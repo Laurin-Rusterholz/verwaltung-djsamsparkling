@@ -1,0 +1,43 @@
+{
+  "_kommentar": [
+    "Regeln für den samsparking-Knoten der Realtime Database (Projekt jupidu-36804).",
+    "WICHTIG: Diese Datei enthält NUR den samsparking-Teil. Ein Deploy mit dieser",
+    "Datei allein würde alle anderen Regeln des Projekts ersetzen. Den Block",
+    "'samsparking' in die vollständige Regeldatei des Projekts einfügen",
+    "(ai-sync/firebase/database.rules.json) und von dort deployen.",
+    "",
+    "content ist absichtlich öffentlich lesbar: der Netlify-Build der Website",
+    "liest ihn ohne Anmeldung. Er enthält nur Inhalte, die ohnehin auf der",
+    "Website stehen. Anfragen (inquiries) enthalten personenbezogene Daten und",
+    "sind deshalb nur angemeldet lesbar — schreiben darf sie jede/r (das",
+    "Formular auf der Website), aber nur neu anlegen, nicht überschreiben."
+  ],
+  "rules": {
+    "samsparking": {
+      "content": {
+        ".read": true,
+        ".write": "auth != null"
+      },
+      "media": {
+        ".read": true,
+        ".write": "auth != null"
+      },
+      "versions": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+      "config": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+      "inquiries": {
+        ".read": "auth != null",
+        ".indexOn": ["status", "createdAt"],
+        "$id": {
+          ".write": "auth != null || !data.exists()",
+          ".validate": "newData.hasChildren(['name','email','createdAt']) && newData.child('name').isString() && newData.child('name').val().length >= 2 && newData.child('name').val().length <= 120 && newData.child('email').isString() && newData.child('email').val().length <= 160 && newData.child('email').val().matches(/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/) && newData.child('createdAt').isString() && (!newData.child('message').exists() || (newData.child('message').isString() && newData.child('message').val().length <= 4000)) && (!newData.child('event').exists() || newData.child('event').val().length <= 200) && (!newData.child('city').exists() || newData.child('city').val().length <= 120)"
+        }
+      }
+    }
+  }
+}

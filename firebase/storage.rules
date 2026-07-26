@@ -1,0 +1,25 @@
+rules_version = '2';
+
+// Storage-Regeln für die Bilder der Sam-Sparkling-Website.
+//
+// WICHTIG: Diese Datei deckt nur den Pfad samsparking/media ab. Wird sie
+// unverändert deployt, verlieren alle anderen Pfade im Bucket ihre Regeln.
+// Den match-Block in die bestehenden Regeln des Projekts jupidu-36804
+// einfügen (Firebase Console → Storage → Rules) und von dort speichern.
+//
+// Lesen ist offen: die Bilder stehen ohnehin öffentlich auf der Website.
+// Schreiben nur angemeldet, nur Bilder, maximal 12 MB.
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    match /samsparking/media/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null
+                   && request.resource.size < 12 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+      allow delete: if request.auth != null;
+    }
+
+  }
+}

@@ -1,0 +1,29 @@
+[build]
+  publish = "public"
+
+# Die Verwaltung ist eine reine statische Seite; alles läuft direkt gegen
+# Firebase (Auth, Realtime Database, Storage). Keine Functions, kein Build.
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    # Nicht in Suchmaschinen aufnehmen
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/js/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/admin.css"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/defaults/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
