@@ -4,6 +4,17 @@
 # Die Verwaltung ist eine reine statische Seite; alles läuft direkt gegen
 # Firebase (Auth, Realtime Database, Storage). Keine Functions, kein Build.
 
+[build.environment]
+  # Netlifys Secret-Scanning meldet den Firebase-Web-API-Key in
+  # public/js/config.js als "likely secret". Das ist ein Fehlalarm: dieser Key
+  # ist ein öffentlicher Projekt-Identifier und MUSS im Browser stehen, damit
+  # das Firebase-SDK das Projekt findet. Er berechtigt zu nichts — der Zugriff
+  # wird über die Realtime-Database-/Storage-Regeln (siehe firebase/) und die
+  # Authorized Domains in Firebase Auth geregelt.
+  # Nur dieser eine Wert wird von der Muster-Erkennung ausgenommen; echte
+  # Secrets (Werte aus Environment-Variablen) werden weiter gescannt.
+  SECRETS_SCAN_SMART_DETECTION_OMIT_VALUES = "AIzaSyC6xVo-wmXC4JjG7qMQnOExIjU-UDvBluE"
+
 [[headers]]
   for = "/*"
   [headers.values]
