@@ -8,7 +8,8 @@ import {
   S,
   initFirebase,
   getAuth,
-  signIn,
+  signInWithPassword,
+  hasAccess,
   signOut,
   loadAll,
   saveContent,
@@ -136,7 +137,7 @@ function renderDashboard() {
   return el("div", { class: "view" }, [
     el("div", { class: "view-head" }, [
       el("div", {}, [
-        el("h2", {}, `Hoi${S.user?.displayName ? " " + S.user.displayName.split(" ")[0] : ""}`),
+        el("h2", {}, "Hoi Sam"),
         el("p", { class: "muted" }, "Alles über Sam Sparkling an einem Ort."),
       ]),
     ]),
@@ -391,8 +392,8 @@ function renderSettings() {
         el("dd", { class: "mono-input" }, `${RTDB_URL}/${PATHS.inquiries}.json`),
         el("dt", {}, "Bilder"),
         el("dd", {}, "Firebase Storage — samsparking/media/…"),
-        el("dt", {}, "Angemeldet als"),
-        el("dd", {}, S.user?.email || "—"),
+        el("dt", {}, "Sitzung"),
+        el("dd", { class: "mono-input" }, (S.user?.uid || "—").slice(0, 12) + " (dieses Gerät)"),
       ]),
       el(
         "p",
@@ -567,33 +568,84 @@ function renderShell() {
 function renderLogin(message) {
   const app = $("#app");
   app.innerHTML = "";
+
+  const input = el("input", {
+    type: "password",
+    autocomplete: "current-password",
+    placeholder: "Passwort",
+    "aria-label": "Passwort",
+  });
+  const hint = el("p", { class: "login-msg" }, "");
+  const btn = el("button", { class: "btn solid", type: "submit" }, "Anmelden");
+
+  const form = el(
+    "form",
+    {
+      class: "login-form",
+      onsubmit: async (e) => {
+        e.preventDefault();
+        const pw = input.value;
+        if (!pw) return input.focus();
+        loggingIn = true;
+        btn.disabled = true;
+        btn.textContent = "prüfe …";
+        hint.textContent = "";
+        hint.className = "login-msg";
+        try {
+          await signInWithPassword(pw);
+          input.value = "";
+          // Weiter geht es über onAuthStateChanged / enterApp()
+          await enterApp();
+        } catch (err) {
+          hint.textContent = err.wrongPassword
+            ? "Falsches Passwort."
+            : "Anmeldung fehlgeschlagen: " + (err.code || err.message);
+          hint.className = "login-msg err";
+          input.select();
+        } finally {
+          loggingIn = false;
+          btn.disabled = false;
+          btn.textContent = "Anmelden";
+        }
+      },
+    },
+    [input, btn]
+  );
+
   app.appendChild(
     el("div", { class: "login" }, [
       el("div", { class: "login-box" }, [
         el("span", { class: "brand-mark big" }, "◆"),
         el("h1", {}, "Sam Sparkling"),
-        el("p", { class: "muted" }, "Verwaltung der Website — Anmeldung mit Google."),
-        el(
-          "button",
-          {
-            class: "btn solid",
-            onclick: async () => {
-              try {
-                await signIn();
-              } catch (e) {
-                toast("Anmeldung fehlgeschlagen: " + (e.code || e.message), "err");
-              }
-            },
-          },
-          "Mit Google anmelden"
-        ),
+        el("p", { class: "muted" }, "Verwaltung der Website"),
+        form,
+        hint,
         message ? el("p", { class: "warn-box" }, message) : null,
       ]),
     ])
   );
+  input.focus();
 }
 
 /* -------------------------------------------------------------------- boot */
+
+let loggingIn = false;
+
+/** Inhalte laden und die Oberfläche aufbauen. */
+async function enterApp() {
+  const app = $("#app");
+  app.innerHTML = "";
+  app.appendChild(el("div", { class: "login" }, [el("p", { class: "muted" }, "lade Inhalte …")]));
+  try {
+    await loadAll();
+    if (!S.saved) toast("Erster Start: Standard-Inhalt geladen. Mit Speichern in die Datenbank schreiben.");
+    renderShell();
+  } catch (e) {
+    console.error(e);
+    if (/permission[_ ]denied/i.test(String(e.code || e.message))) renderLogin();
+    else renderLogin("Daten nicht ladbar: " + e.message);
+  }
+}
 
 function boot() {
   try {
@@ -605,27 +657,24 @@ function boot() {
   }
 
   const auth = getAuth();
-  try {
-    auth.getRedirectResult().catch(() => {});
-  } catch (e) {}
 
   auth.onAuthStateChanged(async (user) => {
     S.user = user;
+    // Während der Anmeldung übernimmt das Formular — sonst würde der Wechsel
+    // auf den anonymen Nutzer den Login-Bildschirm mitten im Vorgang neu bauen.
+    if (loggingIn) return;
     if (!user) {
       S.ready = false;
       renderLogin();
       return;
     }
-    const app = $("#app");
-    app.innerHTML = "";
-    app.appendChild(el("div", { class: "login" }, [el("p", { class: "muted" }, "lade Inhalte …")]));
+    // Anonymer Nutzer aus einer früheren Sitzung: ist er noch freigeschaltet?
     try {
-      await loadAll();
-      if (!S.saved) toast("Erster Start: Standard-Inhalt geladen. Mit Speichern in die Datenbank schreiben.");
-      renderShell();
+      if (await hasAccess()) await enterApp();
+      else renderLogin();
     } catch (e) {
       console.error(e);
-      renderLogin("Daten nicht ladbar: " + e.message);
+      renderLogin("Verbindung zur Datenbank fehlgeschlagen: " + e.message);
     }
   });
 

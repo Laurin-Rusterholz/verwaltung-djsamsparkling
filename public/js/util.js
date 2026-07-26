@@ -126,6 +126,18 @@ export function slug(v) {
     .slice(0, 60);
 }
 
+/**
+ * SHA-256 als Hex. Braucht einen sicheren Kontext (HTTPS oder localhost) —
+ * auf Netlify immer gegeben.
+ */
+export async function sha256Hex(text) {
+  if (!crypto?.subtle) throw new Error("Braucht HTTPS (oder localhost)");
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 /* -------------------------------------------------------------- toasts */
 
 let toastHost = null;

@@ -3,7 +3,7 @@
    ========================================================================== */
 
 import { FIREBASE_CONFIG, RTDB_URL, PATHS, DEFAULT_SITE_URL } from "./config.js";
-import { clone, withDefaults, pruneForRtdb, toast } from "./util.js";
+import { clone, withDefaults, pruneForRtdb, toast, sha256Hex } from "./util.js";
 
 export const S = {
   user: null,
@@ -61,21 +61,63 @@ export const getDb = () => db;
 export const getStorage = () => storage;
 export const getAuth = () => auth;
 
-export async function signIn() {
-  const provider = new firebase.auth.GoogleAuthProvider();
+/* --------------------------------------------------------------- anmeldung
+   Gemeinsames Passwort, geprüft von der Datenbank — nicht vom Browser:
+
+   1. anonyme Firebase-Anmeldung (gibt dem Gerät eine uid)
+   2. SHA-256 des Passworts nach samsparking/session/<uid>/pw schreiben
+   3. Die Regel dort erlaubt den Schreibvorgang nur, wenn der Hash mit
+      samsparking/gate/pw übereinstimmt → falsches Passwort = permission_denied
+   4. Alle weiteren Regeln verlangen diesen Sitzungs-Nachweis
+
+   Damit verlässt das Passwort den Browser nie im Klartext und der Hash ist
+   für Clients nirgends lesbar (die Regeln dürfen ihn lesen, Clients nicht).
+*/
+
+export async function signInWithPassword(password) {
+  const pw = String(password || "");
+  if (pw.length < 4) throw new Error("Passwort zu kurz");
+
+  if (!auth.currentUser) await auth.signInAnonymously();
+  const uid = auth.currentUser.uid;
+  const hash = await sha256Hex("samsparking:" + pw);
+
   try {
-    await auth.signInWithPopup(provider);
+    await db.ref(`${PATHS.session}/${uid}`).set({ pw: hash, at: new Date().toISOString() });
   } catch (e) {
-    if (e && e.code === "auth/popup-blocked" && window.self === window.top) {
-      await auth.signInWithRedirect(provider);
-      return;
+    const denied = /permission[_ ]denied/i.test(String(e && (e.code || e.message)));
+    if (denied) {
+      const err = new Error("Falsches Passwort");
+      err.wrongPassword = true;
+      throw err;
     }
-    if (e && e.code === "auth/popup-closed-by-user") return;
+    throw e;
+  }
+}
+
+/** Ist dieses Gerät (noch) freigeschaltet? Probe auf einen geschützten Knoten. */
+export async function hasAccess() {
+  if (!auth.currentUser) return false;
+  try {
+    await db.ref(PATHS.config).get();
+    return true;
+  } catch (e) {
+    if (/permission[_ ]denied/i.test(String(e && (e.code || e.message)))) return false;
     throw e;
   }
 }
 
 export async function signOut() {
+  const uid = auth.currentUser?.uid;
+  // Sitzungs-Nachweis entfernen, damit das Gerät wirklich abgemeldet ist
+  if (uid) {
+    try {
+      await db.ref(`${PATHS.session}/${uid}`).remove();
+    } catch (e) {
+      console.warn("Sitzung nicht entfernt:", e.message);
+    }
+  }
+  detachListeners();
   await auth.signOut();
 }
 
@@ -110,24 +152,44 @@ export async function loadAll() {
   S.ready = true;
 
   // Medien und Anfragen live mitverfolgen
-  db.ref(PATHS.media).on(
-    "value",
-    (snap) => {
-      S.media = snap.val() || {};
-      emit("media");
-    },
-    (err) => console.warn("media:", err.message)
-  );
-  db.ref(PATHS.inquiries).on(
-    "value",
-    (snap) => {
-      S.inquiries = snap.val() || {};
-      emit("inquiries");
-    },
-    (err) => console.warn("inquiries:", err.message)
-  );
+  watch(PATHS.media, (val) => {
+    S.media = val || {};
+    emit("media");
+  });
+  watch(PATHS.inquiries, (val) => {
+    S.inquiries = val || {};
+    emit("inquiries");
+  });
 
   emit("loaded");
+}
+
+/* Laufende Live-Abfragen, damit sie beim Abmelden gelöst werden können —
+   sonst laufen sie nach dem Entfernen der Sitzung in permission_denied. */
+const watchers = [];
+
+function watch(path, onValue) {
+  const ref = db.ref(path);
+  const cb = ref.on(
+    "value",
+    (snap) => onValue(snap.val()),
+    (err) => console.warn(`${path}:`, err.message)
+  );
+  watchers.push({ ref, cb });
+}
+
+function detachListeners() {
+  while (watchers.length) {
+    const w = watchers.pop();
+    try {
+      w.ref.off("value", w.cb);
+    } catch (e) {
+      /* egal */
+    }
+  }
+  S.ready = false;
+  S.media = {};
+  S.inquiries = {};
 }
 
 /**
@@ -191,7 +253,7 @@ function normalize(c) {
 export async function saveContent() {
   const payload = clone(S.content);
   payload.updatedAt = new Date().toISOString();
-  payload.updatedBy = S.user?.email || "unbekannt";
+  payload.updatedBy = S.user?.email || "Verwaltung";
   await db.ref(PATHS.content).set(pruneForRtdb(payload));
   S.content.updatedAt = payload.updatedAt;
   S.content.updatedBy = payload.updatedBy;
@@ -220,7 +282,7 @@ export async function publish() {
 
   const snapshot = {
     at: updatedAt,
-    by: S.user?.email || "unbekannt",
+    by: S.user?.email || "Verwaltung",
     content: pruneForRtdb(clone(S.content)),
   };
   try {

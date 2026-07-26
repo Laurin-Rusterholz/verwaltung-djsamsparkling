@@ -13,7 +13,7 @@ bestehendes Firebase-Projekt **jupidu-36804** (dasselbe wie in `ai-sync`).
 ┌────────────────────┐         ┌──────────────────────────────┐
 │  Verwaltung        │ schreibt│ Firebase Realtime Database   │
 │  (diese Seite)     ├────────▶│  samsparking/content         │
-│  Login: Google     │         │  samsparking/media           │
+│  Login: Passwort   │         │  samsparking/media           │
 └────────┬───────────┘         │  samsparking/inquiries       │
          │ Upload              │  samsparking/config          │
          ▼                     │  samsparking/versions        │
@@ -37,31 +37,67 @@ bestehendes Firebase-Projekt **jupidu-36804** (dasselbe wie in `ai-sync`).
 Publish-Verzeichnis ist `public`, kein Build-Command — steht in `netlify.toml`.
 Die Seite ist per `X-Robots-Tag: noindex` von Suchmaschinen ausgenommen.
 
-### 2. Firebase: Google-Anmeldung erlauben
+### 2. Firebase: anonyme Anmeldung aktivieren
 
-Firebase Console → Authentication → Settings → **Authorized domains**: die
-Netlify-Adresse der Verwaltung eintragen (z. B.
-`verwaltung-djsamsparkling.netlify.app`). Sonst schlägt der Google-Login fehl.
+Firebase Console → Authentication → Sign-in method → **Anonymous** → aktivieren.
 
-### 3. Firebase: Datenbank-Regeln
+Die Verwaltung braucht kein Google-Konto: sie meldet sich anonym an (das gibt
+dem Gerät nur eine ID) und weist danach das gemeinsame Passwort nach. Ohne
+aktivierten Anonymous-Provider kommt beim Anmelden
+`auth/operation-not-allowed`.
+
+Die Netlify-Adresse unter Authentication → Settings → **Authorized domains**
+einzutragen ist nicht zwingend, aber sinnvoll.
+
+### 3. Passwort festlegen
+
+Das Passwort steht **nicht** im Code, sondern als SHA-256-Hash in der Datenbank.
+
+1. `https://<verwaltung>.netlify.app/passwort.html` öffnen, Wunsch-Passwort
+   eingeben, Hash kopieren. (Die Seite rechnet lokal im Browser; es wird nichts
+   verschickt. Ohne Netlify geht es auch mit
+   `node -e 'console.log(require("crypto").createHash("sha256").update("samsparking:DEINPASSWORT").digest("hex"))'`.)
+2. Firebase Console → Realtime Database → beim Knoten `samsparking` ein Kind
+   `gate` anlegen, darin `pw` mit dem Hash als Wert.
+
+**Nimm eine lange Passphrase (20+ Zeichen).** Warum, steht unter
+*Grenzen dieser Anmeldung*.
+
+Passwort ändern: einfach den Wert von `samsparking/gate/pw` ersetzen. Alle
+bisher angemeldeten Geräte fallen damit automatisch heraus.
+
+### 4. Firebase: Datenbank-Regeln
 
 Den Block `samsparking` aus `firebase/database.rules.json` in die vollständige
 Regeldatei des Projekts einfügen (`ai-sync/firebase/database.rules.json` — dort
 ist er bereits ergänzt) und deployen bzw. in der Console einsetzen.
 
-Warum diese Aufteilung:
+So läuft die Anmeldung — geprüft von der **Datenbank**, nicht vom JavaScript:
+
+1. Du gibst das Passwort ein → der Browser bildet den SHA-256-Hash
+2. anonyme Anmeldung, dann schreibt der Browser den Hash nach
+   `samsparking/session/<geräte-id>/pw`
+3. Die Regel dort lässt den Schreibvorgang **nur bei Übereinstimmung mit
+   `samsparking/gate/pw`** durch → falsches Passwort = `permission_denied`
+4. Alle geschützten Zugriffe verlangen danach diesen Sitzungs-Nachweis
+
+Das Passwort verlässt den Browser nie im Klartext, und den Hash kann kein Client
+lesen (`gate` und `session` sind für Clients nicht lesbar — die Regeln dürfen
+sie trotzdem lesen). Abmelden löscht den Sitzungs-Knoten.
 
 | Knoten | lesen | schreiben |
 |---|---|---|
-| `content` | **öffentlich** — der Website-Build liest ihn ohne Anmeldung | nur angemeldet |
-| `media` | öffentlich (Bild-URLs sind ohnehin öffentlich) | nur angemeldet |
-| `inquiries` | **nur angemeldet** (personenbezogene Daten) | jede/r darf *neue* anlegen (das Formular), nicht überschreiben |
-| `config`, `versions` | nur angemeldet | nur angemeldet |
+| `content` | **öffentlich** — der Website-Build liest ihn ohne Anmeldung | nur mit Sitzung |
+| `media` | öffentlich (Bild-URLs sind ohnehin öffentlich) | nur mit Sitzung |
+| `inquiries` | **nur mit Sitzung** (personenbezogene Daten) | jede/r darf *neue* anlegen (das Formular), nicht überschreiben |
+| `config`, `versions` | nur mit Sitzung | nur mit Sitzung |
+| `gate`, `session` | für Clients gesperrt | `session` nur mit richtigem Passwort |
 
 Ohne diese Regeln greift der `$andere`-Catch-All des Projekts — dann wären die
-Booking-Anfragen öffentlich lesbar. **Also nicht überspringen.**
+Booking-Anfragen öffentlich lesbar und jede Person könnte die Website
+überschreiben. **Also nicht überspringen.**
 
-### 4. Firebase: Storage-Regeln und CORS
+### 5. Firebase: Storage-Regeln und CORS
 
 - Regeln: `match`-Block aus `firebase/storage.rules` in die bestehenden
   Storage-Regeln einfügen (Console → Storage → Rules).
@@ -75,12 +111,27 @@ bash firebase/set-cors.sh
 `gsutil` ersetzt die CORS-Konfiguration des ganzen Buckets — die Liste in
 `cors.json` enthält deshalb auch die Origin von `ai-sync`.
 
-### 5. Build-Hook der Website hinterlegen
+### 6. Build-Hook der Website hinterlegen
 
 Netlify (Site der **Website**, nicht der Verwaltung) → Site configuration →
 Build & deploy → Build hooks → *Add build hook* → URL kopieren und in der
 Verwaltung unter **Einstellungen** einsetzen. Erst dann löst *Publizieren*
 tatsächlich einen neuen Website-Build aus.
+
+### Grenzen dieser Anmeldung
+
+Ein gemeinsames Passwort ohne Benutzerkonto hat zwei Schwächen, die sich nicht
+wegprogrammieren lassen — beide sind mit einer langen Passphrase unkritisch:
+
+- **Raten:** Wer die Projekt-URL kennt, kann Passwörter durch wiederholte
+  `session`-Schreibversuche durchprobieren. Firebase bremst das nicht. Eine
+  Passphrase mit 20+ Zeichen macht das aussichtslos.
+- **Firebase Storage:** Storage-Regeln können den Sitzungs-Nachweis aus der
+  Realtime Database nicht lesen. Bilder-Upload und -Löschung sind daher für
+  jede anonym angemeldete Person möglich (begrenzt auf Bilddateien ≤ 12 MB
+  unter `samsparking/media/`). Die Website selbst und die Anfragen sind davon
+  nicht betroffen. Wer das schliessen will, braucht echte Benutzerkonten
+  (z. B. E-Mail + Passwort) — dann greift `request.auth.uid` direkt.
 
 ---
 
@@ -104,6 +155,10 @@ tatsächlich einen neuen Website-Build aus.
 | **Publizieren** | Publizieren, Verlauf der letzten 20 Stände zum Zurückholen, JSON-Export/Import |
 | **Einstellungen** | Build-Hook, Website-Adresse, Datenablage, Standard-Inhalt laden |
 
+**Anmeldung:** ein Passwortfeld, kein Konto. Nach dem Anmelden bleibt das Gerät
+freigeschaltet (auch nach einem Neuladen), bis du auf *Abmelden* klickst oder
+das Passwort in Firebase geändert wird.
+
 **Speichern vs. Publizieren**
 
 - **Speichern** (auch `Strg`/`Cmd` + `S`) schreibt in die Datenbank. Öffentlich
@@ -121,20 +176,22 @@ npx http-server -p 8080 public
 ```
 
 Für den Bild-Upload muss `http://localhost:8080` in `firebase/cors.json` stehen
-(ist voreingestellt) und in den Authorized domains von Firebase Auth
-(`localhost` ist dort standardmässig erlaubt).
+(ist voreingestellt). Das Hash-Werkzeug und die Anmeldung brauchen einen
+sicheren Kontext — `localhost` gilt als sicher, eine LAN-IP wie `192.168.x.x`
+nicht (dort fehlt `crypto.subtle`).
 
 ## Aufbau
 
 ```
 public/
   index.html         Hülle, lädt Firebase-compat-SDK
+  passwort.html      erzeugt den Passwort-Hash für samsparking/gate/pw
   admin.css          Oberfläche (gleiche Farbwelt wie die Website)
   defaults/site.json Auslieferungs-Inhalt (identisch mit s-mi/content/site.json)
   js/
     config.js        Firebase-Werte, Datenbank-Pfade
     util.js          DOM-Helfer, Pfad-Zugriff, Toasts, Dialoge
-    store.js         Auth, Laden/Speichern, Publizieren, Versionen
+    store.js         Anmeldung, Laden/Speichern, Publizieren, Versionen
     fields.js        Formular-Bausteine (Text, Liste, Bildfeld, Karten-Liste)
     media.js         Upload, Medienbibliothek, Bild-Auswahl
     content.js       Editoren je Website-Abschnitt
@@ -154,5 +211,10 @@ Das Inhalts-Schema ist dasselbe, das der Website-Generator liest
 ## Datenschutz
 
 Booking-Anfragen enthalten Name, E-Mail und Nachricht von Veranstaltern. Sie
-liegen in der Realtime Database und sind nur angemeldet lesbar. Löschen geht in
-der Verwaltung unter *Anfragen* pro Eintrag.
+liegen in der Realtime Database und sind nur mit gültiger Sitzung lesbar — also
+nur für Geräte, die das Passwort nachgewiesen haben. Löschen geht in der
+Verwaltung unter *Anfragen* pro Eintrag.
+
+Weil alle mit demselben Passwort arbeiten, ist im Verlauf und bei
+`updatedBy`/`createdBy` nicht erkennbar, wer eine Änderung gemacht hat. Wer das
+braucht, kommt an echten Benutzerkonten nicht vorbei.

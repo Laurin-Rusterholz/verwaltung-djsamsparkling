@@ -77,7 +77,7 @@ async function uploadOne(file) {
       height: dims?.h || null,
       alt: "",
       createdAt: new Date().toISOString(),
-      createdBy: S.user?.email || "unbekannt",
+      createdBy: S.user?.email || "Verwaltung",
     });
 
     toast(`${file.name} hochgeladen`);

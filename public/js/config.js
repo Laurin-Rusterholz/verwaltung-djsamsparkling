@@ -29,6 +29,8 @@ export const PATHS = {
   inquiries: `${ROOT}/inquiries`, // Booking-Anfragen vom Website-Formular
   media: `${ROOT}/media`, // Medienbibliothek (Metadaten)
   config: `${ROOT}/config`, // Build-Hook, Website-URL
+  session: `${ROOT}/session`, // Nachweis "dieses Gerät kennt das Passwort"
+  gate: `${ROOT}/gate`, // Hash des gemeinsamen Passworts (nur Regeln lesen ihn)
 };
 
 /** Ablage der Bilder in Firebase Storage. */

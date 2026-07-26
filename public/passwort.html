@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Passwort-Hash — Sam Sparkling Verwaltung</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <div class="login">
+    <div class="login-box" style="max-width:600px;text-align:left">
+      <span class="brand-mark big">◆</span>
+      <h1 style="font-size:1.4rem">Passwort festlegen</h1>
+      <p class="muted">
+        Das Passwort selbst wird nirgends gespeichert — nur sein Hash. Diese Seite
+        rechnet ihn direkt hier im Browser aus; es wird nichts verschickt.
+      </p>
+
+      <form id="f" class="login-form" style="margin-top:22px">
+        <input id="pw" type="text" placeholder="Wunsch-Passwort (lang wählen!)" autocomplete="off">
+        <button class="btn solid" type="submit">Hash</button>
+      </form>
+      <p id="strength" class="login-msg"></p>
+
+      <div id="out" hidden style="margin-top:22px">
+        <p class="field-label">Hash (SHA-256)</p>
+        <p class="mono-input" id="hash"
+           style="word-break:break-all;border:1px solid var(--line);padding:11px;background:var(--ink)"></p>
+        <button class="btn ghost sm" id="copy" type="button">Hash kopieren</button>
+
+        <div class="warn-box" style="margin-top:20px">
+          <strong>So einsetzen:</strong><br>
+          Firebase Console → Realtime Database → beim Knoten
+          <code class="mono-input">samsparking</code> ein Kind
+          <code class="mono-input">gate</code> anlegen, darin
+          <code class="mono-input">pw</code> mit diesem Hash als Wert.<br><br>
+          Danach gilt das neue Passwort sofort — alle bisher angemeldeten Geräte
+          müssen sich neu anmelden.
+        </div>
+      </div>
+
+      <p class="muted" style="margin-top:26px">
+        <a href="index.html" style="color:var(--spark)">← zur Verwaltung</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const f = document.getElementById("f");
+    const pw = document.getElementById("pw");
+    const out = document.getElementById("out");
+    const hashEl = document.getElementById("hash");
+    const strength = document.getElementById("strength");
+
+    async function sha256Hex(text) {
+      const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    pw.addEventListener("input", () => {
+      const n = pw.value.length;
+      strength.textContent = n === 0 ? "" :
+        n < 12 ? "Zu kurz — bei einem gemeinsamen Passwort sind 20+ Zeichen sinnvoll." :
+        n < 20 ? "Geht, aber länger ist besser (20+ Zeichen)." :
+        "Gute Länge.";
+      strength.className = "login-msg" + (n && n < 12 ? " err" : "");
+    });
+
+    f.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!pw.value) return;
+      if (!crypto.subtle) {
+        strength.textContent = "Braucht HTTPS (oder localhost).";
+        strength.className = "login-msg err";
+        return;
+      }
+      hashEl.textContent = await sha256Hex("samsparking:" + pw.value);
+      out.hidden = false;
+    });
+
+    document.getElementById("copy").addEventListener("click", () => {
+      navigator.clipboard?.writeText(hashEl.textContent);
+      document.getElementById("copy").textContent = "kopiert ✓";
+    });
+  </script>
+</body>
+</html>
