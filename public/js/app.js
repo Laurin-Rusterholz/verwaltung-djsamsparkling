@@ -35,6 +35,8 @@ import {
 } from "./content.js";
 import { renderMedia, mediaList, usageCount, notifyMediaChanged, notifyUploadsChanged } from "./media.js";
 import { renderInbox, openCount, inquiryList } from "./inbox.js";
+import { renderI18n, translationSummary, LANG_LABEL } from "./i18n.js";
+import { checkKey } from "./ai.js";
 
 /* ------------------------------------------------------------------ views */
 
@@ -50,6 +52,12 @@ const NAV = [
       { id: "seo", label: "SEO & Teilen", render: renderSeo },
       { id: "pages", label: "Seiten", render: renderPages },
       { id: "layout", label: "Abschnitte", render: renderLayout },
+      {
+        id: "i18n",
+        label: "Sprachen",
+        render: renderI18n,
+        badge: () => translationSummary().reduce((n, l) => n + l.missing + l.stale, 0),
+      },
     ],
   },
   {
@@ -120,6 +128,18 @@ function checklist() {
     "Jeder sichtbare Abschnitt ist einer Seite zugeordnet",
     "pages"
   );
+  translationSummary().forEach((l) =>
+    add(
+      !l.missing && !l.stale,
+      `${LANG_LABEL[l.lang] || l.lang} ist vollständig übersetzt` +
+        (l.missing || l.stale
+          ? ` (${[l.missing ? l.missing + " fehlen" : "", l.stale ? l.stale + " veraltet" : ""]
+              .filter(Boolean)
+              .join(", ")})`
+          : ""),
+      "i18n"
+    )
+  );
 
   return el("div", { class: "check-list" }, [
     el("h3", { class: "group-title" }, "Checkliste"),
@@ -170,6 +190,16 @@ function renderDashboard() {
         next ? [next.name, next.city].filter(Boolean).join(", ") : "kein Termin eingetragen"
       ),
       statCard("Bilder", String(mediaList().length), mediaList().filter((m) => !usageCount(m.url)).length + " unbenutzt"),
+      (() => {
+        const langs = translationSummary();
+        const offen = langs.reduce((n, l) => n + l.missing + l.stale, 0);
+        return statCard(
+          "Sprachen",
+          String(1 + langs.length),
+          langs.length ? (offen ? offen + " Texte offen" : "alles übersetzt") : "nur Deutsch",
+          langs.length && offen ? "warn" : "ok"
+        );
+      })(),
       statCard(
         "Seiten",
         String((c.pages || []).filter((p) => p.enabled !== false).length || 1),
@@ -351,6 +381,14 @@ function renderSettings() {
     value: S.config.siteUrl || DEFAULT_SITE_URL,
     placeholder: "https://www.samsparking.ch",
   });
+  const keyInput = el("input", {
+    type: "password",
+    class: "mono-input",
+    autocomplete: "off",
+    value: S.config.anthropicKey || "",
+    placeholder: "sk-ant-…",
+  });
+  const keyState = el("span", { class: "muted" }, "");
 
   return el("div", { class: "view" }, [
     el("div", { class: "view-head" }, [
@@ -391,6 +429,62 @@ function renderSettings() {
         },
         "Einstellungen speichern"
       ),
+    ]),
+    el("div", { class: "group" }, [
+      el("h3", { class: "group-title" }, "KI-Übersetzung"),
+      el("div", { class: "field" }, [
+        el("label", { class: "field-label" }, "Anthropic-API-Key"),
+        keyInput,
+        el(
+          "p",
+          { class: "field-hint" },
+          "Für „Sprachen → Fehlende mit KI übersetzen“. Key auf console.anthropic.com erzeugen (API Keys). " +
+            "Er liegt im geschützten Konfigurations-Knoten der Datenbank und ist nur mit diesem Passwort lesbar — " +
+            "wer das Passwort kennt, kann damit auf deine Rechnung übersetzen. Bei Verdacht den Key dort neu erzeugen."
+        ),
+      ]),
+      el("div", { class: "quick" }, [
+        el(
+          "button",
+          {
+            class: "btn solid",
+            onclick: async (e) => {
+              e.target.disabled = true;
+              try {
+                await saveConfig({ anthropicKey: keyInput.value.trim() });
+                toast("API-Key gespeichert");
+              } catch (err) {
+                toast("Nicht gespeichert: " + err.message, "err");
+              } finally {
+                e.target.disabled = false;
+              }
+            },
+          },
+          "API-Key speichern"
+        ),
+        el(
+          "button",
+          {
+            class: "btn ghost",
+            onclick: async (e) => {
+              const key = keyInput.value.trim();
+              if (!key) return toast("Kein Key eingetragen", "err");
+              e.target.disabled = true;
+              keyState.textContent = "prüfe …";
+              try {
+                await checkKey(key);
+                keyState.textContent = "✓ Key funktioniert";
+              } catch (err) {
+                keyState.textContent = "✗ " + err.message;
+              } finally {
+                e.target.disabled = false;
+              }
+            },
+          },
+          "Key testen"
+        ),
+        keyState,
+      ]),
     ]),
     el("div", { class: "group" }, [
       el("h3", { class: "group-title" }, "Datenablage"),

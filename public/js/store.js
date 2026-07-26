@@ -3,7 +3,7 @@
    ========================================================================== */
 
 import { FIREBASE_CONFIG, RTDB_URL, PATHS, DEFAULT_SITE_URL } from "./config.js";
-import { clone, withDefaults, pruneForRtdb, toast, sha256Hex } from "./util.js";
+import { clone, withDefaults, pruneForRtdb, toast, sha256Hex, setPath } from "./util.js";
 
 export const S = {
   user: null,
@@ -263,6 +263,29 @@ function normalize(c) {
     );
     if (i === 0) p.slug = "";
   });
+  // Übersetzungen: Schlüssel in der Realtime Database dürfen keine Punkte
+  // enthalten. Von Hand gepflegte Dateien (content/site.json der Website)
+  // benutzen aber flache Pfade — die hier in die verschachtelte Form bringen.
+  ["i18n", "i18nHash"].forEach((root) => {
+    const tables = c[root];
+    if (!tables || typeof tables !== "object") return;
+    for (const [lang, table] of Object.entries(tables)) {
+      if (!table || typeof table !== "object") continue;
+      const flat = {};
+      const walkTable = (node, prefix) => {
+        for (const [k, v] of Object.entries(node)) {
+          const p = prefix ? `${prefix}.${k}` : k;
+          if (v && typeof v === "object") walkTable(v, p);
+          else if (typeof v === "string") flat[p] = v;
+        }
+      };
+      walkTable(table, "");
+      const nested = {};
+      for (const [p, v] of Object.entries(flat)) setPath(nested, p, v);
+      tables[lang] = nested;
+    }
+  });
+
   // Nur bekannte Abschnitte im Layout, und keine doppelt
   const known = Object.keys(c.sections || {});
   const seen = new Set();

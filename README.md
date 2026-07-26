@@ -143,18 +143,19 @@ wegprogrammieren lassen — beide sind mit einer langen Passphrase unkritisch:
 | **Start & Design** | Künstlername, Farben (Grundton + Akzent), Hero-Text, Hero-Bild **oder** -Video (läuft automatisch), Ticker |
 | **SEO & Teilen** | Domain, Titel, Description (mit Längen-Check), Keywords, Vorschaubild fürs Teilen |
 | **Seiten** | Aus welchen Seiten die Website besteht, welche Abschnitte auf welcher Seite stehen, Adresse (`/shows/`), Kopfbereich, Menü, SEO je Seite |
+| **Sprachen** | Deutsch, Englisch, Französisch: Stand je Sprache, Übersetzungen von Hand bearbeiten, „Fehlende mit KI übersetzen“ |
 | **Abschnitte** | Sichtbarkeit, Menü-Beschriftungen, zweifarbige Überschriften |
 | **About** | Portrait, Einstiegstext, Absätze (`**fett**`, `[Link](url)`), Stichworte, Fakten-Leiste |
 | **Sound & Mixe** | Genres, beliebig viele Mixe mit Link und optionalem Player-Embed |
-| **Shows** | Termine mit Datum, Location, Stadt, Ticket-Link, „ausverkauft“ — plus Monatskalender als Übersicht |
+| **Shows** | Termine mit Datum, Location, Stadt, Ticket-Link, Status (bestätigt / **gebucht** / ausverkauft / abgesagt) — plus Monatskalender als Übersicht |
 | **Referenzen** | Clubs und Festivals |
 | **Galerie** | Bilder aus der Medienbibliothek, sortierbar, mit Alt-Text und Bildnachweis |
 | **Booking** | Verfügbarkeit, Presskit, Anfrage-Formular, Rider (Gruppen mit Geräten) |
 | **Kontakt** | E-Mail, Telefon, Standort, beliebig viele Social-Links |
 | **Medien** | Upload per Drag & Drop nach Firebase Storage — Bilder **und Videos** (MP4, WebM), max. 250 MB pro Datei; zeigt an, was unbenutzt ist |
-| **Anfragen** | Eingang aus dem Website-Formular, Status (neu / in Abklärung / bestätigt / abgelehnt), Antwort per Mail |
+| **Anfragen** | Eingang aus dem Website-Formular, Status (neu / in Abklärung / bestätigt / abgelehnt), Antwort per Mail — **bestätigt legt automatisch einen gebuchten Termin im Kalender an** |
 | **Publizieren** | Publizieren, Verlauf der letzten 20 Stände zum Zurückholen, JSON-Export/Import |
-| **Einstellungen** | Build-Hook, Website-Adresse, Datenablage, Standard-Inhalt laden |
+| **Einstellungen** | Build-Hook, Website-Adresse, Anthropic-API-Key für die KI-Übersetzung, Datenablage, Standard-Inhalt laden |
 
 **Anmeldung:** ein Passwortfeld, kein Konto. Nach dem Anmelden bleibt das Gerät
 freigeschaltet (auch nach einem Neuladen), bis du auf *Abmelden* klickst oder
@@ -199,7 +200,7 @@ wird sie mit vier Seiten:
 Bleibt die Liste leer, wird wieder eine einzelne Seite mit allen Abschnitten
 gebaut — der frühere Zustand.
 
-## Kalender
+## Kalender und gebuchte Anfragen
 
 Die Shows-Ansicht zeigt einen Monatskalender: Punkte sind Termine, „Nächster
 Termin“ springt zum nächsten Auftritt. Auf der Website erscheint derselbe
@@ -208,6 +209,54 @@ abschalten (dann bleibt nur die Liste).
 
 Die Liste bleibt in beiden Fällen im HTML — sie ist das, was Google liest. Der
 Kalender wird im Browser aufgebaut.
+
+**Anfrage bestätigen → Termin gebucht.** Setzt du unter *Anfragen* eine Anfrage
+auf **bestätigt**, legt die Verwaltung daraus automatisch einen Termin mit dem
+Status `booked` an (Datum, Event, Ort aus der Anfrage) und speichert sofort. Im
+Website-Kalender ist der Tag danach blau eingefärbt und mit „Gebucht“
+beschriftet, in der Liste steht statt des Ticket-Knopfs ebenfalls „Gebucht“ —
+gebucht heisst schliesslich noch nicht, dass es Tickets gibt.
+
+Der Knopf **„in den Kalender“ / „✓ im Kalender“** auf jeder Anfrage macht
+dasselbe von Hand und nimmt den Termin auch wieder heraus (z. B. nach einer
+Absage). Ohne Datum in der Anfrage geht es nicht — dann den Termin unter *Shows*
+selbst eintragen.
+
+Sichtbar auf der Website wird das Ganze erst mit dem nächsten **Publizieren**.
+
+## Sprachen (Deutsch, Englisch, Französisch)
+
+Deutsch ist die Hauptsprache und der gepflegte Stand. Englisch und Französisch
+liegen als Übersetzungstabelle daneben; der Generator baut daraus `/en/…` und
+`/fr/…` mit `hreflang`-Verweisen und einem Umschalter im Kopf der Website.
+**Fehlt eine Übersetzung, steht dort der deutsche Text** — nie eine Lücke.
+
+In der Ansicht *Sprachen*:
+
+- oben anhaken, welche Sprachen die Website überhaupt baut,
+- pro Sprache der Stand: `übersetzt` / `fehlt` / `veraltet`,
+- jede Stelle lässt sich von Hand überschreiben,
+- **„Fehlende mit KI übersetzen“** schickt genau die offenen Stellen an Claude
+  (`claude-opus-5`) und trägt die Antworten ein; **„Alles neu übersetzen“**
+  macht das für alle Texte.
+
+*Veraltet* heisst: der deutsche Text wurde geändert, nachdem übersetzt wurde.
+Dafür merkt sich die Verwaltung zu jeder Übersetzung einen Fingerabdruck des
+deutschen Originals (`i18nHash`). Solche Stellen zählt der KI-Lauf zu den
+offenen — eine Änderung am deutschen Text zieht die Übersetzungen also nach.
+
+**API-Key.** Für die KI-Übersetzung brauchst du einen Anthropic-API-Key
+(console.anthropic.com → API Keys, Guthaben nötig). Er kommt unter
+*Einstellungen → KI-Übersetzung* hinein und liegt im geschützten
+`samsparking/config`-Knoten — lesbar nur mit dem Verwaltungs-Passwort. Der
+Aufruf geht direkt aus dem Browser an `api.anthropic.com`. Wer das Passwort
+kennt, kann den Key benutzen; bei Verdacht in der Anthropic-Konsole neu
+erzeugen. Ohne Key funktioniert alles andere weiter, nur der KI-Knopf nicht.
+
+Übersetzt werden nur Texte — keine URLs, Farben, Daten, Dateinamen und keine
+Eigennamen (Clubs, Festivals, Geräte im Rider, Genre-Bezeichnungen). Welche
+Felder das sind, steht in `public/js/i18n.js` und muss mit `collectStrings()`
+in `s-mi/scripts/build.mjs` übereinstimmen.
 
 ## Videos im Hero
 
@@ -270,7 +319,9 @@ public/
     fields.js        Formular-Bausteine (Text, Liste, Bildfeld, Karten-Liste)
     media.js         Upload, Medienbibliothek, Bild-Auswahl
     content.js       Editoren je Website-Abschnitt
-    inbox.js         Booking-Anfragen
+    inbox.js         Booking-Anfragen, bestätigt → Termin im Kalender
+    i18n.js          Sprachen: Stand, Editor, Auswahl der übersetzbaren Texte
+    ai.js            Aufruf der Anthropic-API (Claude) für die Übersetzung
     app.js           Navigation, Dashboard, Publizieren, Einstellungen
 firebase/
   database.rules.json  Regeln für samsparking (zum Einfügen)

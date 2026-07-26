@@ -325,13 +325,21 @@ function showsCalendar() {
         "cal-day" +
         (iso === todayStr ? " today" : "") +
         (iso < todayStr ? " past" : "") +
-        (shows ? " has-show" : "");
+        (shows ? " has-show" : "") +
+        (shows && shows.some((s) => s.status === "booked") ? " booked" : "") +
+        (shows && shows.every((s) => s.status === "soldout") ? " soldout" : "");
       grid.appendChild(
         el(
           "span",
           {
             class: cls,
-            title: shows ? shows.map((s) => [s.name, s.city].filter(Boolean).join(", ")).join(" · ") : "",
+            title: shows
+              ? shows
+                  .map((s) =>
+                    [s.name, s.city].filter(Boolean).join(", ") + (s.status === "booked" ? " · gebucht" : "")
+                  )
+                  .join(" · ")
+              : "",
           },
           [
             el("b", {}, String(day)),
@@ -420,9 +428,13 @@ export function renderShows() {
           textField(`${base}.country`, "Land (Kürzel)", { placeholder: "CH", maxlength: 3 }),
           selectField(`${base}.status`, "Status", [
             ["confirmed", "bestätigt"],
+            ["booked", "gebucht"],
             ["soldout", "ausverkauft"],
             ["cancelled", "abgesagt"],
-          ]),
+          ], {
+            hint: "„gebucht“ färbt den Tag im Website-Kalender und blendet den Ticket-Knopf aus.",
+            onChange: () => cal._redraw(),
+          }),
           textField(`${base}.ticketUrl`, "Ticket-Link", { mono: true }),
           textField(`${base}.ticketLabel`, "Button-Text", { placeholder: "Tickets" }),
         ],
