@@ -144,9 +144,16 @@ export function mediaList() {
     .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
 }
 
+// Der Inhalt wird für die Verwendungs-Zählung nur einmal je Änderung
+// serialisiert — sonst einmal pro Kachel, was bei vielen Bildern bremst.
+let usageCache = { stamp: -1, json: "" };
 export function usageCount(url) {
   if (!url) return 0;
-  return (JSON.stringify(S.content || {}).match(new RegExp(escapeRe(url), "g")) || []).length;
+  const stamp = S.contentStamp || 0;
+  if (usageCache.stamp !== stamp) {
+    usageCache = { stamp, json: JSON.stringify(S.content || {}) };
+  }
+  return (usageCache.json.match(new RegExp(escapeRe(url), "g")) || []).length;
 }
 const escapeRe = (v) => String(v).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 

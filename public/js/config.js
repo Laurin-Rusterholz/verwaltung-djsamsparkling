@@ -40,7 +40,7 @@ export const STORAGE_PREFIX = `${ROOT}/media`;
 export const DEFAULT_SITE_URL = "https://www.samsparking.ch";
 
 /** Grösse pro Datei. Muss zu den Storage-Regeln passen (firebase/storage.rules). */
-export const MAX_UPLOAD_BYTES = 48 * 1024 * 1024; // 48 MB
+export const MAX_UPLOAD_BYTES = 250 * 1024 * 1024; // 250 MB
 
 /** Ab hier warnt die Verwaltung: so grosse Hero-Videos laden spürbar lange. */
 export const VIDEO_WARN_BYTES = 12 * 1024 * 1024; // 12 MB

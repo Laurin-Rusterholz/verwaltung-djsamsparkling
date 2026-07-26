@@ -15,6 +15,7 @@ export const S = {
   config: {}, // {buildHook, siteUrl, lastPublish}
   dirty: false,
   ready: false,
+  contentStamp: 0, // zählt Änderungen — für Zwischenspeicher, die den Inhalt lesen
 };
 
 let db = null;
@@ -37,14 +38,27 @@ export function emit(what = "state") {
   });
 }
 
+/**
+ * Änderungs-Marke. Der genaue Vergleich (zwei komplette JSON-Serialisierungen)
+ * ist bei jedem Tastendruck zu teuer, deshalb wird sofort "geändert" gesetzt
+ * und der Vergleich kurz danach nachgezogen — so verschwindet die Marke auch
+ * wieder, wenn jemand seine Änderung von Hand rückgängig macht.
+ */
+let dirtyTimer = null;
 export function markDirty() {
-  const d = JSON.stringify(S.content) !== JSON.stringify(S.saved);
-  if (d !== S.dirty) {
-    S.dirty = d;
+  S.contentStamp = (S.contentStamp || 0) + 1;
+  if (!S.dirty) {
+    S.dirty = true;
     emit("dirty");
-  } else {
-    S.dirty = d;
   }
+  clearTimeout(dirtyTimer);
+  dirtyTimer = setTimeout(() => {
+    const exact = JSON.stringify(S.content) !== JSON.stringify(S.saved);
+    if (exact !== S.dirty) {
+      S.dirty = exact;
+      emit("dirty");
+    }
+  }, 400);
 }
 
 /* ------------------------------------------------------------------- init */
@@ -145,6 +159,7 @@ export async function loadAll() {
   const [content, cfg] = await Promise.all([readOnce(PATHS.content), readOnce(PATHS.config)]);
 
   S.content = normalize(withDefaults(content ? clone(content) : clone(defaults), defaults));
+  S.contentStamp++;
   S.saved = content ? clone(S.content) : null; // null ⇒ noch nie gespeichert
   S.config = cfg || {};
   if (!S.config.siteUrl) S.config.siteUrl = DEFAULT_SITE_URL;
@@ -202,6 +217,7 @@ function normalize(c) {
     "site.keywords",
     "ticker.items",
     "layout",
+    "pages",
     "sections.about.paragraphs",
     "sections.about.words",
     "sections.about.facts",
@@ -237,6 +253,15 @@ function normalize(c) {
   // Rider-Gruppen haben selbst wieder Listen
   (c.sections?.booking?.rider?.groups || []).forEach((g) => {
     g.items = toArray(g.items);
+  });
+  // Jede Seite hat eine Abschnittsliste; nur bekannte Abschnitte, keine doppelt
+  const knownSections = Object.keys(c.sections || {});
+  (c.pages || []).forEach((p, i) => {
+    const seenSec = new Set();
+    p.sections = toArray(p.sections).filter(
+      (k) => knownSections.includes(k) && !seenSec.has(k) && seenSec.add(k)
+    );
+    if (i === 0) p.slug = "";
   });
   // Nur bekannte Abschnitte im Layout, und keine doppelt
   const known = Object.keys(c.sections || {});
@@ -333,6 +358,7 @@ export async function listVersions() {
 /** Eine alte Version in den Editor zurückholen (noch nicht speichern). */
 export function restoreVersion(version) {
   S.content = normalize(withDefaults(clone(version.content), S.defaults));
+  S.contentStamp++;
   markDirty();
   emit("loaded");
 }
@@ -340,6 +366,7 @@ export function restoreVersion(version) {
 /** Alles auf den Standard-Inhalt zurücksetzen (nur im Editor). */
 export function resetToDefaults() {
   S.content = normalize(clone(S.defaults));
+  S.contentStamp++;
   markDirty();
   emit("loaded");
 }

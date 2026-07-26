@@ -298,6 +298,9 @@ function toolBtn(text, title, onclick, cls = "") {
  */
 export function objectList(path, label, opts = {}) {
   const host = el("div", { class: "cards" });
+  const changed = () => {
+    if (typeof opts.onChange === "function") opts.onChange();
+  };
 
   const render = () => {
     let items = read(path);
@@ -317,12 +320,13 @@ export function objectList(path, label, opts = {}) {
         el("div", { class: "card-head" }, [
           el("span", { class: "card-title" }, title || "(ohne Titel)"),
           el("div", { class: "row-tools" }, [
-            toolBtn("↑", "Nach oben", () => moveItem(items, i, i - 1) && (markDirty(), render())),
-            toolBtn("↓", "Nach unten", () => moveItem(items, i, i + 1) && (markDirty(), render())),
+            toolBtn("↑", "Nach oben", () => moveItem(items, i, i - 1) && (markDirty(), render(), changed())),
+            toolBtn("↓", "Nach unten", () => moveItem(items, i, i + 1) && (markDirty(), render(), changed())),
             toolBtn("⧉", "Duplizieren", () => {
               items.splice(i + 1, 0, clone(item));
               markDirty();
               render();
+              changed();
             }),
             toolBtn("✕", "Entfernen", async () => {
               if (
@@ -333,6 +337,7 @@ export function objectList(path, label, opts = {}) {
               items.splice(i, 1);
               markDirty();
               render();
+              changed();
             }, "danger"),
           ]),
         ]),
@@ -350,6 +355,7 @@ export function objectList(path, label, opts = {}) {
             items.push(clone(opts.newItem || {}));
             markDirty();
             render();
+            changed();
             const cards = host.querySelectorAll(".card");
             const last = cards[cards.length - 1];
             if (last) {

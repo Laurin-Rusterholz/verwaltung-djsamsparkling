@@ -129,7 +129,7 @@ wegprogrammieren lassen — beide sind mit einer langen Passphrase unkritisch:
 - **Firebase Storage:** Storage-Regeln können den Sitzungs-Nachweis aus der
   Realtime Database nicht lesen. Bilder-Upload und -Löschung sind daher für
   jede anonym angemeldete Person möglich (begrenzt auf Bild- und Videodateien
-  ≤ 48 MB unter `samsparking/media/`). Die Website selbst und die Anfragen sind davon
+  ≤ 250 MB unter `samsparking/media/`). Die Website selbst und die Anfragen sind davon
   nicht betroffen. Wer das schliessen will, braucht echte Benutzerkonten
   (z. B. E-Mail + Passwort) — dann greift `request.auth.uid` direkt.
 
@@ -142,15 +142,16 @@ wegprogrammieren lassen — beide sind mit einer langen Passphrase unkritisch:
 | **Dashboard** | Stand, letzte Publikation, offene Anfragen, nächste Show, Checkliste mit Sprungmarken |
 | **Start & Design** | Künstlername, Farben (Grundton + Akzent), Hero-Text, Hero-Bild **oder** -Video (läuft automatisch), Ticker |
 | **SEO & Teilen** | Domain, Titel, Description (mit Längen-Check), Keywords, Vorschaubild fürs Teilen |
-| **Abschnitte & Reihenfolge** | Reihenfolge, Sichtbarkeit, Menü-Beschriftungen, zweifarbige Überschriften |
+| **Seiten** | Aus welchen Seiten die Website besteht, welche Abschnitte auf welcher Seite stehen, Adresse (`/shows/`), Kopfbereich, Menü, SEO je Seite |
+| **Abschnitte** | Sichtbarkeit, Menü-Beschriftungen, zweifarbige Überschriften |
 | **About** | Portrait, Einstiegstext, Absätze (`**fett**`, `[Link](url)`), Stichworte, Fakten-Leiste |
 | **Sound & Mixe** | Genres, beliebig viele Mixe mit Link und optionalem Player-Embed |
-| **Shows** | Termine mit Datum, Location, Stadt, Ticket-Link, „ausverkauft" |
+| **Shows** | Termine mit Datum, Location, Stadt, Ticket-Link, „ausverkauft“ — plus Monatskalender als Übersicht |
 | **Referenzen** | Clubs und Festivals |
 | **Galerie** | Bilder aus der Medienbibliothek, sortierbar, mit Alt-Text und Bildnachweis |
 | **Booking** | Verfügbarkeit, Presskit, Anfrage-Formular, Rider (Gruppen mit Geräten) |
 | **Kontakt** | E-Mail, Telefon, Standort, beliebig viele Social-Links |
-| **Medien** | Upload per Drag & Drop nach Firebase Storage — Bilder **und Videos** (MP4, WebM), max. 48 MB pro Datei; zeigt an, was unbenutzt ist |
+| **Medien** | Upload per Drag & Drop nach Firebase Storage — Bilder **und Videos** (MP4, WebM), max. 250 MB pro Datei; zeigt an, was unbenutzt ist |
 | **Anfragen** | Eingang aus dem Website-Formular, Status (neu / in Abklärung / bestätigt / abgelehnt), Antwort per Mail |
 | **Publizieren** | Publizieren, Verlauf der letzten 20 Stände zum Zurückholen, JSON-Export/Import |
 | **Einstellungen** | Build-Hook, Website-Adresse, Datenablage, Standard-Inhalt laden |
@@ -169,6 +170,45 @@ das Passwort in Firebase geändert wird.
 Ungespeicherte Änderungen zeigt der Punkt oben links; beim Verlassen der Seite
 warnt der Browser.
 
+## Mehrere Seiten
+
+Die Website muss keine One-Pager sein. Unter **Seiten** legst du fest, aus
+welchen Seiten sie besteht und welcher Abschnitt auf welcher steht. Ausgeliefert
+wird sie mit vier Seiten:
+
+| Adresse | Abschnitte |
+|---|---|
+| `/` | About, Sound |
+| `/shows/` | Shows (mit Kalender), Referenzen |
+| `/gallery/` | Galerie |
+| `/booking/` | Booking, Kontakt |
+
+- Die **erste Seite ist immer die Startseite** (`/`), ihre Adresse lässt sich
+  nicht ändern.
+- Der **Kopfbereich** je Seite: *gross* (Hero mit Bild/Video über den ganzen
+  Bildschirm), *schmal* (nur der Seitentitel) oder *keiner*.
+- Hat eine Seite mehrere Abschnitte, blendet die Website automatisch eine
+  Sprungleiste darunter ein.
+- Sprungmarken wie „Book Sam“ finden ihr Ziel auch dann, wenn der Abschnitt
+  inzwischen auf einer anderen Seite liegt — der Generator schreibt daraus
+  automatisch `/booking/#booking`.
+- Wird eine Seite gelöscht, räumt der nächste Build ihr Verzeichnis weg.
+- Ist ein sichtbarer Abschnitt **auf keiner Seite** eingeplant, warnt die
+  Verwaltung oben in der Seiten-Ansicht (er wäre sonst unsichtbar).
+
+Bleibt die Liste leer, wird wieder eine einzelne Seite mit allen Abschnitten
+gebaut — der frühere Zustand.
+
+## Kalender
+
+Die Shows-Ansicht zeigt einen Monatskalender: Punkte sind Termine, „Nächster
+Termin“ springt zum nächsten Auftritt. Auf der Website erscheint derselbe
+Kalender über der Terminliste; unter *Shows → Darstellung* lässt er sich
+abschalten (dann bleibt nur die Liste).
+
+Die Liste bleibt in beiden Fällen im HTML — sie ist das, was Google liest. Der
+Kalender wird im Browser aufgebaut.
+
 ## Videos im Hero
 
 Ein Video als Hintergrund des ersten Bildschirms: unter *Start & Design →
@@ -185,7 +225,9 @@ Drei Dinge, die den Unterschied machen:
   lädt. Ohne Poster ist der Hero am Anfang schwarz — bei einem grossen Video
   mehrere Sekunden lang.
 - **Kurz halten.** 5–15 Sekunden als nahtloser Loop wirken besser als ein
-  langer Clip und laden schneller. Ab 12 MB warnt die Verwaltung.
+  langer Clip und laden schneller. Ab 12 MB warnt die Verwaltung — die harte
+  Grenze liegt bei 250 MB, aber ein Hero-Video in dieser Grössenordnung ist auf
+  dem Handy unbrauchbar und verbrennt das Firebase-Übertragungskontingent.
 - **Komprimieren.** 1920×1080, H.264, ~2–4 Mbit/s reicht für einen
   Hintergrund völlig:
   ```bash

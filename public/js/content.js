@@ -283,10 +283,107 @@ export function renderSound() {
 
 /* ------------------------------------------------------- Abschnitt: Shows */
 
+/** Monatsübersicht der Termine — dieselbe Ansicht wie auf der Website. */
+function showsCalendar() {
+  const host = el("div", { class: "cal" });
+  const monthLabel = el("strong", { class: "cal-month" });
+  const grid = el("div", { class: "cal-grid" });
+
+  const items = () => getPath(S.content, "sections.shows.items") || [];
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const first = items()
+    .filter((i) => i.date && i.date >= todayStr)
+    .sort((a, b) => a.date.localeCompare(b.date))[0];
+  const startAt = new Date((first?.date || todayStr) + "T12:00:00Z");
+  let year = startAt.getUTCFullYear();
+  let month = startAt.getUTCMonth();
+
+  const draw = () => {
+    const byDate = {};
+    items().forEach((s) => {
+      if (s.date) (byDate[s.date] = byDate[s.date] || []).push(s);
+    });
+    const firstDay = new Date(Date.UTC(year, month, 1));
+    const days = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+    const lead = (firstDay.getUTCDay() + 6) % 7;
+    monthLabel.textContent = firstDay.toLocaleDateString("de-CH", {
+      month: "long",
+      year: "numeric",
+      timeZone: "UTC",
+    });
+
+    grid.innerHTML = "";
+    ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"].forEach((d) =>
+      grid.appendChild(el("span", { class: "cal-wd" }, d))
+    );
+    for (let i = 0; i < lead; i++) grid.appendChild(el("span", { class: "cal-day empty" }));
+
+    for (let day = 1; day <= days; day++) {
+      const iso = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      const shows = byDate[iso];
+      const cls =
+        "cal-day" +
+        (iso === todayStr ? " today" : "") +
+        (iso < todayStr ? " past" : "") +
+        (shows ? " has-show" : "");
+      grid.appendChild(
+        el(
+          "span",
+          {
+            class: cls,
+            title: shows ? shows.map((s) => [s.name, s.city].filter(Boolean).join(", ")).join(" · ") : "",
+          },
+          [
+            el("b", {}, String(day)),
+            shows ? el("span", { class: "cal-dot" }) : null,
+            shows
+              ? el("span", { class: "cal-tip" }, shows[0].name || "Termin")
+              : null,
+          ]
+        )
+      );
+    }
+  };
+  draw();
+
+  const step = (delta) => {
+    month += delta;
+    if (month > 11) { month = 0; year++; }
+    if (month < 0) { month = 11; year--; }
+    draw();
+  };
+
+  const jumpToNext = () => {
+    const todayIso = new Date().toISOString().slice(0, 10);
+    const next = (getPath(S.content, "sections.shows.items") || [])
+      .filter((i) => i.date && i.date >= todayIso)
+      .sort((a, b) => a.date.localeCompare(b.date))[0];
+    const target = new Date((next?.date || todayIso) + "T12:00:00Z");
+    year = target.getUTCFullYear();
+    month = target.getUTCMonth();
+    draw();
+  };
+
+  host.append(
+    el("div", { class: "cal-head" }, [
+      el("button", { class: "cal-nav", type: "button", "aria-label": "Vorheriger Monat", onclick: () => step(-1) }, "‹"),
+      monthLabel,
+      el("div", { class: "cal-head-right" }, [
+        el("button", { class: "btn ghost sm", type: "button", onclick: jumpToNext }, "Nächster Termin"),
+        el("button", { class: "cal-nav", type: "button", "aria-label": "Nächster Monat", onclick: () => step(1) }, "›"),
+      ]),
+    ]),
+    grid
+  );
+  host._redraw = draw;
+  return host;
+}
+
 export function renderShows() {
   const today = new Date().toISOString().slice(0, 10);
   const items = getPath(S.content, "sections.shows.items") || [];
   const upcoming = items.filter((i) => !i.date || i.date >= today).length;
+  const cal = showsCalendar();
 
   return view([
     head(
@@ -296,6 +393,9 @@ export function renderShows() {
       } — vergangene rutschen automatisch nach unten und verschwinden aus der Google-Anzeige.`
     ),
     sectionBasics("shows"),
+    group("Übersicht", [cal], {
+      hint: "Klick auf die Pfeile blättert durch die Monate. Punkte sind Termine.",
+    }),
     group("Termine", [
       objectList("sections.shows.items", null, {
         addLabel: "+ Termin",
@@ -311,6 +411,7 @@ export function renderShows() {
         },
         titleOf: (i) => [i.date, i.name].filter(Boolean).join("  ·  ") || "(neuer Termin)",
         emptyText: "Noch keine Termine — die Website zeigt dann den Platzhaltertext.",
+        onChange: () => cal._redraw(),
         fields: (base) => [
           textField(`${base}.date`, "Datum", { type: "date" }),
           textField(`${base}.name`, "Event / Club", { placeholder: "Ultrawild Festival" }),
@@ -327,7 +428,11 @@ export function renderShows() {
         ],
       }),
     ]),
-    group("Texte", [
+    group("Darstellung auf der Website", [
+      selectField("sections.shows.view", "Anzeige", [
+        ["calendar", "Kalender und Liste"],
+        ["list", "nur Liste"],
+      ]),
       textField("sections.shows.emptyText", "Text ohne Termine"),
       textField("sections.shows.pastLabel", "Beschriftung „vergangene Shows“"),
     ], { cols: 2 }),
@@ -465,6 +570,135 @@ export function renderContact() {
         fields: (base) => [
           textField(`${base}.label`, "Name"),
           textField(`${base}.url`, "URL", { mono: true }),
+        ],
+      }),
+    ]),
+  ]);
+}
+
+/* ------------------------------------------------------------------ Seiten */
+
+/** Zuordnung der Abschnitte zu einer Seite: an/aus plus Reihenfolge. */
+function sectionPicker(basePath) {
+  const host = el("div", { class: "picker" });
+
+  const render = () => {
+    const page = getPath(S.content, basePath);
+    if (!Array.isArray(page.sections)) page.sections = [];
+    const chosen = page.sections;
+    const all = S.content.layout || Object.keys(S.content.sections || {});
+    host.innerHTML = "";
+
+    // Zuerst die gewählten in ihrer Reihenfolge, danach der Rest
+    chosen.forEach((key, i) => {
+      const sec = S.content.sections[key] || {};
+      host.appendChild(
+        el("div", { class: "pick-row on" }, [
+          el("span", { class: "pick-num" }, String(i + 1).padStart(2, "0")),
+          el("strong", {}, sec.navLabel || key),
+          sec.enabled === false ? el("span", { class: "tag off" }, "ausgeschaltet") : null,
+          el("div", { class: "row-tools" }, [
+            el("button", { class: "tool", title: "Nach oben", "aria-label": "Nach oben",
+              onclick: () => { if (i > 0) { chosen.splice(i - 1, 0, chosen.splice(i, 1)[0]); markDirty(); render(); } } }, "↑"),
+            el("button", { class: "tool", title: "Nach unten", "aria-label": "Nach unten",
+              onclick: () => { if (i < chosen.length - 1) { chosen.splice(i + 1, 0, chosen.splice(i, 1)[0]); markDirty(); render(); } } }, "↓"),
+            el("button", { class: "tool danger", title: "Von dieser Seite nehmen", "aria-label": "Entfernen",
+              onclick: () => { chosen.splice(i, 1); markDirty(); render(); } }, "✕"),
+          ]),
+        ])
+      );
+    });
+
+    const rest = all.filter((k) => !chosen.includes(k));
+    if (rest.length) {
+      host.appendChild(
+        el("div", { class: "pick-add" }, [
+          el("span", { class: "field-label" }, "hinzufügen:"),
+          ...rest.map((key) =>
+            el("button", { class: "btn ghost sm", onclick: () => { chosen.push(key); markDirty(); render(); } },
+              "+ " + (S.content.sections[key]?.navLabel || key))
+          ),
+        ])
+      );
+    }
+    if (!chosen.length) {
+      host.appendChild(el("p", { class: "field-hint" }, "Diese Seite zeigt noch keinen Abschnitt."));
+    }
+  };
+  render();
+
+  return el("div", { class: "field" }, [
+    el("label", { class: "field-label" }, "Abschnitte auf dieser Seite"),
+    host,
+  ]);
+}
+
+export function renderPages() {
+  const used = new Set((S.content.pages || []).flatMap((p) => p.sections || []));
+  const orphan = (S.content.layout || []).filter(
+    (k) => !used.has(k) && S.content.sections[k]?.enabled !== false
+  );
+
+  return view([
+    head(
+      "Seiten",
+      "Aus welchen Seiten die Website besteht und welche Abschnitte auf welcher Seite stehen. Die erste Seite ist immer die Startseite."
+    ),
+    orphan.length
+      ? el(
+          "p",
+          { class: "warn-box" },
+          "Auf keiner Seite eingeplant: " +
+            orphan.map((k) => S.content.sections[k]?.navLabel || k).join(", ") +
+            " — diese Abschnitte erscheinen nirgends."
+        )
+      : null,
+    group(null, [
+      objectList("pages", null, {
+        addLabel: "+ Seite",
+        newItem: {
+          slug: "",
+          navLabel: "Neue Seite",
+          title: "Neue Seite",
+          enabled: true,
+          hero: "compact",
+          ticker: false,
+          inNav: true,
+          sections: [],
+          seo: { title: "", description: "" },
+        },
+        titleOf: (p, i) =>
+          (i === 0 ? "/ — " : "/" + (p.slug || "?") + "/ — ") + (p.navLabel || "(ohne Namen)"),
+        emptyText: "Keine Seiten — die Website wird dann als einzelne Seite gebaut.",
+        fields: (base, item, i) => [
+          textField(`${base}.navLabel`, "Name im Menü"),
+          i === 0
+            ? el("div", { class: "field" }, [
+                el("label", { class: "field-label" }, "Adresse"),
+                el("p", { class: "mono-input" }, "/  (Startseite)"),
+              ])
+            : textField(`${base}.slug`, "Adresse", {
+                mono: true,
+                placeholder: "shows",
+                hint:
+                  "Ergibt " +
+                  (item.slug ? "/" + item.slug + "/" : "eine Adresse") +
+                  " — nur Kleinbuchstaben, Zahlen und Bindestriche.",
+              }),
+          textField(`${base}.title`, "Überschrift auf der Seite"),
+          selectField(`${base}.hero`, "Kopfbereich", [
+            ["full", "gross (Bild/Video, ganzer Bildschirm)"],
+            ["compact", "schmal (nur Titel)"],
+            ["none", "keiner"],
+          ]),
+          checkboxField(`${base}.inNav`, "Im Menü zeigen"),
+          checkboxField(`${base}.ticker`, "Lauftext-Ticker zeigen"),
+          sectionPicker(base),
+          textField(`${base}.seo.title`, "Titel bei Google", {
+            maxlength: 70,
+            hint: "Leer = wird aus Seitenname und Künstlername gebaut.",
+          }),
+          textArea(`${base}.seo.description`, "Beschreibung bei Google", { rows: 2, maxlength: 300 }),
         ],
       }),
     ]),

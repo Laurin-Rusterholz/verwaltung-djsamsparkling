@@ -31,6 +31,7 @@ import {
   renderBooking,
   renderContact,
   renderLayout,
+  renderPages,
 } from "./content.js";
 import { renderMedia, mediaList, usageCount, notifyMediaChanged, notifyUploadsChanged } from "./media.js";
 import { renderInbox, openCount, inquiryList } from "./inbox.js";
@@ -47,7 +48,8 @@ const NAV = [
     items: [
       { id: "design", label: "Start & Design", render: renderDesign },
       { id: "seo", label: "SEO & Teilen", render: renderSeo },
-      { id: "layout", label: "Abschnitte & Reihenfolge", render: renderLayout },
+      { id: "pages", label: "Seiten", render: renderPages },
+      { id: "layout", label: "Abschnitte", render: renderLayout },
     ],
   },
   {
@@ -111,6 +113,13 @@ function checklist() {
     "Hero-Bild ist ein eigenes Foto (nicht der Platzhalter aus dem Repo)",
     "design"
   );
+  const onPages = new Set((c.pages || []).flatMap((p) => p.sections || []));
+  add(
+    !(c.pages || []).length ||
+      (c.layout || []).every((k) => c.sections[k]?.enabled === false || onPages.has(k)),
+    "Jeder sichtbare Abschnitt ist einer Seite zugeordnet",
+    "pages"
+  );
 
   return el("div", { class: "check-list" }, [
     el("h3", { class: "group-title" }, "Checkliste"),
@@ -162,9 +171,9 @@ function renderDashboard() {
       ),
       statCard("Bilder", String(mediaList().length), mediaList().filter((m) => !usageCount(m.url)).length + " unbenutzt"),
       statCard(
-        "Abschnitte",
-        String((c.layout || []).filter((k) => c.sections[k]?.enabled !== false).length),
-        "von " + (c.layout || []).length + " sichtbar"
+        "Seiten",
+        String((c.pages || []).filter((p) => p.enabled !== false).length || 1),
+        (c.layout || []).filter((k) => c.sections[k]?.enabled !== false).length + " Abschnitte sichtbar"
       ),
     ]),
     el("div", { class: "quick" }, [
@@ -474,7 +483,9 @@ function go(id) {
   currentId = id;
   location.hash = "#" + id;
   render();
-  document.querySelector(".main")?.scrollTo({ top: 0 });
+  const main = $("#main");
+  if (main) main.scrollTop = 0;
+  window.scrollTo({ top: 0, behavior: "auto" });
   $("#sidebar")?.classList.remove("open");
 }
 
@@ -489,6 +500,7 @@ function renderSidebar() {
           "button",
           {
             class: "nav-item" + (item.id === currentId ? " on" : ""),
+            dataset: { nav: item.id },
             onclick: () => go(item.id),
           },
           [el("span", {}, item.label), badge ? el("span", { class: "nav-badge" }, String(badge)) : null]
@@ -514,24 +526,46 @@ function updateTopbar() {
       : "gespeichert";
   const save = $("#save-btn");
   if (save) save.disabled = !S.dirty;
-  // Anfragen-Zähler in der Navigation aktualisieren
-  const sidebar = $("#sidebar");
-  if (sidebar) sidebar.replaceWith(renderSidebar());
+  syncSidebar();
 }
 
 function render() {
   const item = allItems().find((i) => i.id === currentId) || allItems()[0];
   const main = $("#main");
   main.innerHTML = "";
+  let node;
   try {
-    main.appendChild(item.render());
+    node = item.render();
   } catch (e) {
     console.error(e);
-    main.appendChild(el("p", { class: "empty" }, "Fehler in der Ansicht: " + e.message));
+    node = el("p", { class: "empty" }, "Fehler in der Ansicht: " + e.message);
   }
-  const sidebar = $("#sidebar");
-  if (sidebar) sidebar.replaceWith(renderSidebar());
+  node.classList && node.classList.add("view-enter");
+  main.appendChild(node);
+  requestAnimationFrame(() => node.classList && node.classList.remove("view-enter"));
+  syncSidebar();
   updateTopbar();
+}
+
+/**
+ * Navigation nur dort anfassen, wo sie sich wirklich ändert — sie komplett neu
+ * zu bauen kostet bei jedem Tastendruck Zeit und lässt den Fokus springen.
+ */
+function syncSidebar() {
+  const sidebar = $("#sidebar");
+  if (!sidebar) return;
+  allItems().forEach((item) => {
+    const btn = sidebar.querySelector(`[data-nav="${item.id}"]`);
+    if (!btn) return;
+    btn.classList.toggle("on", item.id === currentId);
+    if (item.badge) {
+      const n = item.badge();
+      let badge = btn.querySelector(".nav-badge");
+      if (n && !badge) btn.appendChild(el("span", { class: "nav-badge" }, String(n)));
+      else if (n && badge) badge.textContent = String(n);
+      else if (!n && badge) badge.remove();
+    }
+  });
 }
 
 function renderShell() {
