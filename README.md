@@ -140,7 +140,7 @@ wegprogrammieren lassen — beide sind mit einer langen Passphrase unkritisch:
 | Bereich | Was drin ist |
 |---|---|
 | **Dashboard** | Stand, letzte Publikation, offene Anfragen, nächste Show, Checkliste mit Sprungmarken |
-| **Start & Design** | Künstlername, Farben (Grundton + Akzent), Hero-Text, Hero-Bild **oder** -Video (läuft automatisch), Ticker |
+| **Start & Design** | Künstlername, Hauptsprache, Farben (Grundton + Akzent), Hero-Text, Hero-Bild **oder** -Video (läuft automatisch), **Hintergrundbild der ganzen Seite**, Ticker |
 | **SEO & Teilen** | Domain, Titel, Description (mit Längen-Check), Keywords, Vorschaubild fürs Teilen |
 | **Seiten** | Aus welchen Seiten die Website besteht, welche Abschnitte auf welcher Seite stehen, Adresse (`/shows/`), Kopfbereich, Menü, SEO je Seite |
 | **Sprachen** | Deutsch, Englisch, Französisch: Stand je Sprache, Übersetzungen von Hand bearbeiten, „Fehlende mit KI übersetzen“ |
@@ -230,6 +230,12 @@ Deutsch ist die Hauptsprache und der gepflegte Stand. Englisch und Französisch
 liegen als Übersetzungstabelle daneben; der Generator baut daraus `/en/…` und
 `/fr/…` mit `hreflang`-Verweisen und einem Umschalter im Kopf der Website.
 **Fehlt eine Übersetzung, steht dort der deutsche Text** — nie eine Lücke.
+
+Steht in der Datenbank noch ein älterer Stand mit einer anderen Hauptsprache
+(z. B. die frühere englische Fassung), zeigt die Ansicht *Sprachen* oben einen
+Hinweis mit dem Knopf **„Texte auf Deutsch umstellen"**: er holt alle Texte und
+Übersetzungen aus der mitgelieferten Vorlage nach und lässt Bilder, Videos,
+Termine, Farben, Links und Einstellungen unangetastet.
 
 In der Ansicht *Sprachen*:
 

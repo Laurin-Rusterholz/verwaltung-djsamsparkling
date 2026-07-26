@@ -27,10 +27,10 @@ const NO_TRANSLATE = new Set([
   "src", "poster", "url", "ticketUrl", "linkUrl", "embedUrl", "presskitUrl",
   "ogImage", "domain", "bookingApi", "themeColor", "accentColor", "lang",
   "slug", "date", "status", "email", "phone", "country", "createdAt",
-  "updatedAt", "updatedBy", "schemaVersion", "type", "view", "hero",
+  "updatedAt", "updatedBy", "schemaVersion", "type", "view",
   "value", "logoText", "artist", "languages", "nameSpaced", "nameMain",
   // Eigennamen: Clubs, Festivals, Geräte, Genre-Bezeichnungen
-  "name", "venue", "inquiryId",
+  "name", "venue", "inquiryId", "backgroundImage",
 ]);
 
 const looksTechnical = (v) =>
@@ -38,7 +38,7 @@ const looksTechnical = (v) =>
   /^#[0-9a-f]{3,8}$/i.test(v) ||
   /^\d{4}-\d{2}-\d{2}$/.test(v);
 
-const NO_TRANSLATE_PATH = /^layout\.|^pages\.\d+\.sections\./;
+const NO_TRANSLATE_PATH = /^layout\.|^pages\.\d+\.sections\.|^pages\.\d+\.hero$/;
 
 export function collectStrings(node, prefix = "", out = []) {
   if (prefix && NO_TRANSLATE_PATH.test(prefix)) return out;
@@ -144,6 +144,45 @@ export function translationSummary() {
   });
 }
 
+/* ------------------------------------------------ Hauptsprache umstellen
+
+   Die Verwaltung wird mit deutscher Vorlage ausgeliefert. Steht in der
+   Datenbank noch der alte englische Stand (site.lang: "en"), fehlen dort
+   sämtliche deutschen Texte — die Website baut dann nur eine Sprache.
+   Diese Aktion holt die Texte aus der Vorlage nach, ohne Bilder, Videos,
+   Termine, Farben oder Links anzufassen.
+*/
+
+/** Weicht die Hauptsprache von der Vorlage ab? */
+export function masterMismatch() {
+  const from = String(S.content?.site?.lang || "");
+  const to = String(S.defaults?.site?.lang || "");
+  return from && to && from !== to ? { from, to } : null;
+}
+
+/**
+ * Alle übersetzbaren Texte aus der Vorlage übernehmen — aber nur dort, wo es
+ * das Feld im aktuellen Inhalt schon gibt. Dadurch bleiben eigene Termine,
+ * Galerie-Einträge und Social-Links unangetastet.
+ */
+export function adoptDefaultTexts() {
+  const d = S.defaults;
+  if (!d) throw new Error("Vorlage nicht geladen");
+  let n = 0;
+  collectStrings(d).forEach(([path, text]) => {
+    if (getPath(S.content, path) === undefined) return;
+    setPath(S.content, path, text);
+    n++;
+  });
+  setPath(S.content, "site.lang", d.site.lang);
+  setPath(S.content, "site.languages", [...(d.site.languages || [])]);
+  S.content.i18n = JSON.parse(JSON.stringify(d.i18n || {}));
+  S.content.i18nHash = JSON.parse(JSON.stringify(d.i18nHash || {}));
+  if (d.ui) S.content.ui = JSON.parse(JSON.stringify(d.ui));
+  markDirty();
+  return n;
+}
+
 /* -------------------------------------------------------------- übersetzen */
 
 function artistBrief() {
@@ -195,6 +234,49 @@ export async function translateMissing(lang, opts = {}) {
 /* ------------------------------------------------------------------ ansicht */
 
 const STATE_LABEL = { missing: "fehlt", stale: "veraltet", ok: "übersetzt" };
+
+/** Hinweis, wenn die Datenbank noch auf einer anderen Hauptsprache steht. */
+function masterBox(onDone) {
+  const m = masterMismatch();
+  if (!m) return null;
+  return el("div", { class: "warn-box" }, [
+    el(
+      "p",
+      {},
+      `Die Website läuft noch auf ${LANG_LABEL[m.from] || m.from} als Hauptsprache, die Vorlage ist ` +
+        `${LANG_LABEL[m.to] || m.to}. Deshalb erscheinen auf der Website noch nicht alle Sprachen.`
+    ),
+    el("div", { class: "quick", style: "margin:12px 0 0" }, [
+      el(
+        "button",
+        {
+          class: "btn solid",
+          onclick: async () => {
+            if (
+              !(await confirmDialog(
+                `Auf ${LANG_LABEL[m.to] || m.to} umstellen?`,
+                "Alle Texte werden durch die Fassung aus der Vorlage ersetzt, dazu kommen die " +
+                  "Übersetzungen. Bilder, Videos, Termine, Farben, Links und Einstellungen bleiben, " +
+                  "wie sie sind. Danach speichern nicht vergessen.",
+                "Umstellen"
+              ))
+            )
+              return;
+            try {
+              const n = adoptDefaultTexts();
+              await saveContent();
+              toast(`${n} Texte übernommen und gespeichert`);
+              onDone();
+            } catch (e) {
+              toast("Nicht übernommen: " + e.message, "err");
+            }
+          },
+        },
+        `Texte auf ${LANG_LABEL[m.to] || m.to} umstellen`
+      ),
+    ]),
+  ]);
+}
 
 /** Welche Sprachen die Website überhaupt baut. */
 function languagePicker(onChange) {
@@ -412,6 +494,7 @@ export function renderI18n() {
         ),
       ]),
     ]),
+    masterBox(() => reload()),
     languagePicker(() => reload()),
     langs.length
       ? null

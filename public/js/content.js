@@ -36,10 +36,11 @@ export function renderDesign() {
       textField("site.logoText", "Logo-Text (oben links)"),
       textField("site.claim", "Claim im Footer"),
       textField("site.photoCredit", "Fotograf/in (Footer)"),
-      selectField("site.lang", "Sprache der Seite", [
-        ["en", "Englisch"],
+      selectField("site.lang", "Hauptsprache", [
         ["de", "Deutsch"],
-      ]),
+        ["en", "Englisch"],
+        ["fr", "Französisch"],
+      ], { hint: "Die gepflegte Sprache. Weitere Sprachen unter „Sprachen“." }),
     ], { cols: 2 }),
     group("Farben", [
       colorField("site.themeColor", "Hintergrund / Grundton", "Sehr dunkel wählen — die Seite ist als Dark Design gebaut."),
@@ -55,6 +56,15 @@ export function renderDesign() {
       textField("hero.ctaHref", "Button-Ziel", { mono: true, hint: "#booking, #contact oder eine ganze URL." }),
     ], { cols: 2 }),
     heroBackground(),
+    group("Hintergrundbild der Seite", [
+      imageField("site.backgroundImage", "Bild hinter allem", {
+        asObject: false,
+        kind: "image",
+        hint:
+          "Liegt fix hinter der ganzen Seite, stark abgedunkelt — die Inhalte stehen frei darauf. " +
+          "Leer lassen für einen ruhigen, einfarbigen Hintergrund.",
+      }),
+    ]),
     group("Lauftext-Ticker", [
       checkboxField("ticker.enabled", "Ticker anzeigen"),
       objectList("ticker.items", "Wörter", {
