@@ -138,6 +138,9 @@ export async function sha256Hex(text) {
     .join("");
 }
 
+/** Video anhand der Dateiendung erkennen, wenn kein MIME-Typ bekannt ist. */
+export const looksLikeVideo = (url) => /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(String(url || ""));
+
 /* -------------------------------------------------------------- toasts */
 
 let toastHost = null;

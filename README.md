@@ -21,7 +21,7 @@ bestehendes Firebase-Projekt **jupidu-36804** (dasselbe wie in `ai-sync`).
 │ Firebase Storage   │                     │ liest (öffentlich)
 │ samsparking/media  │                     ▼
 └────────────────────┘         ┌──────────────────────────────┐
-         ▲ Bild-URLs           │ Netlify-Build der Website    │
+         ▲ Datei-URLs          │ Netlify-Build der Website    │
          └─────────────────────│ node scripts/build.mjs       │
                                │ → index.html, sitemap.xml    │
                                └──────────────────────────────┘
@@ -88,7 +88,7 @@ sie trotzdem lesen). Abmelden löscht den Sitzungs-Knoten.
 | Knoten | lesen | schreiben |
 |---|---|---|
 | `content` | **öffentlich** — der Website-Build liest ihn ohne Anmeldung | nur mit Sitzung |
-| `media` | öffentlich (Bild-URLs sind ohnehin öffentlich) | nur mit Sitzung |
+| `media` | öffentlich (die Datei-URLs stehen ohnehin auf der Website) | nur mit Sitzung |
 | `inquiries` | **nur mit Sitzung** (personenbezogene Daten) | jede/r darf *neue* anlegen (das Formular), nicht überschreiben |
 | `config`, `versions` | nur mit Sitzung | nur mit Sitzung |
 | `gate`, `session` | für Clients gesperrt | `session` nur mit richtigem Passwort |
@@ -101,7 +101,7 @@ Booking-Anfragen öffentlich lesbar und jede Person könnte die Website
 
 - Regeln: `match`-Block aus `firebase/storage.rules` in die bestehenden
   Storage-Regeln einfügen (Console → Storage → Rules).
-- CORS für den Bild-Upload aus dem Browser:
+- CORS für den Upload aus dem Browser:
 
 ```bash
 # Adresse der Verwaltung zuerst in firebase/cors.json ergänzen!
@@ -128,8 +128,8 @@ wegprogrammieren lassen — beide sind mit einer langen Passphrase unkritisch:
   Passphrase mit 20+ Zeichen macht das aussichtslos.
 - **Firebase Storage:** Storage-Regeln können den Sitzungs-Nachweis aus der
   Realtime Database nicht lesen. Bilder-Upload und -Löschung sind daher für
-  jede anonym angemeldete Person möglich (begrenzt auf Bilddateien ≤ 12 MB
-  unter `samsparking/media/`). Die Website selbst und die Anfragen sind davon
+  jede anonym angemeldete Person möglich (begrenzt auf Bild- und Videodateien
+  ≤ 48 MB unter `samsparking/media/`). Die Website selbst und die Anfragen sind davon
   nicht betroffen. Wer das schliessen will, braucht echte Benutzerkonten
   (z. B. E-Mail + Passwort) — dann greift `request.auth.uid` direkt.
 
@@ -140,7 +140,7 @@ wegprogrammieren lassen — beide sind mit einer langen Passphrase unkritisch:
 | Bereich | Was drin ist |
 |---|---|
 | **Dashboard** | Stand, letzte Publikation, offene Anfragen, nächste Show, Checkliste mit Sprungmarken |
-| **Start & Design** | Künstlername, Farben (Grundton + Akzent), Hero-Text, Hero-Bild **oder** -Video, Ticker |
+| **Start & Design** | Künstlername, Farben (Grundton + Akzent), Hero-Text, Hero-Bild **oder** -Video (läuft automatisch), Ticker |
 | **SEO & Teilen** | Domain, Titel, Description (mit Längen-Check), Keywords, Vorschaubild fürs Teilen |
 | **Abschnitte & Reihenfolge** | Reihenfolge, Sichtbarkeit, Menü-Beschriftungen, zweifarbige Überschriften |
 | **About** | Portrait, Einstiegstext, Absätze (`**fett**`, `[Link](url)`), Stichworte, Fakten-Leiste |
@@ -150,7 +150,7 @@ wegprogrammieren lassen — beide sind mit einer langen Passphrase unkritisch:
 | **Galerie** | Bilder aus der Medienbibliothek, sortierbar, mit Alt-Text und Bildnachweis |
 | **Booking** | Verfügbarkeit, Presskit, Anfrage-Formular, Rider (Gruppen mit Geräten) |
 | **Kontakt** | E-Mail, Telefon, Standort, beliebig viele Social-Links |
-| **Medien** | Upload per Drag & Drop nach Firebase Storage, zeigt an, welche Bilder unbenutzt sind |
+| **Medien** | Upload per Drag & Drop nach Firebase Storage — Bilder **und Videos** (MP4, WebM), max. 48 MB pro Datei; zeigt an, was unbenutzt ist |
 | **Anfragen** | Eingang aus dem Website-Formular, Status (neu / in Abklärung / bestätigt / abgelehnt), Antwort per Mail |
 | **Publizieren** | Publizieren, Verlauf der letzten 20 Stände zum Zurückholen, JSON-Export/Import |
 | **Einstellungen** | Build-Hook, Website-Adresse, Datenablage, Standard-Inhalt laden |
@@ -168,6 +168,39 @@ das Passwort in Firebase geändert wird.
 
 Ungespeicherte Änderungen zeigt der Punkt oben links; beim Verlassen der Seite
 warnt der Browser.
+
+## Videos im Hero
+
+Ein Video als Hintergrund des ersten Bildschirms: unter *Start & Design →
+Hero-Hintergrund* die Art auf **Video** stellen und die Datei wählen. Wird im
+Auswahldialog ein Video gewählt, springt die Art automatisch mit.
+
+Was die Website daraus macht: `autoplay muted loop playsinline` — das ist die
+einzige Kombination, die Browser ohne Klick abspielen. **Ton geht nicht**,
+weder auf dem Handy noch am Desktop; unmuted Autoplay ist überall gesperrt.
+
+Drei Dinge, die den Unterschied machen:
+
+- **Poster setzen.** Es erscheint sofort und bleibt stehen, solange das Video
+  lädt. Ohne Poster ist der Hero am Anfang schwarz — bei einem grossen Video
+  mehrere Sekunden lang.
+- **Kurz halten.** 5–15 Sekunden als nahtloser Loop wirken besser als ein
+  langer Clip und laden schneller. Ab 12 MB warnt die Verwaltung.
+- **Komprimieren.** 1920×1080, H.264, ~2–4 Mbit/s reicht für einen
+  Hintergrund völlig:
+  ```bash
+  ffmpeg -i original.mov -vf scale=1920:-2 -c:v libx264 -crf 26 -preset slow \
+         -an -movflags +faststart hero.mp4
+  ```
+  (`-an` wirft die Tonspur raus — sie wird ohnehin nie abgespielt und macht
+  die Datei nur grösser.)
+
+Wer „Bewegung reduzieren" im Betriebssystem eingestellt hat, sieht statt des
+Videos das Poster. Im Hintergrund-Tab pausiert das Video.
+
+Videos lassen sich auch in der Galerie verwenden (Feld-URL von Hand einsetzen);
+sie spielen dort stumm, sobald sie ins Bild scrollen, und sind von der Lightbox
+ausgenommen.
 
 ## Lokal starten
 

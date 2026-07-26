@@ -2,7 +2,7 @@
    Formular-Bausteine — an S.content gebundene Eingabefelder
    ========================================================================== */
 
-import { el, getPath, setPath, clone, toast, confirmDialog } from "./util.js";
+import { el, getPath, setPath, clone, toast, confirmDialog, looksLikeVideo } from "./util.js";
 import { S, markDirty } from "./store.js";
 import { DEFAULT_SITE_URL } from "./config.js";
 
@@ -103,7 +103,12 @@ export function colorField(path, label, hint) {
 }
 
 export function selectField(path, label, options, opts = {}) {
-  const sel = el("select", { onchange: (e) => write(path, e.target.value) });
+  const sel = el("select", {
+    onchange: (e) => {
+      write(path, e.target.value);
+      if (typeof opts.onChange === "function") opts.onChange(e.target.value);
+    },
+  });
   const cur = read(path);
   options.forEach(([val, text]) => {
     const o = el("option", { value: val }, text);
@@ -125,17 +130,23 @@ export function imageField(path, label, opts = {}) {
   const renderThumb = () => {
     const src = read(srcPath);
     thumb.innerHTML = "";
+    const fallback = (e) =>
+      e.target.replaceWith(el("span", { class: "img-empty" }, "nicht ladbar"));
+    thumb.classList.toggle("is-video", looksLikeVideo(src));
     thumb.appendChild(
-      src
-        ? el("img", {
+      !src
+        ? el("span", { class: "img-empty" }, opts.emptyText || "kein Bild")
+        : looksLikeVideo(src)
+        ? el("video", {
             src: previewSrc(src),
-            alt: "",
-            loading: "lazy",
-            onerror: (e) => {
-              e.target.replaceWith(el("span", { class: "img-empty" }, "nicht ladbar"));
-            },
+            muted: true,
+            loop: true,
+            playsinline: true,
+            autoplay: true,
+            preload: "metadata",
+            onerror: fallback,
           })
-        : el("span", { class: "img-empty" }, "kein Bild")
+        : el("img", { src: previewSrc(src), alt: "", loading: "lazy", onerror: fallback })
     );
   };
   renderThumb();
@@ -143,7 +154,7 @@ export function imageField(path, label, opts = {}) {
   const urlInput = el("input", {
     type: "text",
     value: read(srcPath) ?? "",
-    placeholder: "https://… oder img/hero.jpg",
+    placeholder: opts.placeholder || "https://… oder img/hero.jpg",
     class: "mono-input",
     oninput: (e) => {
       write(srcPath, e.target.value);
@@ -158,16 +169,17 @@ export function imageField(path, label, opts = {}) {
       class: "btn ghost sm",
       onclick: async () => {
         if (!mediaPicker) return toast("Medienbibliothek noch nicht bereit", "err");
-        const item = await mediaPicker();
+        const item = await mediaPicker({ kind: opts.kind });
         if (!item) return;
         write(srcPath, item.url);
         urlInput.value = item.url;
         if (asObject && !read(`${path}.alt`) && item.alt) write(`${path}.alt`, item.alt);
         renderThumb();
         if (altInput && read(`${path}.alt`)) altInput.value = read(`${path}.alt`);
+        if (typeof opts.afterPick === "function") opts.afterPick(item);
       },
     },
-    "Aus Medien wählen"
+    opts.pickLabel || "Aus Medien wählen"
   );
 
   let altInput = null;

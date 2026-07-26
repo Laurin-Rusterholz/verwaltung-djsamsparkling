@@ -2,8 +2,8 @@
    Medien — Upload nach Firebase Storage, Metadaten in der Realtime Database
    ========================================================================== */
 
-import { PATHS, STORAGE_PREFIX, MAX_UPLOAD_BYTES } from "./config.js";
-import { el, bytes, relativeTime, toast, confirmDialog, slug } from "./util.js";
+import { PATHS, STORAGE_PREFIX, MAX_UPLOAD_BYTES, VIDEO_WARN_BYTES, ACCEPTED_TYPES, ACCEPT_ATTR } from "./config.js";
+import { el, bytes, relativeTime, toast, confirmDialog, slug, looksLikeVideo } from "./util.js";
 import { S, getDb, getStorage, emit } from "./store.js";
 import { setMediaPicker } from "./fields.js";
 
@@ -17,16 +17,27 @@ export async function uploadFiles(fileList) {
   for (const file of files) uploadOne(file);
 }
 
+/** "image" | "video" | null (nicht erlaubt) */
+export function kindOf(type) {
+  if (ACCEPTED_TYPES.image.test(type || "")) return "image";
+  if (ACCEPTED_TYPES.video.test(type || "")) return "video";
+  return null;
+}
+
 async function uploadOne(file) {
   const tempId = "u" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
-  if (!/^image\/(jpeg|png|webp|avif|gif)$/.test(file.type)) {
-    toast(`${file.name}: nur JPG, PNG, WebP, AVIF oder GIF`, "err");
+  const kind = kindOf(file.type);
+  if (!kind) {
+    toast(`${file.name}: nur Bilder (JPG, PNG, WebP, AVIF, GIF) oder Videos (MP4, WebM)`, "err");
     return;
   }
   if (file.size > MAX_UPLOAD_BYTES) {
     toast(`${file.name} ist ${bytes(file.size)} — max. ${bytes(MAX_UPLOAD_BYTES)}`, "err");
     return;
+  }
+  if (kind === "video" && file.size > VIDEO_WARN_BYTES) {
+    toast(`${file.name} ist ${bytes(file.size)} — auf dem Handy lädt das spürbar lange. Kürzer schneiden oder stärker komprimieren.`, "err");
   }
 
   uploads.set(tempId, { name: file.name, percent: 0 });
@@ -66,15 +77,17 @@ async function uploadOne(file) {
       );
     });
 
-    const dims = await imageSize(file).catch(() => null);
+    const dims = await mediaSize(file, kind).catch(() => null);
     await db.ref(`${PATHS.media}/${id}`).set({
       name: file.name,
       url,
       storagePath,
+      kind,
       size: file.size,
       contentType: file.type,
       width: dims?.w || null,
       height: dims?.h || null,
+      duration: dims?.d || null,
       alt: "",
       createdAt: new Date().toISOString(),
       createdBy: S.user?.email || "Verwaltung",
@@ -94,18 +107,31 @@ async function uploadOne(file) {
   }
 }
 
-function imageSize(file) {
+/** Breite/Höhe (und bei Video die Länge) aus der Datei lesen. */
+function mediaSize(file, kind) {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
+    const done = (v) => {
+      URL.revokeObjectURL(url);
+      resolve(v);
+    };
+    const fail = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Masse nicht lesbar"));
+    };
+    if (kind === "video") {
+      const v = document.createElement("video");
+      v.preload = "metadata";
+      v.muted = true;
+      v.onloadedmetadata = () =>
+        done({ w: v.videoWidth, h: v.videoHeight, d: Math.round(v.duration) || null });
+      v.onerror = fail;
+      v.src = url;
+      return;
+    }
     const img = new Image();
-    img.onload = () => {
-      resolve({ w: img.naturalWidth, h: img.naturalHeight });
-      URL.revokeObjectURL(url);
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("kein Bild"));
-    };
+    img.onload = () => done({ w: img.naturalWidth, h: img.naturalHeight });
+    img.onerror = fail;
     img.src = url;
   });
 }
@@ -127,7 +153,7 @@ const escapeRe = (v) => String(v).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 export async function deleteMedia(item) {
   const uses = usageCount(item.url);
   const ok = await confirmDialog(
-    "Bild löschen?",
+    isVideo(item) ? "Video löschen?" : "Bild löschen?",
     uses
       ? `„${item.name}“ wird auf der Website noch ${uses}× verwendet. Diese Stellen bleiben dann leer.`
       : `„${item.name}“ wird endgültig aus Firebase Storage entfernt.`,
@@ -140,7 +166,7 @@ export async function deleteMedia(item) {
     console.warn("Storage-Löschung:", e.message);
   }
   await getDb().ref(`${PATHS.media}/${item.id}`).remove();
-  toast("Bild gelöscht");
+  toast(isVideo(item) ? "Video gelöscht" : "Bild gelöscht");
 }
 
 export async function renameMedia(id, patch) {
@@ -149,18 +175,40 @@ export async function renameMedia(id, patch) {
 
 /* -------------------------------------------------------------- ansicht */
 
-/** Kachel für ein Bild. `onPick` macht die Kachel klickbar (Auswahlmodus). */
+/** Ist dieser Eintrag ein Video? */
+export const isVideo = (item) => item?.kind === "video" || looksLikeVideo(item?.url);
+
+const duration = (sec) =>
+  sec ? `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")} min` : null;
+
+/** Kachel für ein Medium. `onPick` macht die Kachel klickbar (Auswahlmodus). */
 function tile(item, onPick) {
   const uses = usageCount(item.url);
+  const video = isVideo(item);
   const meta = [
     item.width ? `${item.width}×${item.height}` : null,
+    duration(item.duration),
     item.size ? bytes(item.size) : null,
   ]
     .filter(Boolean)
     .join(" · ");
 
-  const thumb = el("div", { class: "tile-img" }, [
-    el("img", { src: item.url, alt: item.alt || item.name, loading: "lazy" }),
+  const thumb = el("div", { class: "tile-img" + (video ? " is-video" : "") }, [
+    video
+      ? el("video", {
+          src: item.url,
+          muted: true,
+          loop: true,
+          playsinline: true,
+          preload: "metadata",
+          onmouseenter: (e) => e.target.play().catch(() => {}),
+          onmouseleave: (e) => {
+            e.target.pause();
+            e.target.currentTime = 0;
+          },
+        })
+      : el("img", { src: item.url, alt: item.alt || item.name, loading: "lazy" }),
+    video ? el("span", { class: "play-badge" }, "▶ Video") : null,
   ]);
 
   const body = el("div", { class: "tile-body" }, [
@@ -211,7 +259,7 @@ function tile(item, onPick) {
 function dropZone() {
   const input = el("input", {
     type: "file",
-    accept: "image/*",
+    accept: ACCEPT_ATTR,
     multiple: true,
     class: "sr-only",
     onchange: (e) => {
@@ -239,8 +287,8 @@ function dropZone() {
       },
     },
     [
-      el("strong", {}, "Bilder hierher ziehen"),
-      el("span", {}, "oder klicken — JPG, PNG, WebP, AVIF, GIF · max. 12 MB"),
+      el("strong", {}, "Bilder oder Videos hierher ziehen"),
+      el("span", {}, `oder klicken — JPG, PNG, WebP, AVIF, GIF, MP4, WebM · max. ${bytes(MAX_UPLOAD_BYTES)}`),
       input,
     ]
   );
@@ -280,9 +328,11 @@ export function renderMedia() {
     }
     items.forEach((it) => grid.appendChild(tile(it, null)));
     const unused = items.filter((i) => !usageCount(i.url)).length;
-    count.textContent = `${items.length} Bild${items.length === 1 ? "" : "er"}${
-      unused ? ` · ${unused} unbenutzt` : ""
-    }`;
+    const videos = items.filter(isVideo).length;
+    count.textContent =
+      `${items.length - videos} Bild${items.length - videos === 1 ? "" : "er"}` +
+      (videos ? ` · ${videos} Video${videos === 1 ? "" : "s"}` : "") +
+      (unused ? ` · ${unused} unbenutzt` : "");
     prog.render();
   };
   render();
@@ -296,12 +346,26 @@ export function renderMedia() {
     grid,
   ]);
   view._refresh = render;
+
+  // Fortschritt der laufenden Uploads mitverfolgen — sonst bliebe die Zeile
+  // nach dem Hochladen auf 100 % stehen, bis das nächste Medien-Ereignis kommt.
+  const off = uploadsChanged(() => {
+    if (!view.isConnected) return off();
+    prog.render();
+  });
+
   return view;
 }
 
 /* ------------------------------------------------------------ auswahl-dialog */
 
-function pickMedia() {
+/** kind: "image" | "video" | undefined (alles) */
+function filterKind(items, kind) {
+  if (!kind) return items;
+  return items.filter((i) => (kind === "video" ? isVideo(i) : !isVideo(i)));
+}
+
+function pickMedia(opts = {}) {
   return new Promise((resolve) => {
     const grid = el("div", { class: "grid pickgrid" });
     const prog = uploadProgress();
@@ -316,11 +380,19 @@ function pickMedia() {
     const onKey = (e) => e.key === "Escape" && close(null);
 
     const fill = () => {
-      const items = mediaList();
+      const items = filterKind(mediaList(), opts.kind);
       grid.innerHTML = "";
       if (!items.length) {
         grid.appendChild(
-          el("p", { class: "empty" }, "Noch keine Bilder — zieh sie oben einfach hier hinein.")
+          el(
+            "p",
+            { class: "empty" },
+            (opts.kind === "video"
+              ? "Noch kein Video hochgeladen"
+              : opts.kind === "image"
+              ? "Noch kein Bild hochgeladen"
+              : "Noch nichts hochgeladen") + " — zieh die Dateien oben einfach hier hinein."
+          )
         );
       }
       items.forEach((it) => grid.appendChild(tile(it, (item) => close(item))));
@@ -330,7 +402,7 @@ function pickMedia() {
     const wrap = el("div", { class: "modal", onclick: (e) => e.target === wrap && close(null) }, [
       el("div", { class: "modal-box wide", role: "dialog", "aria-modal": "true" }, [
         el("div", { class: "modal-head" }, [
-          el("h3", {}, "Bild auswählen"),
+          el("h3", {}, { image: "Bild auswählen", video: "Video auswählen" }[opts.kind] || "Bild oder Video auswählen"),
           el("button", { class: "tool", onclick: () => close(null), "aria-label": "Schliessen" }, "✕"),
         ]),
         dropZone(),
@@ -348,7 +420,7 @@ function pickMedia() {
 }
 
 /** Mehrfach-Auswahl (für die Galerie). Liefert ein Array von Medien. */
-export function pickMany() {
+export function pickMany(opts = {}) {
   return new Promise((resolve) => {
     const chosen = new Set();
     const grid = el("div", { class: "grid pickgrid" });
@@ -356,6 +428,7 @@ export function pickMany() {
     const okBtn = el("button", { class: "btn solid", disabled: true, onclick: () => close(list()) }, "Übernehmen");
 
     const list = () => mediaList().filter((m) => chosen.has(m.id));
+    const visible = () => filterKind(mediaList(), opts.kind);
     const close = (val) => {
       off();
       offUploads();
@@ -366,10 +439,17 @@ export function pickMany() {
     const onKey = (e) => e.key === "Escape" && close([]);
 
     const fill = () => {
-      const items = mediaList();
+      const items = visible();
       grid.innerHTML = "";
       if (!items.length) {
-        grid.appendChild(el("p", { class: "empty" }, "Noch keine Bilder — zieh sie oben einfach hier hinein."));
+        grid.appendChild(
+          el(
+            "p",
+            { class: "empty" },
+            (opts.kind === "image" ? "Noch kein Bild hochgeladen" : "Noch nichts hochgeladen") +
+              " — zieh die Dateien oben einfach hier hinein."
+          )
+        );
       }
       items.forEach((it) => {
         const t = tile(it, () => {
@@ -388,7 +468,7 @@ export function pickMany() {
     const wrap = el("div", { class: "modal", onclick: (e) => e.target === wrap && close([]) }, [
       el("div", { class: "modal-box wide", role: "dialog", "aria-modal": "true" }, [
         el("div", { class: "modal-head" }, [
-          el("h3", {}, "Bilder auswählen"),
+          el("h3", {}, { image: "Bilder auswählen", video: "Videos auswählen" }[opts.kind] || "Medien auswählen"),
           el("button", { class: "tool", onclick: () => close([]), "aria-label": "Schliessen" }, "✕"),
         ]),
         dropZone(),

@@ -2,7 +2,7 @@
    Inhalts-Editoren — je Website-Abschnitt eine Ansicht
    ========================================================================== */
 
-import { el, getPath, toast } from "./util.js";
+import { el, getPath, setPath, toast } from "./util.js";
 import { pickMany } from "./media.js";
 import { S, markDirty } from "./store.js";
 import {
@@ -54,16 +54,7 @@ export function renderDesign() {
       textField("hero.ctaLabel", "Button-Text"),
       textField("hero.ctaHref", "Button-Ziel", { mono: true, hint: "#booking, #contact oder eine ganze URL." }),
     ], { cols: 2 }),
-    group("Hero-Hintergrund", [
-      selectField("hero.media.type", "Art", [
-        ["image", "Bild"],
-        ["video", "Video (MP4)"],
-      ]),
-      imageField("hero.media", "Bild bzw. Video-Datei", {
-        hint: "Bei Video hier die MP4-URL eintragen — Video läuft stumm in Dauerschleife.",
-      }),
-      textField("hero.media.poster", "Video-Vorschaubild (nur bei Video)", { mono: true }),
-    ]),
+    heroBackground(),
     group("Lauftext-Ticker", [
       checkboxField("ticker.enabled", "Ticker anzeigen"),
       objectList("ticker.items", "Wörter", {
@@ -77,6 +68,68 @@ export function renderDesign() {
         ],
       }),
     ]),
+  ]);
+}
+
+/**
+ * Hero-Hintergrund. Wird beim Auswählen eines Videos automatisch auf „Video“
+ * gestellt (und umgekehrt) — die Art von Hand nachzuziehen ist die häufigste
+ * Stolperfalle.
+ */
+function heroBackground() {
+  const box = el("div", { class: "group-body" });
+
+  const build = () => {
+    const isVideo = getPath(S.content, "hero.media.type") === "video";
+    box.innerHTML = "";
+    box.append(
+      selectField(
+        "hero.media.type",
+        "Art",
+        [
+          ["image", "Bild"],
+          ["video", "Video (läuft automatisch, stumm, in Dauerschleife)"],
+        ],
+        { onChange: build }
+      ),
+      imageField("hero.media", isVideo ? "Video-Datei" : "Bild", {
+        kind: isVideo ? "video" : "image",
+        pickLabel: isVideo ? "Video wählen" : "Bild wählen",
+        emptyText: isVideo ? "kein Video" : "kein Bild",
+        alt: true,
+        afterPick: (item) => {
+          const nowVideo = item.kind === "video" || /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(item.url || "");
+          if (nowVideo !== isVideo) {
+            setPathAndRender("hero.media.type", nowVideo ? "video" : "image");
+          }
+        },
+        hint: isVideo
+          ? "Ton wird nicht abgespielt — Browser erlauben Autoplay nur stumm. Kurzer Loop (5–15 s) wirkt am besten."
+          : null,
+      }),
+      ...(isVideo
+        ? [
+            imageField("hero.media.poster", "Vorschaubild (Poster)", {
+              asObject: false,
+              kind: "image",
+              hint:
+                "Wird sofort angezeigt, während das Video lädt, und ersetzt es bei „Bewegung reduzieren“. Ohne Poster bleibt der Hero kurz schwarz.",
+            }),
+          ]
+        : [])
+    );
+  };
+
+  const setPathAndRender = (path, value) => {
+    setPath(S.content, path, value);
+    markDirty();
+    build();
+  };
+
+  build();
+  return el("section", { class: "group" }, [
+    el("h3", { class: "group-title" }, "Hero-Hintergrund"),
+    box,
   ]);
 }
 
@@ -110,7 +163,8 @@ export function renderSeo() {
       textArea("site.ogDescription", "Text", { rows: 2, maxlength: 300 }),
       imageField("site.ogImage", "Vorschaubild", {
         asObject: false,
-        hint: "Querformat, ideal 1200×630 px.",
+        kind: "image",
+        hint: "Querformat, ideal 1200×630 px. Videos gehen hier nicht.",
       }),
     ]),
     group("Booking-Formular", [
@@ -161,7 +215,7 @@ export function renderAbout() {
   return view([
     head("About", "Der Text über Sam."),
     sectionBasics("about"),
-    group("Bild", [imageField("sections.about.photo", "Portrait", { credit: true })]),
+    group("Bild", [imageField("sections.about.photo", "Portrait", { credit: true, kind: "image" })]),
     group("Text", [
       textArea("sections.about.lede", "Einstieg (gross gesetzt)", { rows: 3 }),
       stringList("sections.about.paragraphs", "Absätze", {
@@ -321,7 +375,7 @@ export function renderGallery() {
           {
             label: "+ Aus Medien hinzufügen",
             onClick: async (items, render) => {
-              const chosen = await pickMany();
+              const chosen = await pickMany({ kind: "image" });
               if (!chosen || !chosen.length) return;
               chosen.forEach((m) =>
                 items.push({ src: m.url, alt: m.alt || "", credit: getPath(S.content, "site.photoCredit") || "" })
@@ -333,7 +387,7 @@ export function renderGallery() {
           },
         ],
         fields: (base) => [
-          imageField(base, null, { credit: true }),
+          imageField(base, null, { credit: true, kind: "image" }),
         ],
       }),
     ]),

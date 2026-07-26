@@ -7,8 +7,9 @@ rules_version = '2';
 // Den match-Block in die bestehenden Regeln des Projekts jupidu-36804
 // einfügen (Firebase Console → Storage → Rules) und von dort speichern.
 //
-// Lesen ist offen: die Bilder stehen ohnehin öffentlich auf der Website.
-// Schreiben nur angemeldet, nur Bilder, maximal 12 MB.
+// Lesen ist offen: die Dateien stehen ohnehin öffentlich auf der Website.
+// Schreiben nur angemeldet, nur Bilder und Videos, maximal 48 MB.
+// Die Grenze muss zu MAX_UPLOAD_BYTES in public/js/config.js passen.
 
 service firebase.storage {
   match /b/{bucket}/o {
@@ -16,8 +17,9 @@ service firebase.storage {
     match /samsparking/media/{allPaths=**} {
       allow read: if true;
       allow write: if request.auth != null
-                   && request.resource.size < 12 * 1024 * 1024
-                   && request.resource.contentType.matches('image/.*');
+                   && request.resource.size < 48 * 1024 * 1024
+                   && (request.resource.contentType.matches('image/.*')
+                       || request.resource.contentType.matches('video/.*'));
       allow delete: if request.auth != null;
     }
 
