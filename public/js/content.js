@@ -473,6 +473,10 @@ export function renderShop() {
     sectionBasics("shop"),
     group("Allgemein", [
       textField("sections.shop.currency", "Währung", { placeholder: "CHF", maxlength: 5 }),
+      textField("sections.shop.twint", "TWINT-Nummer", {
+        placeholder: "+41 77 509 11 71",
+        hint: "Deine eigene Bezahlmethode: Produkte ohne Bezahl-Link zeigen dann einen TWINT-Kauf an (Nummer, Betrag, Vermerk, Mail-Bestätigung).",
+      }),
       textField("sections.shop.buyLabel", "Kauf-Knopf", { placeholder: "Kaufen" }),
       textArea("sections.shop.note", "Einleitung", { rows: 2 }),
       textArea("sections.shop.emptyText", "Text, solange keine Produkte da sind", { rows: 2 }),
@@ -499,18 +503,20 @@ export function renderShop() {
         ],
       }),
     ]),
-    group("So kommst du an Bezahl-Links", [
+    group("So läuft das Bezahlen", [
+      el("p", { class: "field-hint" }, "Pro Produkt gilt: Bezahl-Link gesetzt → Kauf über den Link. Sonst TWINT-Nummer gesetzt → TWINT-Kauf. Sonst → Bestellung per Mail."),
+      el("h4", { class: "group-title" }, "Weg 1 — TWINT (deine eigene Bezahlmethode, sofort startklar)"),
       el("ol", { class: "steps" }, [
-        el("li", {}, "Konto bei stripe.com anlegen (einmalig, kostenlos — Gebühr fällt nur pro Verkauf an)."),
-        el("li", {}, "Stripe → Payment Links → „+ Neu“: Produkt, Preis und Versand eintragen."),
-        el("li", {}, "Den erzeugten Link hier beim Produkt als Bezahl-Link einsetzen und publizieren."),
+        el("li", {}, "Oben deine TWINT-Handynummer eintragen und publizieren — fertig."),
+        el("li", {}, "Die Kundschaft zahlt per TWINT (Betrag + Produktname als Vermerk) und bestätigt per Mail mit Lieferadresse."),
+        el("li", {}, "Zahlung in der TWINT-App prüfen, Paket verschicken."),
       ]),
-      el(
-        "p",
-        { class: "field-hint" },
-        "Stripe wickelt Zahlung, Quittung und Karten ab; die Bestellungen siehst du im Stripe-Dashboard. " +
-          "Alternative ohne Konto: Bezahl-Link leer lassen — dann bestellt die Kundschaft per Mail und du regelst Zahlung und Versand selbst (z. B. TWINT)."
-      ),
+      el("h4", { class: "group-title" }, "Weg 2 — Stripe Payment Link (Kartenzahlung, automatische Quittung)"),
+      el("ol", { class: "steps" }, [
+        el("li", {}, "Konto bei stripe.com anlegen (einmalig — Gebühr fällt nur pro Verkauf an)."),
+        el("li", {}, "Stripe → Payment Links → „+ Neu“: Produkt, Preis und Versand eintragen."),
+        el("li", {}, "Den Link beim Produkt als Bezahl-Link einsetzen und publizieren."),
+      ]),
     ]),
   ]);
 }

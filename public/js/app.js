@@ -557,6 +557,11 @@ async function doPublish() {
   try {
     const res = await publish();
     if (res.built) toast("Publiziert — Netlify baut die Website neu (1–2 Minuten)");
+    else if (/Build-Hook/.test(res.reason || ""))
+      toast(
+        "Publiziert — die Website übernimmt den Stand automatisch (spätestens in einer Stunde). " +
+          "Soll es sofort sein: Build-Hook unter Einstellungen hinterlegen."
+      );
     else toast("Gespeichert, aber kein Build ausgelöst: " + res.reason, "err");
   } catch (e) {
     console.error(e);

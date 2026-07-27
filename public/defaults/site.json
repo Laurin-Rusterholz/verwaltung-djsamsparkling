@@ -298,6 +298,7 @@
       "note": "Merch von Sam Sparkling — jedes Teil hilft, die nächste Produktion zu stemmen.",
       "emptyText": "Der Shop ist bald offen — das erste Merch ist in Arbeit. Folg mir auf den Kanälen unten, dann verpasst du den Start nicht.",
       "currency": "CHF",
+      "twint": "",
       "buyLabel": "Kaufen",
       "items": []
     },
@@ -418,7 +419,14 @@
     "buy": "Kaufen",
     "orderByMail": "Per Mail bestellen",
     "orderSubject": "Bestellung",
-    "bookDay": "Diesen Tag anfragen"
+    "bookDay": "Diesen Tag anfragen",
+    "pickDay": "Oder Wunschdatum direkt im Kalender antippen:",
+    "dayBusy": "Belegt",
+    "twintSend": "Per TWINT bezahlen an",
+    "twintRef": "Vermerk",
+    "twintNote": "Nach der Zahlung kurz per Mail bestätigen und die Lieferadresse angeben — dann geht dein Teil in den Versand.",
+    "twintConfirm": "Bestellung per Mail bestätigen",
+    "orderMailBody": "Hoi Sam\n\nIch bestelle: {product}\nLieferadresse:\n\nDanke!"
   },
   "i18n": {
     "en": {
@@ -726,7 +734,14 @@
         "buy": "Buy",
         "orderByMail": "Order by e-mail",
         "orderSubject": "Order",
-        "bookDay": "Request this date"
+        "bookDay": "Request this date",
+        "pickDay": "Or tap your preferred date right in the calendar:",
+        "dayBusy": "Taken",
+        "twintSend": "Pay by TWINT to",
+        "twintRef": "Reference",
+        "twintNote": "After paying, confirm briefly by e-mail with your shipping address — then your piece ships.",
+        "twintConfirm": "Confirm order by e-mail",
+        "orderMailBody": "Hi Sam\n\nI'd like to order: {product}\nShipping address:\n\nThanks!"
       },
       "hero": {
         "kicker": "DJ & producer — St. Gallen, Switzerland",
@@ -1043,7 +1058,14 @@
         "buy": "Acheter",
         "orderByMail": "Commander par e-mail",
         "orderSubject": "Commande",
-        "bookDay": "Demander cette date"
+        "bookDay": "Demander cette date",
+        "pickDay": "Ou choisis ta date directement dans le calendrier :",
+        "dayBusy": "Occupé",
+        "twintSend": "Payer par TWINT au",
+        "twintRef": "Motif",
+        "twintNote": "Après le paiement, confirme par e-mail avec ton adresse de livraison — ta pièce part ensuite.",
+        "twintConfirm": "Confirmer la commande par e-mail",
+        "orderMailBody": "Salut Sam\n\nJe commande : {product}\nAdresse de livraison :\n\nMerci !"
       },
       "hero": {
         "kicker": "DJ & producteur — Saint-Gall, Suisse",
@@ -1362,7 +1384,14 @@
         "buy": "8dcd885d",
         "orderByMail": "77f6f959",
         "orderSubject": "b8e896b6",
-        "bookDay": "78e97c4b"
+        "bookDay": "78e97c4b",
+        "pickDay": "24f7ddf0",
+        "dayBusy": "998bfd78",
+        "twintSend": "0674f004",
+        "twintRef": "5f36991f",
+        "twintNote": "164a381d",
+        "twintConfirm": "b2ba67e1",
+        "orderMailBody": "303203c1"
       },
       "hero": {
         "kicker": "00cd226e",
@@ -1679,7 +1708,14 @@
         "buy": "8dcd885d",
         "orderByMail": "77f6f959",
         "orderSubject": "b8e896b6",
-        "bookDay": "78e97c4b"
+        "bookDay": "78e97c4b",
+        "pickDay": "24f7ddf0",
+        "dayBusy": "998bfd78",
+        "twintSend": "0674f004",
+        "twintRef": "5f36991f",
+        "twintNote": "164a381d",
+        "twintConfirm": "b2ba67e1",
+        "orderMailBody": "303203c1"
       },
       "hero": {
         "kicker": "00cd226e",

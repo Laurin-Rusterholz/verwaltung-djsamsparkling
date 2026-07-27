@@ -30,7 +30,7 @@ const NO_TRANSLATE = new Set([
   "updatedAt", "updatedBy", "schemaVersion", "type", "view",
   "value", "logoText", "artist", "languages", "nameSpaced", "nameMain",
   // Eigennamen: Clubs, Festivals, Geräte, Genre-Bezeichnungen
-  "name", "venue", "inquiryId", "backgroundImage", "price", "currency",
+  "name", "venue", "inquiryId", "backgroundImage", "price", "currency", "twint",
 ]);
 
 const looksTechnical = (v) =>
