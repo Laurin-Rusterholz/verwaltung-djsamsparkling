@@ -102,6 +102,13 @@ function heroBackground() {
         ],
         { onChange: build }
       ),
+      isVideo
+        ? el(
+            "p",
+            { class: "field-hint" },
+            "MP4 (H.264) verwenden — .mov/HEVC vom iPhone spielt auf Android und Windows oft nicht ab. Klein halten (unter 12 MB), sonst wartet das Handy aufs Video."
+          )
+        : document.createDocumentFragment(),
       imageField("hero.media", isVideo ? "Video-Datei" : "Bild", {
         kind: isVideo ? "video" : "image",
         pickLabel: isVideo ? "Video wählen" : "Bild wählen",
@@ -451,13 +458,12 @@ export function renderShows() {
       }),
     ]),
     group("Darstellung auf der Website", [
-      selectField("sections.shows.view", "Anzeige", [
-        ["calendar", "Kalender und Liste"],
-        ["list", "nur Liste"],
-      ]),
       textField("sections.shows.emptyText", "Text ohne Termine"),
       textField("sections.shows.pastLabel", "Beschriftung „vergangene Shows“"),
-    ], { cols: 2 }),
+    ], {
+      cols: 2,
+      hint: "Der Termin-Kalender steht auf der Website beim Booking-Formular — dort sind belegte Tage markiert und freie direkt anfragbar.",
+    }),
   ]);
 }
 
