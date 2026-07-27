@@ -45,6 +45,12 @@ async function uploadOne(file) {
 
   try {
     const db = getDb();
+    if (/quicktime|\.mov$/i.test(file.type + " " + file.name)) {
+      toast(
+        "Achtung: .mov-Videos (iPhone) laufen auf Android und Windows oft nicht. Fuer das Hero-Video besser als MP4 (H.264) exportieren.",
+        "err"
+      );
+    }
     const id = db.ref(PATHS.media).push().key;
     const clean = slug(file.name.replace(/\.[^.]+$/, "")) || "bild";
     const ext = (file.name.match(/\.[a-z0-9]+$/i) || [".jpg"])[0].toLowerCase();
