@@ -366,6 +366,9 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
 }
 .danger-zone{border-color:#3a1c26;}
 
+/* ------------------------------------------------------------------ shop */
+.steps{margin:4px 0 10px 20px;display:flex;flex-direction:column;gap:6px;font-size:.9rem;}
+
 /* ------------------------------------------------------------- sprachen */
 .i18n-list{display:flex;flex-direction:column;gap:1px;background:var(--line);border:1px solid var(--line);}
 .i18n-row{

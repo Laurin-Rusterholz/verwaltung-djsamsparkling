@@ -150,6 +150,7 @@ wegprogrammieren lassen — beide sind mit einer langen Passphrase unkritisch:
 | **Shows** | Termine mit Datum, Location, Stadt, Ticket-Link, Status (bestätigt / **gebucht** / ausverkauft / abgesagt) — plus Monatskalender als Übersicht |
 | **Referenzen** | Clubs und Festivals |
 | **Galerie** | Bilder aus der Medienbibliothek, sortierbar, mit Alt-Text und Bildnachweis |
+| **Shop** | Produkte mit Bild, Preis, Beschreibung und Bezahl-Link (Stripe Payment Link / PayPal.me); ohne Link bestellt die Kundschaft per Mail. Anleitung für Bezahl-Links direkt in der Ansicht |
 | **Booking** | Verfügbarkeit, Presskit, Anfrage-Formular, Rider (Gruppen mit Geräten) |
 | **Kontakt** | E-Mail, Telefon, Standort, beliebig viele Social-Links |
 | **Medien** | Upload per Drag & Drop nach Firebase Storage — Bilder **und Videos** (MP4, WebM), max. 250 MB pro Datei; zeigt an, was unbenutzt ist |

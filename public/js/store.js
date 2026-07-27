@@ -226,6 +226,7 @@ function normalize(c) {
     "sections.shows.items",
     "sections.references.items",
     "sections.gallery.items",
+    "sections.shop.items",
     "sections.booking.available",
     "sections.booking.rider.groups",
     "sections.contact.socials",

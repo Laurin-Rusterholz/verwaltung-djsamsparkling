@@ -461,6 +461,60 @@ export function renderShows() {
   ]);
 }
 
+/* ------------------------------------------------------- Abschnitt: Shop */
+
+export function renderShop() {
+  return view([
+    head(
+      "Shop",
+      "Merch verkaufen, ohne eigenen Server: jedes Produkt bekommt einen Bezahl-Link. " +
+        "Ohne Link zeigt die Website einen „Per Mail bestellen“-Knopf an die Kontakt-Adresse."
+    ),
+    sectionBasics("shop"),
+    group("Allgemein", [
+      textField("sections.shop.currency", "Währung", { placeholder: "CHF", maxlength: 5 }),
+      textField("sections.shop.buyLabel", "Kauf-Knopf", { placeholder: "Kaufen" }),
+      textArea("sections.shop.note", "Einleitung", { rows: 2 }),
+      textArea("sections.shop.emptyText", "Text, solange keine Produkte da sind", { rows: 2 }),
+    ], { cols: 2 }),
+    group("Produkte", [
+      objectList("sections.shop.items", null, {
+        addLabel: "+ Produkt",
+        newItem: { name: "", price: "", note: "", src: "", alt: "", linkUrl: "", status: "available" },
+        titleOf: (i) => [i.name, i.price].filter(Boolean).join("  ·  ") || "(neues Produkt)",
+        emptyText: "Noch keine Produkte — die Website zeigt solange den Text oben.",
+        fields: (base) => [
+          imageField(base, "Produktbild", { kind: "image", alt: true }),
+          textField(`${base}.name`, "Name", { placeholder: "Sparkling T-Shirt" }),
+          textField(`${base}.price`, "Preis", { placeholder: "45", maxlength: 12, hint: "Nur die Zahl — die Währung kommt aus der Einstellung oben." }),
+          textField(`${base}.note`, "Beschreibung (kurz)", { placeholder: "Schwarz, Logo vorne, S–XL" }),
+          textField(`${base}.linkUrl`, "Bezahl-Link", {
+            mono: true,
+            hint: "Stripe Payment Link oder PayPal.me — auf stripe.com bzw. paypal.me erstellen und hier einsetzen. Leer = Bestellung per Mail.",
+          }),
+          selectField(`${base}.status`, "Status", [
+            ["available", "verfügbar"],
+            ["soldout", "ausverkauft"],
+          ]),
+        ],
+      }),
+    ]),
+    group("So kommst du an Bezahl-Links", [
+      el("ol", { class: "steps" }, [
+        el("li", {}, "Konto bei stripe.com anlegen (einmalig, kostenlos — Gebühr fällt nur pro Verkauf an)."),
+        el("li", {}, "Stripe → Payment Links → „+ Neu“: Produkt, Preis und Versand eintragen."),
+        el("li", {}, "Den erzeugten Link hier beim Produkt als Bezahl-Link einsetzen und publizieren."),
+      ]),
+      el(
+        "p",
+        { class: "field-hint" },
+        "Stripe wickelt Zahlung, Quittung und Karten ab; die Bestellungen siehst du im Stripe-Dashboard. " +
+          "Alternative ohne Konto: Bezahl-Link leer lassen — dann bestellt die Kundschaft per Mail und du regelst Zahlung und Versand selbst (z. B. TWINT)."
+      ),
+    ]),
+  ]);
+}
+
 /* -------------------------------------------------- Abschnitt: Referenzen */
 
 export function renderReferences() {
