@@ -48,7 +48,9 @@ export function collectStrings(node, prefix = "", out = []) {
   }
   if (node && typeof node === "object") {
     for (const [k, v] of Object.entries(node)) {
-      if (NO_TRANSLATE.has(k) || k === "i18n" || k === "i18nHash") continue;
+      // Unter ui.* stehen nur Oberflächentexte — dort gelten die technischen
+      // Schlüsselnamen (phone, close, …) nicht als Sperre.
+      if ((!prefix.startsWith("ui") && NO_TRANSLATE.has(k)) || k === "i18n" || k === "i18nHash") continue;
       collectStrings(v, prefix ? `${prefix}.${k}` : k, out);
     }
     return out;
