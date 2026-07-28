@@ -492,3 +492,23 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
   .brand span:last-child{display:none;}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
+
+/* --------------------------------------------------- vorschau & wuensche */
+.vorschau-buehne{
+  margin-top:14px;border:1px solid var(--line);background:var(--ink);
+  display:flex;justify-content:center;padding:10px;
+}
+.vorschau-buehne.mobil{padding:16px 10px;}
+.vorschau-frame{
+  border:0;background:#0b0b0d;width:100%;height:min(72vh,760px);display:block;
+}
+.vorschau-buehne.mobil .vorschau-frame{width:390px;max-width:100%;height:min(72vh,760px);border:1px solid var(--line);}
+.wunsch-fahne{color:var(--warn);margin-top:9px;}
+
+.wunsch-liste{display:flex;flex-direction:column;gap:9px;}
+.wunsch-item{border:1px solid var(--line);background:var(--ink-2);padding:11px 13px;}
+.wunsch-item-head{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.wunsch-item p{color:var(--dim);font-size:.86rem;margin-top:5px;white-space:pre-wrap;}
+.wunsch-state{font-family:var(--font-m);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;flex:0 0 auto;}
+.wunsch-state.ok{color:var(--ok);}
+.wunsch-state.wait{color:var(--warn);}

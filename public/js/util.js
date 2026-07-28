@@ -186,3 +186,51 @@ export function confirmDialog(title, text, okLabel = "Ja, löschen") {
     ok.focus();
   });
 }
+
+/**
+ * Textdialog als Promise<string|null> — null heisst abgebrochen.
+ * Optionen: {placeholder, okLabel, value, hint, rows}
+ */
+export function promptDialog(title, text, opts = {}) {
+  return new Promise((resolve) => {
+    const close = (val) => {
+      wrap.remove();
+      document.removeEventListener("keydown", onKey);
+      resolve(val);
+    };
+    const senden = () => {
+      const v = feld.value.trim();
+      if (!v) {
+        feld.focus();
+        return;
+      }
+      close(v);
+    };
+    const onKey = (e) => {
+      if (e.key === "Escape") close(null);
+      // Strg/Cmd + Enter schickt ab — bequem im mehrzeiligen Feld
+      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) senden();
+    };
+    const feld = el("textarea", {
+      rows: opts.rows || 5,
+      style: "width:100%",
+      placeholder: opts.placeholder || "",
+    });
+    feld.value = opts.value || "";
+    const wrap = el("div", { class: "modal", onclick: (e) => e.target === wrap && close(null) }, [
+      el("div", { class: "modal-box", role: "dialog", "aria-modal": "true" }, [
+        el("h3", {}, title),
+        text ? el("p", {}, text) : null,
+        feld,
+        opts.hint ? el("p", { class: "field-hint" }, opts.hint) : null,
+        el("div", { class: "modal-foot" }, [
+          el("button", { class: "btn ghost", onclick: () => close(null) }, "Abbrechen"),
+          el("button", { class: "btn", onclick: senden }, opts.okLabel || "Absenden"),
+        ]),
+      ]),
+    ]);
+    document.body.appendChild(wrap);
+    document.addEventListener("keydown", onKey);
+    feld.focus();
+  });
+}

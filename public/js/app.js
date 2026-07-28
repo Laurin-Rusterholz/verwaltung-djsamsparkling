@@ -37,6 +37,7 @@ import {
 import { renderMedia, mediaList, usageCount, notifyMediaChanged, notifyUploadsChanged } from "./media.js";
 import { renderInbox, openCount, inquiryList } from "./inbox.js";
 import { renderI18n, translationSummary, LANG_LABEL } from "./i18n.js";
+import { renderPreview } from "./wish.js";
 import { checkKey } from "./ai.js";
 
 /* ------------------------------------------------------------------ views */
@@ -44,7 +45,10 @@ import { checkKey } from "./ai.js";
 const NAV = [
   {
     group: "Übersicht",
-    items: [{ id: "dashboard", label: "Dashboard", render: renderDashboard }],
+    items: [
+      { id: "dashboard", label: "Dashboard", render: renderDashboard },
+      { id: "preview", label: "Website & Wünsche", render: renderPreview },
+    ],
   },
   {
     group: "Website",

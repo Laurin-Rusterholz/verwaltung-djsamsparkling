@@ -33,6 +33,15 @@ export const PATHS = {
   gate: `${ROOT}/gate`, // Hash des gemeinsamen Passworts (nur Regeln lesen ihn)
 };
 
+/**
+ * Aufgaben-Eingang von Quantus (ai-sync). Liegt bewusst NICHT unter
+ * `samsparking`, sondern auf der Wurzel — dort liest Quantus
+ * (ai-sync/public/index.html) mit `child_added` mit, legt pro Eintrag über
+ * `createEntity("task", …)` eine echte Aufgabe an und entfernt den Knoten
+ * wieder. Ein Eintrag verschwindet also, sobald Quantus offen war.
+ */
+export const QUANTUS_INBOX = "quantus_task_inbox";
+
 /** Ablage der Bilder und Videos in Firebase Storage. */
 export const STORAGE_PREFIX = `${ROOT}/media`;
 

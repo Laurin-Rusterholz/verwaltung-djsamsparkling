@@ -300,6 +300,38 @@ Videos lassen sich auch in der Galerie verwenden (Feld-URL von Hand einsetzen);
 sie spielen dort stumm, sobald sie ins Bild scrollen, und sind von der Lightbox
 ausgenommen.
 
+## Website ansehen und Wünsche an Quantus schicken
+
+Unter **Übersicht → Website & Wünsche** läuft die veröffentlichte Website in
+einem Rahmen — umschaltbar zwischen Desktop und Handy und zwischen den
+Sprachen.
+
+Mit **Wunsch-Modus an** wird die Vorschau zur Auswahl: In ihr wird dann nicht
+mehr navigiert, ein Klick meldet stattdessen die angetippte Stelle. Die
+Verwaltung fragt nach einem Text und legt daraus eine Aufgabe an — in
+**Quantus** (Repo `ai-sync`), zusammen mit Abschnitt, angetipptem Element,
+Sprache und Adresse.
+
+Der Weg dorthin:
+
+```
+Verwaltung  ──push──▶  Realtime Database  /quantus_task_inbox
+                              │ child_added
+                              ▼
+                       Quantus (ai-sync/public/index.html)
+                              │ createEntity("task", …)
+                              └── entfernt den Eintrag wieder
+```
+
+Quantus holt den Eintrag also erst ab, wenn es das nächste Mal offen ist —
+solange steht in der Liste „wartet auf Quantus", danach „in Quantus angelegt".
+
+Damit die Vorschau überhaupt eingebettet werden darf, erlaubt die Website in
+`s-mi/netlify.toml` per `Content-Security-Policy: frame-ancestors` genau die
+eigenen Netlify-Adressen. Die Website selbst schaltet den Wunsch-Modus nur
+frei, wenn sie in einem Rahmen läuft *und* `?wunsch=1` in der Adresse steht —
+für normale Besucherinnen und Besucher passiert dort nichts.
+
 ## Lokal starten
 
 ```bash
@@ -329,6 +361,7 @@ public/
     inbox.js         Booking-Anfragen, bestätigt → Termin im Kalender
     i18n.js          Sprachen: Stand, Editor, Auswahl der übersetzbaren Texte
     ai.js            Aufruf der Anthropic-API (Claude) für die Übersetzung
+    wish.js          Website-Vorschau, Wunsch-Modus, Aufgabe an Quantus
     app.js           Navigation, Dashboard, Publizieren, Einstellungen
 firebase/
   database.rules.json  Regeln für samsparking (zum Einfügen)
