@@ -2,7 +2,7 @@
    Inhalts-Editoren — je Website-Abschnitt eine Ansicht
    ========================================================================== */
 
-import { el, getPath, setPath, toast } from "./util.js";
+import { el, getPath, setPath, toast, looksLikeVideo } from "./util.js";
 import { pickMany } from "./media.js";
 import { S, markDirty } from "./store.js";
 import {
@@ -109,6 +109,29 @@ function heroBackground() {
             "MP4 (H.264) verwenden — .mov/HEVC vom iPhone spielt auf Android und Windows oft nicht ab. Klein halten (unter 12 MB), sonst wartet das Handy aufs Video."
           )
         : document.createDocumentFragment(),
+      selectField(
+        "hero.media.fit",
+        isVideo ? "Anzeige des Videos" : "Anzeige des Bildes",
+        [
+          ["fill", "Bildschirm füllen — Ränder werden abgeschnitten"],
+          ["full", "ganzes " + (isVideo ? "Video" : "Bild") + " zeigen — mit Rand"],
+        ],
+        {
+          onChange: build,
+          hint:
+            "„Bildschirm füllen“ sieht satter aus, schneidet auf dem Handy aber viel weg (Video ist quer, der Bildschirm hoch). " +
+            "„Ganzes Video zeigen“ lässt nichts weg, dafür bleiben oben und unten dunkle Ränder.",
+        }
+      ),
+      getPath(S.content, "hero.media.fit") === "full"
+        ? document.createDocumentFragment()
+        : selectField("hero.media.focus", "Sichtbarer Ausschnitt", [
+            ["center", "Mitte"],
+            ["top", "oben"],
+            ["bottom", "unten"],
+            ["left", "links"],
+            ["right", "rechts"],
+          ], { hint: "Welcher Teil sichtbar bleibt, wenn Ränder abgeschnitten werden." }),
       imageField("hero.media", isVideo ? "Video-Datei" : "Bild", {
         kind: isVideo ? "video" : "image",
         pickLabel: isVideo ? "Video wählen" : "Bild wählen",
@@ -579,9 +602,18 @@ export function renderGallery() {
             },
           },
         ],
-        fields: (base) => [
-          imageField(base, null, { credit: true, kind: "image" }),
-        ],
+        fields: (base) => {
+          const istVideo = looksLikeVideo(getPath(S.content, `${base}.src`));
+          return [
+            imageField(base, null, { credit: true, kind: "image" }),
+            istVideo
+              ? selectField(`${base}.fit`, "Anzeige des Videos", [
+                  ["fill", "Fläche füllen — Ränder abgeschnitten"],
+                  ["full", "ganzes Video zeigen — mit Rand"],
+                ], { hint: "Gilt nur für Videos in der Galerie." })
+              : document.createDocumentFragment(),
+          ];
+        },
       }),
     ]),
   ]);
