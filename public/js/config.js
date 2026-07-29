@@ -42,6 +42,26 @@ export const PATHS = {
  */
 export const QUANTUS_INBOX = "quantus_task_inbox";
 
+/**
+ * Projekt in Quantus, dem Website-Wünsche zugeordnet werden — die externe
+ * Projekt-ID im Format `PRJ-XXXXX`. Leer lassen heisst: die Aufgabe entsteht
+ * ohne Projekt (so war es bisher). Quantus löst die ID beim Import auf; findet
+ * es kein passendes Projekt, bleibt die Aufgabe trotzdem erhalten.
+ */
+export const QUANTUS_PROJECT = "";
+
+/**
+ * Vorführ-Modus. Aus (false) ist dies die echte Verwaltung: Anmeldung mit dem
+ * gemeinsamen Passwort, Speichern und Publizieren schreiben in die Datenbank.
+ *
+ * An (true) öffnet sich die Verwaltung ohne Passwort und zeigt den echten,
+ * öffentlich lesbaren Inhalt — aber nichts wird zurückgeschrieben: Speichern,
+ * Publizieren, Uploads und Anfragen sind stillgelegt, Änderungen bleiben im
+ * Browser. Genutzt von der Präsentations-Fassung (Repo Beispiel-Sami), die nur
+ * diese eine Datei anders hat.
+ */
+export const DEMO = false;
+
 /** Ablage der Bilder und Videos in Firebase Storage. */
 export const STORAGE_PREFIX = `${ROOT}/media`;
 

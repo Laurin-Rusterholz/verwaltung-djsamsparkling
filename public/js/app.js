@@ -2,7 +2,7 @@
    Verwaltung DJ Sam Sparkling — App-Rahmen, Navigation, Dashboard
    ========================================================================== */
 
-import { DEFAULT_SITE_URL, PATHS, RTDB_URL } from "./config.js";
+import { DEFAULT_SITE_URL, PATHS, RTDB_URL, DEMO } from "./config.js";
 import { el, $, toast, relativeTime, formatDate, confirmDialog } from "./util.js";
 import {
   S,
@@ -26,6 +26,7 @@ import {
   renderAbout,
   renderSound,
   renderShows,
+  renderExperience,
   renderReferences,
   renderGallery,
   renderShop,
@@ -70,6 +71,7 @@ const NAV = [
     items: [
       { id: "about", label: "About", render: renderAbout },
       { id: "sound", label: "Sound & Mixe", render: renderSound },
+      { id: "experience", label: "Erlebnis", render: renderExperience },
       { id: "shows", label: "Shows", render: renderShows },
       { id: "references", label: "Referenzen", render: renderReferences },
       { id: "gallery", label: "Galerie", render: renderGallery },
@@ -687,6 +689,18 @@ function renderShell() {
         el("div", { class: "brand" }, [
           el("span", { class: "brand-mark" }, "◆"),
           el("span", {}, "Sam Sparkling — Verwaltung"),
+          DEMO
+            ? el(
+                "span",
+                {
+                  class: "demo-chip",
+                  title:
+                    "Vorführ-Modus: echter Inhalt, aber nichts wird zurückgeschrieben. " +
+                    "Änderungen bleiben in diesem Browser.",
+                },
+                "Vorführ-Modus"
+              )
+            : null,
         ]),
         el("div", { class: "topbar-state" }, [
           el("span", { class: "dot ok", id: "dirty-dot" }),
@@ -695,7 +709,7 @@ function renderShell() {
         el("div", { class: "topbar-actions" }, [
           el("button", { class: "btn ghost", id: "save-btn", onclick: doSave }, "Speichern"),
           el("button", { class: "btn solid", id: "publish-btn", onclick: doPublish }, "Publizieren"),
-          el("button", { class: "btn ghost sm", onclick: () => signOut() }, "Abmelden"),
+          DEMO ? null : el("button", { class: "btn ghost sm", onclick: () => signOut() }, "Abmelden"),
         ]),
       ]),
       el("div", { class: "body" }, [renderSidebar(), el("main", { class: "main", id: "main" })]),
@@ -797,6 +811,14 @@ function boot() {
 
   const auth = getAuth();
 
+  // Vorführ-Modus: kein Passwort, keine Anmeldung. Der Inhalt kommt aus dem
+  // öffentlich lesbaren Teil der Datenbank, geschrieben wird nirgends.
+  if (DEMO) {
+    enterApp();
+    bindStoreEvents();
+    return;
+  }
+
   auth.onAuthStateChanged(async (user) => {
     S.user = user;
     // Während der Anmeldung übernimmt das Formular — sonst würde der Wechsel
@@ -817,6 +839,11 @@ function boot() {
     }
   });
 
+  bindStoreEvents();
+}
+
+/** Store-Ereignisse, Tastatur und Direktlinks — in beiden Betriebsarten gleich. */
+function bindStoreEvents() {
   // Zustandsänderungen aus dem Store
   onChange((what) => {
     if (what === "media") notifyMediaChanged();

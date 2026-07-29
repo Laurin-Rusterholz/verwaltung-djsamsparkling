@@ -427,6 +427,40 @@ function showsCalendar() {
   return host;
 }
 
+/* ---------------------------------------------------- Abschnitt: Erlebnis */
+
+export function renderExperience() {
+  return view([
+    head("Erlebnis", "Was ein Sam-Sparkling-Set ausmacht — für Booker und Fans."),
+    sectionBasics("experience"),
+    group("Einstieg", [
+      textArea("sections.experience.lede", "Einstiegssatz (gross gesetzt)", { rows: 2 }),
+    ]),
+    group("Momente", [
+      objectList("sections.experience.moments", null, {
+        addLabel: "+ Moment",
+        newItem: { kicker: "", title: "", text: "" },
+        titleOf: (i) => i.title || "(leer)",
+        emptyText: "Keine Momente.",
+        fields: (base) => [
+          textField(`${base}.kicker`, "Kleine Zeile oben", { placeholder: "Peak time" }),
+          textField(`${base}.title`, "Titel", { placeholder: "The Drop" }),
+          textArea(`${base}.text`, "Text", { rows: 2 }),
+        ],
+      }),
+    ]),
+    group("Aftermovie (optional)", [
+      textField("sections.experience.embedUrl", "Einbett-Link (YouTube/Vimeo, embed-URL)", { mono: true }),
+      textField("sections.experience.embedLabel", "Titel für Screenreader", { placeholder: "Aftermovie" }),
+    ], { cols: 2 }),
+    group("Zitat (optional)", [
+      textArea("sections.experience.quote.text", "Zitat", { rows: 2 }),
+      textField("sections.experience.quote.name", "Person"),
+      textField("sections.experience.quote.venue", "Club / Festival"),
+    ], { cols: 2 }),
+  ]);
+}
+
 export function renderShows() {
   const today = new Date().toISOString().slice(0, 10);
   const items = getPath(S.content, "sections.shows.items") || [];
