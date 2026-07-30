@@ -59,7 +59,13 @@ export const DEMO = false;
 export const STORAGE_PREFIX = `${ROOT}/media`;
 
 /** Fallback, solange unter Einstellungen keine Website-URL gesetzt ist. */
-export const DEFAULT_SITE_URL = "https://www.samsparking.ch";
+export const DEFAULT_SITE_URL = "https://djsamsparkling.netlify.app";
+
+/** Frühere Vorschau-Adressen, die noch auf den alten Website-Auftritt zeigen. */
+export const LEGACY_SITE_URLS = [
+  "https://www.samsparking.ch",
+  "https://samsparking.ch",
+];
 
 /** Grösse pro Datei. Muss zu den Storage-Regeln passen (firebase/storage.rules). */
 export const MAX_UPLOAD_BYTES = 250 * 1024 * 1024; // 250 MB

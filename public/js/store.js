@@ -2,7 +2,14 @@
    Store — Firebase (Auth, Realtime Database, Storage) + Zustand
    ========================================================================== */
 
-import { FIREBASE_CONFIG, RTDB_URL, PATHS, DEFAULT_SITE_URL, DEMO } from "./config.js";
+import {
+  FIREBASE_CONFIG,
+  RTDB_URL,
+  PATHS,
+  DEFAULT_SITE_URL,
+  LEGACY_SITE_URLS,
+  DEMO,
+} from "./config.js";
 import { clone, withDefaults, pruneForRtdb, toast, sha256Hex, setPath } from "./util.js";
 
 export const S = {
@@ -164,7 +171,10 @@ export async function loadAll() {
   S.contentStamp++;
   S.saved = content ? clone(S.content) : null; // null ⇒ noch nie gespeichert
   S.config = cfg || {};
-  if (!S.config.siteUrl) S.config.siteUrl = DEFAULT_SITE_URL;
+  const configuredSite = String(S.config.siteUrl || "").replace(/\/+$/, "");
+  if (!configuredSite || LEGACY_SITE_URLS.includes(configuredSite)) {
+    S.config.siteUrl = DEFAULT_SITE_URL;
+  }
   S.dirty = S.saved === null;
   S.ready = true;
 
