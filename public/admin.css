@@ -570,7 +570,9 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
   .nav{
     width:100%;right:0;padding:10px 12px calc(30px + env(safe-area-inset-bottom,0px));
     background:rgba(5,7,14,.985);box-shadow:none;
+    overscroll-behavior:contain;
   }
+  body.nav-open{overflow:hidden;}
   .nav.open{box-shadow:none;}
   .nav-group{
     padding:20px 6px 8px;border-bottom:1px solid var(--line);
@@ -618,6 +620,9 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
   .label-row{align-items:stretch;flex-direction:column;}
   .label-key{min-width:0;padding-bottom:0;}
   .field.inline{min-width:0;width:100%;}
+
+  .stats,.grid,.tabs{touch-action:pan-x;scroll-snap-stop:always;}
+  .btn:active,.tool:active,.nav-item:active,.tab:active{transform:scale(.98);}
 }
 @media(max-width:380px){
   .brand span:last-child{font-size:.65rem;}
