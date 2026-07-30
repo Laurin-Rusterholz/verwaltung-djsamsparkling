@@ -427,6 +427,40 @@ function showsCalendar() {
   return host;
 }
 
+/* ---------------------------------------------------- Abschnitt: Erlebnis */
+
+export function renderExperience() {
+  return view([
+    head("Erlebnis", "Was ein Sam-Sparkling-Set ausmacht — für Booker und Fans."),
+    sectionBasics("experience"),
+    group("Einstieg", [
+      textArea("sections.experience.lede", "Einstiegssatz (gross gesetzt)", { rows: 2 }),
+    ]),
+    group("Momente", [
+      objectList("sections.experience.moments", null, {
+        addLabel: "+ Moment",
+        newItem: { kicker: "", title: "", text: "" },
+        titleOf: (i) => i.title || "(leer)",
+        emptyText: "Keine Momente.",
+        fields: (base) => [
+          textField(`${base}.kicker`, "Kleine Zeile oben", { placeholder: "Peak time" }),
+          textField(`${base}.title`, "Titel", { placeholder: "The Drop" }),
+          textArea(`${base}.text`, "Text", { rows: 2 }),
+        ],
+      }),
+    ]),
+    group("Aftermovie (optional)", [
+      textField("sections.experience.embedUrl", "Einbett-Link (YouTube/Vimeo, embed-URL)", { mono: true }),
+      textField("sections.experience.embedLabel", "Titel für Screenreader", { placeholder: "Aftermovie" }),
+    ], { cols: 2 }),
+    group("Zitat (optional)", [
+      textArea("sections.experience.quote.text", "Zitat", { rows: 2 }),
+      textField("sections.experience.quote.name", "Person"),
+      textField("sections.experience.quote.venue", "Club / Festival"),
+    ], { cols: 2 }),
+  ]);
+}
+
 export function renderShows() {
   const today = new Date().toISOString().slice(0, 10);
   const items = getPath(S.content, "sections.shows.items") || [];
@@ -438,7 +472,7 @@ export function renderShows() {
       "Shows",
       `Auftritts-Termine. ${upcoming} kommende${upcoming === 1 ? "r" : ""} Termin${
         upcoming === 1 ? "" : "e"
-      } — vergangene rutschen automatisch nach unten und verschwinden aus der Google-Anzeige.`
+      } — ohne hinterlegten Termin verschwindet der komplette Shows-Abschnitt automatisch von der Website.`
     ),
     sectionBasics("shows"),
     group("Übersicht", [cal], {
@@ -458,7 +492,7 @@ export function renderShows() {
           status: "confirmed",
         },
         titleOf: (i) => [i.date, i.name].filter(Boolean).join("  ·  ") || "(neuer Termin)",
-        emptyText: "Noch keine Termine — die Website zeigt dann den Platzhaltertext.",
+        emptyText: "Noch keine Termine — der Shows-Abschnitt und sein Menüpunkt bleiben dann vollständig verborgen.",
         onChange: () => cal._redraw(),
         fields: (base) => [
           textField(`${base}.date`, "Datum", { type: "date" }),
@@ -481,11 +515,9 @@ export function renderShows() {
       }),
     ]),
     group("Darstellung auf der Website", [
-      textField("sections.shows.emptyText", "Text ohne Termine"),
       textField("sections.shows.pastLabel", "Beschriftung „vergangene Shows“"),
     ], {
-      cols: 2,
-      hint: "Der Termin-Kalender steht auf der Website beim Booking-Formular — dort sind belegte Tage markiert und freie direkt anfragbar.",
+      hint: "Der Abschnitt erscheint erst, sobald oben mindestens ein echter Termin angelegt ist. Der Kalender im Booking-Formular bleibt für Wunschanfragen trotzdem verfügbar.",
     }),
   ]);
 }
@@ -579,8 +611,20 @@ export function renderReferences() {
 
 export function renderGallery() {
   return view([
-    head("Galerie", "Bilder im Masonry-Raster mit Lightbox."),
+    head("Galerie", "Bilder mit Lightbox; auf dem Handy startet die Galerie bewusst als kurze Auswahl."),
     sectionBasics("gallery"),
+    group("Mobile Darstellung", [
+      selectField("sections.gallery.mobileLimit", "Bilder vor „Mehr anzeigen“", [
+        ["2", "2 Bilder"],
+        ["4", "4 Bilder (empfohlen)"],
+        ["6", "6 Bilder"],
+        ["8", "8 Bilder"],
+      ], {
+        hint: "Nur für Handys. Desktop zeigt weiterhin die komplette Galerie.",
+      }),
+    ], {
+      hint: "Eine kurze 2-Spalten-Auswahl hält den AIDA-Weg kompakt. Weitere Bilder öffnet der Besucher bewusst über einen Knopf.",
+    }),
     group("Bilder", [
       objectList("sections.gallery.items", null, {
         addLabel: "+ leeres Bild",

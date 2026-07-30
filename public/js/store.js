@@ -2,7 +2,7 @@
    Store — Firebase (Auth, Realtime Database, Storage) + Zustand
    ========================================================================== */
 
-import { FIREBASE_CONFIG, RTDB_URL, PATHS, DEFAULT_SITE_URL } from "./config.js";
+import { FIREBASE_CONFIG, RTDB_URL, PATHS, DEFAULT_SITE_URL, DEMO } from "./config.js";
 import { clone, withDefaults, pruneForRtdb, toast, sha256Hex, setPath } from "./util.js";
 
 export const S = {
@@ -122,6 +122,7 @@ export async function hasAccess() {
 }
 
 export async function signOut() {
+  if (DEMO) return demoBlock("Abmelden");
   const uid = auth.currentUser?.uid;
   // Sitzungs-Nachweis entfernen, damit das Gerät wirklich abgemeldet ist
   if (uid) {
@@ -155,6 +156,7 @@ async function loadDefaults() {
  * verwendet — aber noch NICHT geschrieben; das passiert beim ersten Speichern.
  */
 export async function loadAll() {
+  if (DEMO) return loadForDemo();
   const defaults = await loadDefaults();
   const [content, cfg] = await Promise.all([readOnce(PATHS.content), readOnce(PATHS.config)]);
 
@@ -177,6 +179,35 @@ export async function loadAll() {
   });
 
   emit("loaded");
+}
+
+/**
+ * Vorführ-Modus: nur die öffentlich lesbaren Inhalte und Medien laden.
+ * Anfragen, Einstellungen und Versionen bleiben wegen ihrer Personendaten
+ * unangetastet.
+ */
+async function loadForDemo() {
+  const defaults = await loadDefaults();
+  const content = await readOnce(PATHS.content);
+
+  S.content = normalize(withDefaults(content ? clone(content) : clone(defaults), defaults));
+  S.contentStamp++;
+  S.saved = clone(S.content);
+  S.config = { siteUrl: DEFAULT_SITE_URL };
+  S.inquiries = {};
+  S.dirty = false;
+  S.ready = true;
+
+  watch(PATHS.media, (val) => {
+    S.media = val || {};
+    emit("media");
+  });
+
+  emit("loaded");
+}
+
+function demoBlock(was) {
+  toast(`Vorführ-Modus: ${was} ist hier abgeschaltet — die echte Website bleibt unberührt.`);
 }
 
 /* Laufende Live-Abfragen, damit sie beim Abmelden gelöst werden können —
@@ -303,6 +334,13 @@ export async function saveContent() {
   const payload = clone(S.content);
   payload.updatedAt = new Date().toISOString();
   payload.updatedBy = S.user?.email || "Verwaltung";
+  if (DEMO) {
+    demoBlock("Speichern");
+    S.saved = clone(S.content);
+    S.dirty = false;
+    emit("saved");
+    return S.content.updatedAt;
+  }
   await db.ref(PATHS.content).set(pruneForRtdb(payload));
   S.content.updatedAt = payload.updatedAt;
   S.content.updatedBy = payload.updatedBy;
@@ -314,6 +352,10 @@ export async function saveContent() {
 
 export async function saveConfig(patch) {
   Object.assign(S.config, patch);
+  if (DEMO) {
+    emit("config");
+    return;
+  }
   await db.ref(PATHS.config).update(pruneForRtdb(patch));
   emit("config");
 }
@@ -327,6 +369,10 @@ export async function saveConfig(patch) {
  * Netlify den Build angenommen; sichtbar wird das im Netlify-Deploy-Log.
  */
 export async function publish() {
+  if (DEMO) {
+    demoBlock("Publizieren");
+    return { built: false, reason: "Vorführ-Modus" };
+  }
   const updatedAt = await saveContent();
 
   const snapshot = {
@@ -372,6 +418,7 @@ async function trimVersions() {
 }
 
 export async function listVersions() {
+  if (DEMO) return [];
   const snap = await db.ref(PATHS.versions).orderByKey().limitToLast(20).get();
   const val = snap.exists() ? snap.val() : {};
   return Object.entries(val)
@@ -398,17 +445,19 @@ export function resetToDefaults() {
 /* ------------------------------------------------------------ anfragen */
 
 export async function updateInquiry(id, patch) {
+  if (DEMO) return demoBlock("Anfragen bearbeiten");
   await db.ref(`${PATHS.inquiries}/${id}`).update(patch);
 }
 
 export async function deleteInquiry(id) {
+  if (DEMO) return demoBlock("Anfragen löschen");
   await db.ref(`${PATHS.inquiries}/${id}`).remove();
 }
 
 /* -------------------------------------------------------- warnung beim weg */
 
 window.addEventListener("beforeunload", (e) => {
-  if (S.dirty) {
+  if (S.dirty && !DEMO) {
     e.preventDefault();
     e.returnValue = "";
   }

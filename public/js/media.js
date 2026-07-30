@@ -2,7 +2,7 @@
    Medien — Upload nach Firebase Storage, Metadaten in der Realtime Database
    ========================================================================== */
 
-import { PATHS, STORAGE_PREFIX, MAX_UPLOAD_BYTES, VIDEO_WARN_BYTES, ACCEPTED_TYPES, ACCEPT_ATTR } from "./config.js";
+import { PATHS, STORAGE_PREFIX, MAX_UPLOAD_BYTES, VIDEO_WARN_BYTES, ACCEPTED_TYPES, ACCEPT_ATTR, DEMO } from "./config.js";
 import { el, bytes, relativeTime, toast, confirmDialog, slug, looksLikeVideo } from "./util.js";
 import { S, getDb, getStorage, emit } from "./store.js";
 import { setMediaPicker } from "./fields.js";
@@ -14,6 +14,10 @@ const uploads = new Map(); // tempId → {name, percent, error}
 export async function uploadFiles(fileList) {
   const files = Array.from(fileList || []);
   if (!files.length) return;
+  if (DEMO) {
+    toast("Vorführ-Modus: Hochladen ist hier abgeschaltet. Die vorhandenen Medien lassen sich ansehen.");
+    return;
+  }
   for (const file of files) uploadOne(file);
 }
 
@@ -164,6 +168,7 @@ export function usageCount(url) {
 const escapeRe = (v) => String(v).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 export async function deleteMedia(item) {
+  if (DEMO) return toast("Vorführ-Modus: Löschen ist hier abgeschaltet.");
   const uses = usageCount(item.url);
   const ok = await confirmDialog(
     isVideo(item) ? "Video löschen?" : "Bild löschen?",
@@ -183,6 +188,7 @@ export async function deleteMedia(item) {
 }
 
 export async function renameMedia(id, patch) {
+  if (DEMO) return toast("Vorführ-Modus: Änderungen an der Mediathek werden nicht gespeichert.");
   await getDb().ref(`${PATHS.media}/${id}`).update(patch);
 }
 
