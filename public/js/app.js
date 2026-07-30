@@ -591,7 +591,7 @@ function go(id) {
   const main = $("#main");
   if (main) main.scrollTop = 0;
   window.scrollTo({ top: 0, behavior: "auto" });
-  $("#sidebar")?.classList.remove("open");
+  toggleSidebar(false);
 }
 
 function renderSidebar() {
@@ -682,7 +682,8 @@ function renderShell() {
         el("button", {
           class: "burger tool",
           "aria-label": "Menü",
-          onclick: () => $("#sidebar").classList.toggle("open"),
+          "aria-expanded": "false",
+          onclick: (e) => toggleSidebar(undefined, e.currentTarget),
         }, "☰"),
         el("div", { class: "brand" }, [
           el("span", { class: "brand-mark" }, "◆"),
@@ -702,6 +703,22 @@ function renderShell() {
     ])
   );
   render();
+}
+
+function toggleSidebar(force, trigger) {
+  const sidebar = $("#sidebar");
+  if (!sidebar) return;
+  const open = force === undefined ? !sidebar.classList.contains("open") : force;
+  sidebar.classList.toggle("open", open);
+  document.body.classList.toggle("nav-open", open);
+  const burger = trigger || $(".burger");
+  if (burger) {
+    burger.setAttribute("aria-expanded", open ? "true" : "false");
+    burger.setAttribute("aria-label", open ? "Menü schliessen" : "Menü");
+    burger.textContent = open ? "×" : "☰";
+  }
+  if (open) sidebar.querySelector(".nav-item.on, .nav-item")?.focus();
+  else if (trigger) trigger.focus();
 }
 
 function renderLogin(message) {
@@ -835,6 +852,11 @@ function boot() {
 
   // Tastatur: Strg/Cmd+S speichert
   document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && $("#sidebar")?.classList.contains("open")) {
+      toggleSidebar(false);
+      $(".burger")?.focus();
+      return;
+    }
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
       e.preventDefault();
       if (S.dirty) doSave();
