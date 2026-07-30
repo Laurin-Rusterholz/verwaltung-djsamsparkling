@@ -564,6 +564,60 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
   .vorschau-buehne{margin-inline:-6px;padding:4px;}
   .vorschau-buehne.mobil{padding:8px 4px;}
   .vorschau-frame,.vorschau-buehne.mobil .vorschau-frame{height:68dvh;}
+
+  /* Mobile Navigation ist eine eigene Vollbild-Ansicht, keine verkleinerte
+     Desktop-Seitenleiste. */
+  .nav{
+    width:100%;right:0;padding:10px 12px calc(30px + env(safe-area-inset-bottom,0px));
+    background:rgba(5,7,14,.985);box-shadow:none;
+  }
+  .nav.open{box-shadow:none;}
+  .nav-group{
+    padding:20px 6px 8px;border-bottom:1px solid var(--line);
+    color:var(--spark);
+  }
+  .nav-item{
+    min-height:50px;padding:11px 8px;border-left:0;border-bottom:1px solid rgba(26,33,51,.72);
+    font-size:1rem;
+  }
+  .nav-item.on{
+    border-left:0;background:var(--ink-3);box-shadow:inset 3px 0 0 var(--spark);
+    padding-left:14px;
+  }
+
+  /* Informationskarten verhalten sich wie mobile Übersichten statt wie ein
+     zusammengeschobenes Desktop-Raster. */
+  .stats{
+    display:flex;overflow-x:auto;margin-inline:-12px;padding-inline:12px;
+    scroll-snap-type:x mandatory;scrollbar-width:none;
+  }
+  .stats::-webkit-scrollbar{display:none;}
+  .stat{flex:0 0 72vw;scroll-snap-align:center;padding:16px;}
+  .stat-value{font-size:1.75rem;}
+  .check-list{padding:14px 12px;margin-bottom:12px;}
+  .check-item{min-height:46px;align-items:flex-start;padding:10px 0;}
+
+  .tabs{
+    flex-wrap:nowrap;overflow-x:auto;margin-inline:-12px;padding:0 12px 6px;
+    scrollbar-width:none;
+  }
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{min-height:42px;white-space:nowrap;}
+  .grid{
+    display:flex;gap:10px;margin-inline:-12px;padding-inline:12px;
+    overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;
+  }
+  .grid::-webkit-scrollbar{display:none;}
+  .tile{flex:0 0 78vw;scroll-snap-align:center;}
+  .drop{padding:22px 14px;min-height:132px;justify-content:center;}
+
+  .img-row{flex-direction:column;}
+  .img-thumb{width:100%;height:auto;aspect-ratio:16/9;}
+  .list-row{display:grid;grid-template-columns:24px minmax(0,1fr) 40px;gap:7px;}
+  .list-row .row-tools{grid-column:3;}
+  .label-row{align-items:stretch;flex-direction:column;}
+  .label-key{min-width:0;padding-bottom:0;}
+  .field.inline{min-width:0;width:100%;}
 }
 @media(max-width:380px){
   .brand span:last-child{font-size:.65rem;}
