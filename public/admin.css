@@ -640,7 +640,14 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
 .vorschau-frame{
   border:0;background:#0b0b0d;width:100%;height:min(72vh,760px);display:block;
 }
-.vorschau-buehne.mobil .vorschau-frame{width:390px;max-width:100%;height:min(72vh,760px);border:1px solid var(--line);}
+.vorschau-buehne.mobil .vorschau-frame{
+  width:393px;max-width:100%;height:auto;aspect-ratio:393/852;
+  border:1px solid var(--line);
+}
+.vorschau-geraet{
+  display:inline-flex;align-items:center;min-height:42px;padding:0 11px;
+  border:1px solid var(--line);color:var(--dim);background:var(--ink);
+}
 .wunsch-fahne{color:var(--warn);margin-top:9px;}
 
 .wunsch-liste{display:flex;flex-direction:column;gap:9px;}

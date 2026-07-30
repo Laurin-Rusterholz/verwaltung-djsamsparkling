@@ -2,7 +2,7 @@
 
 Management-Oberfläche für die Website von **Sam Sparkling**
 ([Repo `s-mi`](https://github.com/Laurin-Rusterholz/s-mi), live auf
-`samsparking.ch`). Hier wird die **ganze Website eingestellt**: Texte, Bilder,
+`djsamsparkling.netlify.app`). Hier wird die **ganze Website eingestellt**: Texte, Bilder,
 Shows, Rider, SEO, Reihenfolge und Sichtbarkeit der Abschnitte — plus die
 Booking-Anfragen, die über das Formular auf der Website hereinkommen.
 
@@ -303,8 +303,8 @@ ausgenommen.
 ## Website ansehen und Wünsche an Quantus schicken
 
 Unter **Übersicht → Website & Wünsche** läuft die veröffentlichte Website in
-einem Rahmen — umschaltbar zwischen Desktop und Handy und zwischen den
-Sprachen.
+einem Rahmen — beim Öffnen im mobilen Prüfformat **393 × 852**, danach
+umschaltbar zwischen Desktop und Handy sowie zwischen den Sprachen.
 
 Mit **Wunsch-Modus an** wird die Vorschau zur Auswahl: In ihr wird dann nicht
 mehr navigiert, ein Klick meldet stattdessen die angetippte Stelle. Die
