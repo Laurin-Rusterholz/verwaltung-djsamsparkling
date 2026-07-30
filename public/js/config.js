@@ -42,6 +42,19 @@ export const PATHS = {
  */
 export const QUANTUS_INBOX = "quantus_task_inbox";
 
+/**
+ * Optionales Quantus-Projekt für Website-Wünsche. Leer bedeutet: Aufgabe ohne
+ * feste Projekt-Zuordnung. Die Präsentationsfassung setzt hier ihr Demo-Projekt.
+ */
+export const QUANTUS_PROJECT = "";
+
+/**
+ * Die echte Verwaltung schreibt normal in Firebase. Die Präsentationsfassung
+ * überschreibt nur diese Konfiguration mit `true` und wird dadurch vollständig
+ * schreibgeschützt.
+ */
+export const DEMO = false;
+
 /** Ablage der Bilder und Videos in Firebase Storage. */
 export const STORAGE_PREFIX = `${ROOT}/media`;
 

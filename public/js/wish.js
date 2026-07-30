@@ -18,7 +18,7 @@
    nutzt die Liste unten als Rückmeldung („in Quantus angelegt“).
    ========================================================================== */
 
-import { DEFAULT_SITE_URL, QUANTUS_INBOX } from "./config.js";
+import { DEFAULT_SITE_URL, QUANTUS_INBOX, QUANTUS_PROJECT } from "./config.js";
 import { el, toast, promptDialog } from "./util.js";
 import { S, getDb } from "./store.js";
 import { languages, LANG_LABEL } from "./i18n.js";
@@ -84,6 +84,7 @@ export async function sendeWunsch({ text, section, sectionTitle, label, url, lan
     createdAt: new Date().toISOString(),
     createdBy: S.user?.email || "Verwaltung",
   };
+  if (QUANTUS_PROJECT) eintrag.projectExternalId = QUANTUS_PROJECT;
 
   const ref = await db.ref(QUANTUS_INBOX).push(eintrag);
   return { key: ref.key, ref, titel, text: text.trim(), stelle };
@@ -193,7 +194,7 @@ window.addEventListener("message", (e) => {
   if (!frame || e.source !== frame.contentWindow) return;
   let erlaubt = "";
   try {
-    erlaubt = new URL(basisUrl()).origin;
+    erlaubt = new URL(basisUrl() || "/", location.href).origin;
   } catch (err) {
     return;
   }
