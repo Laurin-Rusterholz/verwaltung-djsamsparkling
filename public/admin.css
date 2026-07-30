@@ -75,7 +75,7 @@
 html,body{height:100%;}
 body{
   background:var(--ink);color:var(--bone);font-family:var(--font-d);font-size:15px;line-height:1.55;
-  -webkit-font-smoothing:antialiased;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
 }
 ::selection{background:var(--spark);color:#fff;}
 :focus-visible{outline:2px solid var(--spark);outline-offset:2px;}
@@ -484,12 +484,91 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
   .burger{display:flex;align-items:center;justify-content:center;}
   .nav{
     position:fixed;top:var(--top);left:0;bottom:0;z-index:30;transform:translateX(-100%);
-    transition:transform .2s;height:auto;
+    transition:transform .2s;height:auto;width:min(84vw,320px);flex-basis:auto;
+    padding-bottom:calc(32px + env(safe-area-inset-bottom,0px));
   }
   .nav.open{transform:none;box-shadow:0 0 40px rgba(0,0,0,.6);}
   .topbar-state{display:none;}
   .topbar-actions .btn{padding:8px 12px;font-size:.62rem;}
   .brand span:last-child{display:none;}
+}
+@media(max-width:700px){
+  :root{--top:108px;}
+  .topbar{
+    height:var(--top);display:grid;grid-template-columns:40px minmax(0,1fr);
+    grid-template-rows:52px 48px;gap:0 10px;
+    padding:env(safe-area-inset-top,0px) 12px 8px;
+  }
+  .burger{grid-column:1;grid-row:1;width:40px;height:40px;}
+  .brand{grid-column:2;grid-row:1;min-width:0;}
+  .brand span:last-child{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.72rem;}
+  .topbar-actions{
+    grid-column:1/-1;grid-row:2;margin:0;display:grid;
+    grid-template-columns:1fr 1fr auto;gap:7px;width:100%;
+  }
+  .topbar-actions .btn{
+    min-height:42px;padding:8px 10px;font-size:.59rem;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .topbar-actions .btn.sm{padding-inline:10px;}
+  .main{padding:18px 12px calc(70px + env(safe-area-inset-bottom,0px));}
+  .view{width:100%;}
+  .view-head{align-items:flex-start;flex-direction:column;gap:10px;margin-bottom:18px;}
+  h2{font-size:clamp(1.3rem,7vw,1.65rem);}
+
+  .group{padding:15px 13px;margin-bottom:12px;}
+  .group.basics{padding:13px;}
+  .quick{display:grid;grid-template-columns:1fr;margin-bottom:16px;}
+  .quick .btn,.quick>a.btn{width:100%;min-height:46px;text-align:center;}
+  .btn{min-height:44px;padding:10px 13px;}
+  .tool{width:40px;height:40px;}
+  input,textarea,select{font-size:16px;}
+
+  .card-head{padding:10px;}
+  .card-body{padding:12px 10px;gap:11px;}
+  .row-between{align-items:flex-start;flex-direction:column;}
+  .row-between>.btn{width:100%;}
+  .layout-row{grid-template-columns:40px minmax(0,1fr) auto;gap:8px;padding:9px 8px;}
+  .pick-row{align-items:flex-start;padding:9px 8px;}
+  .pick-row .row-tools{display:grid;grid-template-columns:40px 40px;}
+  .upl{grid-template-columns:minmax(0,1fr) 54px 40px;gap:7px;}
+
+  .stats{grid-template-columns:1fr 1fr;gap:8px;}
+  .stat{min-width:0;}
+  .inq{padding:13px 11px;}
+  .inq-head{flex-direction:column;}
+  .inq-when{align-items:flex-start;}
+  .inq-meta{grid-template-columns:1fr;gap:2px;}
+  .inq-meta dd{margin-bottom:7px;overflow-wrap:anywhere;}
+  .inq-foot{align-items:stretch;flex-direction:column;}
+  .inq-foot select,.inq-foot .btn{width:100%;min-width:0;}
+  .ver-row{align-items:flex-start;flex-wrap:wrap;}
+  .ver-when{min-width:0;flex:1 1 150px;}
+  .ver-row .btn{margin-left:0;width:100%;}
+  .kv{grid-template-columns:1fr;gap:2px;}
+  .kv dd{margin-bottom:8px;overflow-wrap:anywhere;}
+
+  .cal-head{padding:9px 8px;gap:6px;}
+  .cal-head-right{gap:5px;}
+  .cal-nav{width:40px;height:40px;}
+  .cal-month{font-size:.78rem;text-align:center;}
+  .cal-wd{font-size:.5rem;letter-spacing:.04em;padding:6px 1px;}
+  .cal-day{min-height:44px;padding:5px 4px;}
+  .cal-dot{left:50%;transform:translateX(-50%);}
+
+  .modal{padding:10px;align-items:flex-end;}
+  .modal-box{padding:18px 14px;max-height:92dvh;}
+  .modal-foot{display:grid;grid-template-columns:1fr;}
+  .modal-foot .btn{width:100%;}
+  .toasts{left:10px;right:10px;bottom:10px;max-width:none;}
+  .vorschau-buehne{margin-inline:-6px;padding:4px;}
+  .vorschau-buehne.mobil{padding:8px 4px;}
+  .vorschau-frame,.vorschau-buehne.mobil .vorschau-frame{height:68dvh;}
+}
+@media(max-width:380px){
+  .brand span:last-child{font-size:.65rem;}
+  .stats{grid-template-columns:1fr;}
+  .topbar-actions .btn{letter-spacing:.07em;padding-inline:7px;}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
 
