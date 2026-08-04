@@ -349,7 +349,7 @@ nicht (dort fehlt `crypto.subtle`).
 public/
   index.html         Hülle, lädt Firebase-compat-SDK
   passwort.html      erzeugt den Passwort-Hash für samsparking/gate/pw
-  admin.css          Oberfläche (gleiche Farbwelt wie die Website)
+  admin.css          Oberfläche (helles Arbeitslicht — die Website bleibt dunkel)
   defaults/site.json Auslieferungs-Inhalt (identisch mit s-mi/content/site.json)
   js/
     config.js        Firebase-Werte, Datenbank-Pfade

@@ -43,24 +43,59 @@ import { checkKey } from "./ai.js";
 
 /* ------------------------------------------------------------------ views */
 
+/**
+ * Kleine Strichzeichnungen für die Navigation. Sie erben die Farbe vom
+ * Menüpunkt, deshalb reicht ein einziges Gerüst für alle.
+ */
+const svg = (inner) =>
+  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" ` +
+  `stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
+
+const ICON = {
+  dashboard: svg(
+    '<rect x="3" y="3" width="7" height="8" rx="1.6"/><rect x="14" y="3" width="7" height="5" rx="1.6"/>' +
+      '<rect x="14" y="11" width="7" height="10" rx="1.6"/><rect x="3" y="14" width="7" height="7" rx="1.6"/>'
+  ),
+  eye: svg('<path d="M2.5 12S6 5.8 12 5.8 21.5 12 21.5 12 18 18.2 12 18.2 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.6"/>'),
+  spark: svg('<path d="m12 3 2 5.6 5.6 2-5.6 2-2 5.6-2-5.6-5.6-2 5.6-2Z"/><path d="m18.6 15.4.7 1.9 1.9.7-1.9.7-.7 1.9-.7-1.9-1.9-.7 1.9-.7Z"/>'),
+  search: svg('<circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/>'),
+  page: svg('<path d="M6 3h7l5 5v13H6z"/><path d="M13 3v5h5"/><path d="M9 13h6M9 17h4"/>'),
+  layout: svg('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11"/>'),
+  globe: svg('<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.4 2.6 3.7 5.6 3.7 9S14.4 18.4 12 21c-2.4-2.6-3.7-5.6-3.7-9S9.6 5.6 12 3Z"/>'),
+  user: svg('<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1-3.6 3.9-5.5 7.5-5.5s6.5 1.9 7.5 5.5"/>'),
+  music: svg('<path d="M9 18V6l11-2v12"/><circle cx="6.4" cy="18" r="2.6"/><circle cx="17.4" cy="16" r="2.6"/>'),
+  bolt: svg('<path d="M13 2 4.5 14H10l-1 8 9.5-12H13z"/>'),
+  calendar: svg('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'),
+  star: svg('<path d="m12 3.8 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>'),
+  image: svg('<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.7"/><path d="m4 17 5-4.5 4 3.5 3-2.5 4 3.5"/>'),
+  bag: svg('<path d="M5 7h14l-1 13H6z"/><path d="M9 7a3 3 0 0 1 6 0"/>'),
+  clipboard: svg('<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 3h6v3.5H9z"/><path d="m9.5 13 2 2 3.5-4"/>'),
+  mail: svg('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.6 7 8.4 6 8.4-6"/>'),
+  media: svg('<rect x="7" y="3" width="14" height="14" rx="2"/><path d="M17 17v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h2"/>'),
+  inbox: svg('<path d="M4.5 5h15l1.5 8v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4z"/><path d="M3 13h5l1.5 3h5L16 13h5"/>'),
+  upload: svg('<path d="M12 16V5"/><path d="m7.5 9.5 4.5-4.5 4.5 4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>'),
+  gear: svg('<circle cx="12" cy="12" r="3.1"/><path d="M12 2.5v3M12 18.5v3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M2.5 12h3M18.5 12h3M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1"/>'),
+};
+
 const NAV = [
   {
     group: "Übersicht",
     items: [
-      { id: "dashboard", label: "Dashboard", render: renderDashboard },
-      { id: "preview", label: "Website & Wünsche", render: renderPreview },
+      { id: "dashboard", label: "Dashboard", icon: ICON.dashboard, render: renderDashboard },
+      { id: "preview", label: "Website & Wünsche", icon: ICON.eye, render: renderPreview },
     ],
   },
   {
     group: "Website",
     items: [
-      { id: "design", label: "Start & Design", render: renderDesign },
-      { id: "seo", label: "SEO & Teilen", render: renderSeo },
-      { id: "pages", label: "Seiten", render: renderPages },
-      { id: "layout", label: "Abschnitte", render: renderLayout },
+      { id: "design", label: "Start & Design", icon: ICON.spark, render: renderDesign },
+      { id: "seo", label: "SEO & Teilen", icon: ICON.search, render: renderSeo },
+      { id: "pages", label: "Seiten", icon: ICON.page, render: renderPages },
+      { id: "layout", label: "Abschnitte", icon: ICON.layout, render: renderLayout },
       {
         id: "i18n",
         label: "Sprachen",
+        icon: ICON.globe,
         render: renderI18n,
         badge: () => translationSummary().reduce((n, l) => n + l.missing + l.stale, 0),
       },
@@ -69,24 +104,24 @@ const NAV = [
   {
     group: "Abschnitte",
     items: [
-      { id: "about", label: "About", render: renderAbout },
-      { id: "sound", label: "Sound & Mixe", render: renderSound },
-      { id: "experience", label: "Erlebnis", render: renderExperience },
-      { id: "shows", label: "Shows", render: renderShows },
-      { id: "references", label: "Referenzen", render: renderReferences },
-      { id: "gallery", label: "Galerie", render: renderGallery },
-      { id: "shop", label: "Shop", render: renderShop },
-      { id: "booking", label: "Booking", render: renderBooking },
-      { id: "contact", label: "Kontakt", render: renderContact },
+      { id: "about", label: "About", icon: ICON.user, render: renderAbout },
+      { id: "sound", label: "Sound & Mixe", icon: ICON.music, render: renderSound },
+      { id: "experience", label: "Erlebnis", icon: ICON.bolt, render: renderExperience },
+      { id: "shows", label: "Shows", icon: ICON.calendar, render: renderShows },
+      { id: "references", label: "Referenzen", icon: ICON.star, render: renderReferences },
+      { id: "gallery", label: "Galerie", icon: ICON.image, render: renderGallery },
+      { id: "shop", label: "Shop", icon: ICON.bag, render: renderShop },
+      { id: "booking", label: "Booking", icon: ICON.clipboard, render: renderBooking },
+      { id: "contact", label: "Kontakt", icon: ICON.mail, render: renderContact },
     ],
   },
   {
     group: "Verwaltung",
     items: [
-      { id: "media", label: "Medien", render: renderMedia },
-      { id: "inbox", label: "Anfragen", render: renderInbox, badge: () => openCount() },
-      { id: "publish", label: "Publizieren", render: renderPublish },
-      { id: "settings", label: "Einstellungen", render: renderSettings },
+      { id: "media", label: "Medien", icon: ICON.media, render: renderMedia },
+      { id: "inbox", label: "Anfragen", icon: ICON.inbox, render: renderInbox, badge: () => openCount() },
+      { id: "publish", label: "Publizieren", icon: ICON.upload, render: renderPublish },
+      { id: "settings", label: "Einstellungen", icon: ICON.gear, render: renderSettings },
     ],
   },
 ];
@@ -610,7 +645,11 @@ function renderSidebar() {
             dataset: { nav: item.id },
             onclick: () => go(item.id),
           },
-          [el("span", {}, item.label), badge ? el("span", { class: "nav-badge" }, String(badge)) : null]
+          [
+            item.icon ? el("span", { class: "nav-icon", html: item.icon }) : null,
+            el("span", { class: "nav-label" }, item.label),
+            badge ? el("span", { class: "nav-badge" }, String(badge)) : null,
+          ]
         )
       );
     });
@@ -689,7 +728,7 @@ function renderShell() {
         }, "☰"),
         el("div", { class: "brand" }, [
           el("span", { class: "brand-mark" }, "◆"),
-          el("span", {}, "Sam Sparkling — Verwaltung"),
+          el("span", { class: "brand-text" }, "Sam Sparkling — Verwaltung"),
           DEMO
             ? el(
                 "span",
