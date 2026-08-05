@@ -162,6 +162,17 @@ wegprogrammieren lassen — beide sind mit einer langen Passphrase unkritisch:
 freigeschaltet (auch nach einem Neuladen), bis du auf *Abmelden* klickst oder
 das Passwort in Firebase geändert wird.
 
+**Bilder, Videos und neue Einträge**
+
+- **Bilder und Videos** werden angeklickt, nicht ausgewählt: die Vorschau *ist*
+  der Knopf und öffnet die Medienbibliothek. Ein leeres Feld zeigt ein grosses
+  **+**. Darunter stehen *Entfernen* und — eingeklappt — *Adresse von Hand* für
+  Dateien, die nicht in der Bibliothek liegen.
+- **Alles, wovon es mehrere gibt** (Produkte, Termine, Mixe, Referenzen,
+  Galeriebilder, Social-Links …) kommt über die breite Fläche mit dem **+** am
+  Ende der jeweiligen Liste dazu. In der Galerie führt sie direkt in die
+  Mehrfach-Auswahl aus den Medien.
+
 **Speichern vs. Publizieren**
 
 - **Speichern** (auch `Strg`/`Cmd` + `S`) schreibt in die Datenbank. Öffentlich

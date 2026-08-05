@@ -119,37 +119,83 @@ export function selectField(path, label, options, opts = {}) {
 }
 
 /**
- * Bildfeld: Vorschau + „Aus Medien wählen“ + freie URL.
+ * Bild- oder Videofeld: die Vorschau selbst ist der Knopf. Ein Klick darauf
+ * öffnet die Medienbibliothek und tauscht das Medium aus — kein Umweg über
+ * einen Extra-Knopf. Ist noch nichts gesetzt, steht dort ein grosses „+“.
+ * Die Adresse von Hand einzutippen geht weiterhin, aber eingeklappt.
+ *
  * `path` zeigt auf das Objekt {src, alt, credit?} oder direkt auf einen String.
  */
 export function imageField(path, label, opts = {}) {
   const asObject = opts.asObject !== false;
   const srcPath = asObject ? `${path}.src` : path;
+  const wording = opts.kind === "video" ? "Video" : "Bild";
 
-  const thumb = el("div", { class: "img-thumb" });
-  const renderThumb = () => {
+  const preview = el("button", {
+    type: "button",
+    class: "media-pick",
+    onclick: () => choose(),
+  });
+
+  const removeBtn = el(
+    "button",
+    {
+      type: "button",
+      class: "link danger",
+      onclick: () => {
+        write(srcPath, "");
+        urlInput.value = "";
+        renderPreview();
+      },
+    },
+    "Entfernen"
+  );
+
+  const renderPreview = () => {
     const src = read(srcPath);
-    thumb.innerHTML = "";
+    const video = looksLikeVideo(src);
     const fallback = (e) =>
       e.target.replaceWith(el("span", { class: "img-empty" }, "nicht ladbar"));
-    thumb.classList.toggle("is-video", looksLikeVideo(src));
-    thumb.appendChild(
-      !src
-        ? el("span", { class: "img-empty" }, opts.emptyText || "kein Bild")
-        : looksLikeVideo(src)
-        ? el("video", {
-            src: previewSrc(src),
-            muted: true,
-            loop: true,
-            playsinline: true,
-            autoplay: true,
-            preload: "metadata",
-            onerror: fallback,
-          })
-        : el("img", { src: previewSrc(src), alt: "", loading: "lazy", onerror: fallback })
+
+    preview.classList.toggle("empty", !src);
+    preview.title = src ? `${wording} austauschen` : `${wording} wählen`;
+    removeBtn.hidden = !src;
+
+    preview.replaceChildren(
+      ...(!src
+        ? [
+            el("span", { class: "media-empty-plus" }, "+"),
+            el("span", { class: "media-empty-text" }, opts.emptyText || `${wording} wählen`),
+          ]
+        : [
+            video
+              ? el("video", {
+                  src: previewSrc(src),
+                  muted: true,
+                  loop: true,
+                  playsinline: true,
+                  autoplay: true,
+                  preload: "metadata",
+                  onerror: fallback,
+                })
+              : el("img", { src: previewSrc(src), alt: "", loading: "lazy", onerror: fallback }),
+            video ? el("span", { class: "media-kind" }, "Video") : null,
+            el("span", { class: "media-overlay" }, "Klicken zum Austauschen"),
+          ].filter(Boolean))
     );
   };
-  renderThumb();
+
+  async function choose() {
+    if (!mediaPicker) return toast("Medienbibliothek noch nicht bereit", "err");
+    const item = await mediaPicker({ kind: opts.kind });
+    if (!item) return;
+    write(srcPath, item.url);
+    urlInput.value = item.url;
+    if (asObject && !read(`${path}.alt`) && item.alt) write(`${path}.alt`, item.alt);
+    renderPreview();
+    if (altInput && read(`${path}.alt`)) altInput.value = read(`${path}.alt`);
+    if (typeof opts.afterPick === "function") opts.afterPick(item);
+  }
 
   const urlInput = el("input", {
     type: "text",
@@ -158,29 +204,29 @@ export function imageField(path, label, opts = {}) {
     class: "mono-input",
     oninput: (e) => {
       write(srcPath, e.target.value);
-      renderThumb();
+      renderPreview();
     },
   });
 
-  const pick = el(
+  const manual = el("div", { class: "media-manual", hidden: true }, [
+    el("label", { class: "field-label" }, "Adresse von Hand"),
+    urlInput,
+  ]);
+  const manualToggle = el(
     "button",
     {
       type: "button",
-      class: "btn ghost sm",
-      onclick: async () => {
-        if (!mediaPicker) return toast("Medienbibliothek noch nicht bereit", "err");
-        const item = await mediaPicker({ kind: opts.kind });
-        if (!item) return;
-        write(srcPath, item.url);
-        urlInput.value = item.url;
-        if (asObject && !read(`${path}.alt`) && item.alt) write(`${path}.alt`, item.alt);
-        renderThumb();
-        if (altInput && read(`${path}.alt`)) altInput.value = read(`${path}.alt`);
-        if (typeof opts.afterPick === "function") opts.afterPick(item);
+      class: "link",
+      onclick: () => {
+        manual.hidden = !manual.hidden;
+        manualToggle.textContent = manual.hidden ? "Adresse von Hand" : "Adresse ausblenden";
+        if (!manual.hidden) urlInput.focus();
       },
     },
-    opts.pickLabel || "Aus Medien wählen"
+    "Adresse von Hand"
   );
+
+  renderPreview();
 
   let altInput = null;
   const extras = [];
@@ -202,7 +248,9 @@ export function imageField(path, label, opts = {}) {
 
   return el("div", { class: "field img-field" }, [
     label ? el("label", { class: "field-label" }, label) : null,
-    el("div", { class: "img-row" }, [thumb, el("div", { class: "img-ctrl" }, [urlInput, pick])]),
+    preview,
+    el("div", { class: "media-actions" }, [manualToggle, removeBtn]),
+    manual,
     ...extras,
     opts.hint ? el("p", { class: "field-hint" }, opts.hint) : null,
   ]);
@@ -262,20 +310,16 @@ export function stringList(path, label, opts = {}) {
       );
     });
     host.appendChild(
-      el(
-        "button",
-        {
-          type: "button",
-          class: "btn ghost sm add",
-          onclick: () => {
-            items.push("");
-            markDirty();
-            render();
-            const last = host.querySelectorAll("input,textarea");
-            if (last.length) last[last.length - 1].focus();
-          },
+      addTile(
+        opts.addLabel || "Zeile hinzufügen",
+        () => {
+          items.push("");
+          markDirty();
+          render();
+          const last = host.querySelectorAll("input,textarea");
+          if (last.length) last[last.length - 1].focus();
         },
-        opts.addLabel || "+ Zeile"
+        { small: true }
       )
     );
   };
@@ -290,6 +334,19 @@ export function stringList(path, label, opts = {}) {
 
 function toolBtn(text, title, onclick, cls = "") {
   return el("button", { type: "button", class: "tool " + cls, title, "aria-label": title, onclick }, text);
+}
+
+/**
+ * Hinzufügen geht überall gleich: eine breite Fläche mit einem „+“ davor.
+ * Beschriftungen dürfen weiterhin als „+ Produkt“ hereinkommen — das Zeichen
+ * steckt jetzt im Kreis, im Text wäre es doppelt.
+ */
+function addTile(label, onclick, opts = {}) {
+  return el(
+    "button",
+    { type: "button", class: "add-tile" + (opts.small ? " sm" : ""), onclick },
+    [el("span", { class: "plus", "aria-hidden": "true" }, "+"), String(label).replace(/^\+\s*/, "")]
+  );
 }
 
 /**
@@ -345,41 +402,45 @@ export function objectList(path, label, opts = {}) {
       ]);
       host.appendChild(card);
     });
-    const addRow = el("div", { class: "add-row" }, [
-      el(
-        "button",
-        {
-          type: "button",
-          class: "btn ghost sm",
-          onclick: () => {
-            items.push(clone(opts.newItem || {}));
-            markDirty();
+    host.appendChild(
+      addTile(opts.addLabel || "Eintrag hinzufügen", async () => {
+        // `onAdd` übernimmt das Anlegen selbst (z. B. Auswahl aus der
+        // Medienbibliothek); sonst kommt ein leerer Eintrag dazu.
+        if (typeof opts.onAdd === "function") {
+          await opts.onAdd(items, () => {
             render();
             changed();
-            const cards = host.querySelectorAll(".card");
-            const last = cards[cards.length - 1];
-            if (last) {
-              last.scrollIntoView({ block: "nearest" });
-              const f = last.querySelector("input,textarea,select");
-              if (f) f.focus();
-            }
-          },
-        },
-        opts.addLabel || "+ Eintrag"
-      ),
-      ...(opts.extraAdd || []).map((a) =>
+          });
+          return;
+        }
+        items.push(clone(opts.newItem || {}));
+        markDirty();
+        render();
+        changed();
+        const cards = host.querySelectorAll(".card");
+        const last = cards[cards.length - 1];
+        if (last) {
+          last.scrollIntoView({ block: "nearest" });
+          const f = last.querySelector("input,textarea,select");
+          if (f) f.focus();
+        }
+      })
+    );
+    if ((opts.extraAdd || []).length) {
+      host.appendChild(
         el(
-          "button",
-          {
-            type: "button",
-            class: "btn ghost sm",
-            onclick: () => a.onClick(items, render),
-          },
-          a.label
+          "div",
+          { class: "add-row" },
+          opts.extraAdd.map((a) =>
+            el(
+              "button",
+              { type: "button", class: "btn ghost sm", onclick: () => a.onClick(items, render) },
+              a.label
+            )
+          )
         )
-      ),
-    ]);
-    host.appendChild(addRow);
+      );
+    }
   };
   render();
 

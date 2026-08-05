@@ -68,7 +68,7 @@ export function renderDesign() {
     group("Lauftext-Ticker", [
       checkboxField("ticker.enabled", "Ticker anzeigen"),
       objectList("ticker.items", "Wörter", {
-        addLabel: "+ Wortpaar",
+        addLabel: "Wortpaar hinzufügen",
         newItem: { text: "", accent: "" },
         titleOf: (i) => [i.text, i.accent].filter(Boolean).join(" ") || "(leer)",
         emptyText: "Keine Ticker-Wörter.",
@@ -134,8 +134,7 @@ function heroBackground() {
           ], { hint: "Welcher Teil sichtbar bleibt, wenn Ränder abgeschnitten werden." }),
       imageField("hero.media", isVideo ? "Video-Datei" : "Bild", {
         kind: isVideo ? "video" : "image",
-        pickLabel: isVideo ? "Video wählen" : "Bild wählen",
-        emptyText: isVideo ? "kein Video" : "kein Bild",
+        emptyText: isVideo ? "Video wählen" : "Bild wählen",
         alt: true,
         afterPick: (item) => {
           const nowVideo = item.kind === "video" || /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(item.url || "");
@@ -193,7 +192,7 @@ export function renderSeo() {
         hint: "Ideal 140–160 Zeichen. Das ist der Text unter dem Suchergebnis.",
       }),
       stringList("site.keywords", "Keywords", {
-        addLabel: "+ Keyword",
+        addLabel: "Keyword hinzufügen",
         placeholder: "Hardstyle DJ Schweiz",
         hint: "Nur noch schwach gewichtet — 5 bis 10 treffende Begriffe genügen.",
       }),
@@ -261,14 +260,14 @@ export function renderAbout() {
       stringList("sections.about.paragraphs", "Absätze", {
         multiline: true,
         rows: 5,
-        addLabel: "+ Absatz",
+        addLabel: "Absatz hinzufügen",
         hint: "**doppelte Sternchen** machen fett, [Text](https://…) macht einen Link.",
       }),
-      stringList("sections.about.words", "Stichworte (Kacheln)", { addLabel: "+ Stichwort" }),
+      stringList("sections.about.words", "Stichworte (Kacheln)", { addLabel: "Stichwort hinzufügen" }),
     ]),
     group("Fakten-Leiste", [
       objectList("sections.about.facts", null, {
-        addLabel: "+ Fakt",
+        addLabel: "Fakt hinzufügen",
         newItem: { value: "", label: "" },
         titleOf: (i) => [i.value, i.label].filter(Boolean).join(" — ") || "(leer)",
         emptyText: "Keine Fakten — die Leiste wird dann nicht angezeigt.",
@@ -289,7 +288,7 @@ export function renderSound() {
     sectionBasics("sound"),
     group("Genres", [
       objectList("sections.sound.genres", null, {
-        addLabel: "+ Genre",
+        addLabel: "Genre hinzufügen",
         newItem: { name: "", meta: "Genre" },
         titleOf: (i) => i.name || "(leer)",
         fields: (base) => [
@@ -301,7 +300,7 @@ export function renderSound() {
     ]),
     group("Mixe", [
       objectList("sections.sound.mixes", null, {
-        addLabel: "+ Mix",
+        addLabel: "Mix hinzufügen",
         newItem: { kicker: "Latest Mix", title: "", text: "", linkLabel: "Listen", linkUrl: "", embedUrl: "" },
         titleOf: (i) => i.title || "(ohne Titel)",
         emptyText: "Keine Mixe.",
@@ -438,7 +437,7 @@ export function renderExperience() {
     ]),
     group("Momente", [
       objectList("sections.experience.moments", null, {
-        addLabel: "+ Moment",
+        addLabel: "Moment hinzufügen",
         newItem: { kicker: "", title: "", text: "" },
         titleOf: (i) => i.title || "(leer)",
         emptyText: "Keine Momente.",
@@ -480,7 +479,7 @@ export function renderShows() {
     }),
     group("Termine", [
       objectList("sections.shows.items", null, {
-        addLabel: "+ Termin",
+        addLabel: "Termin hinzufügen",
         newItem: {
           date: "",
           name: "",
@@ -544,7 +543,7 @@ export function renderShop() {
     ], { cols: 2 }),
     group("Produkte", [
       objectList("sections.shop.items", null, {
-        addLabel: "+ Produkt",
+        addLabel: "Produkt hinzufügen",
         newItem: { name: "", price: "", note: "", src: "", alt: "", linkUrl: "", status: "available" },
         titleOf: (i) => [i.name, i.price].filter(Boolean).join("  ·  ") || "(neues Produkt)",
         emptyText: "Noch keine Produkte — die Website zeigt solange den Text oben.",
@@ -590,7 +589,7 @@ export function renderReferences() {
     sectionBasics("references"),
     group("Liste", [
       objectList("sections.references.items", null, {
-        addLabel: "+ Referenz",
+        addLabel: "Referenz hinzufügen",
         newItem: { name: "", city: "", url: "" },
         titleOf: (i) => [i.name, i.city].filter(Boolean).join(" — ") || "(leer)",
         fields: (base) => [
@@ -627,22 +626,29 @@ export function renderGallery() {
     }),
     group("Bilder", [
       objectList("sections.gallery.items", null, {
-        addLabel: "+ leeres Bild",
+        // Der übliche Weg ist „Bilder aussuchen“ — der leere Platz ist die
+        // Ausnahme (z. B. wenn die Adresse von Hand kommt).
+        addLabel: "Bilder aus den Medien hinzufügen",
+        onAdd: async (items, render) => {
+          const chosen = await pickMany({ kind: "image" });
+          if (!chosen || !chosen.length) return;
+          chosen.forEach((m) =>
+            items.push({ src: m.url, alt: m.alt || "", credit: getPath(S.content, "site.photoCredit") || "" })
+          );
+          markDirty();
+          render();
+          toast(`${chosen.length} Bild(er) hinzugefügt`);
+        },
         newItem: { src: "", alt: "", credit: "" },
         titleOf: (i, n) => i.alt || `Bild ${n + 1}`,
         emptyText: "Keine Bilder.",
         extraAdd: [
           {
-            label: "+ Aus Medien hinzufügen",
-            onClick: async (items, render) => {
-              const chosen = await pickMany({ kind: "image" });
-              if (!chosen || !chosen.length) return;
-              chosen.forEach((m) =>
-                items.push({ src: m.url, alt: m.alt || "", credit: getPath(S.content, "site.photoCredit") || "" })
-              );
+            label: "leerer Platz",
+            onClick: (items, render) => {
+              items.push({ src: "", alt: "", credit: "" });
               markDirty();
               render();
-              toast(`${chosen.length} Bild(er) hinzugefügt`);
             },
           },
         ],
@@ -671,7 +677,7 @@ export function renderBooking() {
     sectionBasics("booking"),
     group("Verfügbar für", [
       textField("sections.booking.availableKicker", "Kleine Zeile"),
-      stringList("sections.booking.available", "Einträge", { addLabel: "+ Eintrag" }),
+      stringList("sections.booking.available", "Einträge", { addLabel: "Eintrag hinzufügen" }),
     ]),
     group("Presskit", [
       textField("sections.booking.presskitLabel", "Button-Text"),
@@ -691,13 +697,13 @@ export function renderBooking() {
     group("Rider (technische Anforderungen)", [
       textField("sections.booking.rider.kicker", "Kleine Zeile"),
       objectList("sections.booking.rider.groups", "Gruppen", {
-        addLabel: "+ Gruppe",
+        addLabel: "Gruppe hinzufügen",
         newItem: { title: "", items: [] },
         titleOf: (i) => i.title || "(neue Gruppe)",
         fields: (base) => [
           textField(`${base}.title`, "Titel", { placeholder: "CDJs — 4× required" }),
           objectList(`${base}.items`, "Geräte", {
-            addLabel: "+ Gerät",
+            addLabel: "Gerät hinzufügen",
             newItem: { name: "", meta: "" },
             titleOf: (i) => i.name || "(leer)",
             confirmDelete: false,
@@ -727,7 +733,7 @@ export function renderContact() {
     ], { cols: 2 }),
     group("Social Media & Musik", [
       objectList("sections.contact.socials", null, {
-        addLabel: "+ Link",
+        addLabel: "Link hinzufügen",
         newItem: { label: "", url: "" },
         titleOf: (i) => i.label || "(leer)",
         hint: "Instagram, Mixcloud, SoundCloud, Spotify, YouTube …",
@@ -819,7 +825,7 @@ export function renderPages() {
       : null,
     group(null, [
       objectList("pages", null, {
-        addLabel: "+ Seite",
+        addLabel: "Seite hinzufügen",
         newItem: {
           slug: "",
           navLabel: "Neue Seite",
