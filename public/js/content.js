@@ -673,7 +673,7 @@ export function renderGallery() {
 
 export function renderBooking() {
   return view([
-    head("Booking", "Verfügbarkeit, Rider, Presskit und das Anfrage-Formular."),
+    head("Booking", "Verfügbarkeit, Presskit und das Anfrage-Formular."),
     sectionBasics("booking"),
     group("Verfügbar für", [
       textField("sections.booking.availableKicker", "Kleine Zeile"),
@@ -693,28 +693,6 @@ export function renderBooking() {
       textField("sections.booking.form.submitLabel", "Button-Text"),
       textArea("sections.booking.form.successText", "Text nach dem Absenden", { rows: 2 }),
       textArea("sections.booking.form.errorText", "Text bei einem Fehler", { rows: 2 }),
-    ]),
-    group("Rider (technische Anforderungen)", [
-      textField("sections.booking.rider.kicker", "Kleine Zeile"),
-      objectList("sections.booking.rider.groups", "Gruppen", {
-        addLabel: "Gruppe hinzufügen",
-        newItem: { title: "", items: [] },
-        titleOf: (i) => i.title || "(neue Gruppe)",
-        fields: (base) => [
-          textField(`${base}.title`, "Titel", { placeholder: "CDJs — 4× required" }),
-          objectList(`${base}.items`, "Geräte", {
-            addLabel: "Gerät hinzufügen",
-            newItem: { name: "", meta: "" },
-            titleOf: (i) => i.name || "(leer)",
-            confirmDelete: false,
-            fields: (b2) => [
-              textField(`${b2}.name`, "Gerät"),
-              textField(`${b2}.meta`, "Hinweis rechts", { placeholder: "1st choice" }),
-            ],
-          }),
-        ],
-      }),
-      textArea("sections.booking.rider.note", "Hinweis-Box", { rows: 3 }),
     ]),
   ]);
 }

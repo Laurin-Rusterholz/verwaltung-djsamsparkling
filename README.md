@@ -3,7 +3,7 @@
 Management-Oberfläche für die Website von **Sam Sparkling**
 ([Repo `s-mi`](https://github.com/Laurin-Rusterholz/s-mi), live auf
 `djsamsparkling.netlify.app`). Hier wird die **ganze Website eingestellt**: Texte, Bilder,
-Shows, Rider, SEO, Reihenfolge und Sichtbarkeit der Abschnitte — plus die
+Shows, SEO, Reihenfolge und Sichtbarkeit der Abschnitte — plus die
 Booking-Anfragen, die über das Formular auf der Website hereinkommen.
 
 Reine statische Seite, keine Netlify-Functions. Alles läuft direkt gegen dein
@@ -151,7 +151,7 @@ wegprogrammieren lassen — beide sind mit einer langen Passphrase unkritisch:
 | **Referenzen** | Clubs und Festivals |
 | **Galerie** | Bilder aus der Medienbibliothek, sortierbar, mit Alt-Text und Bildnachweis; Anzahl der zunächst sichtbaren Mobile-Bilder einstellbar |
 | **Shop** | Produkte mit Bild, Preis, Beschreibung und Bezahl-Link (Stripe Payment Link / PayPal.me); ohne Link bestellt die Kundschaft per Mail. Anleitung für Bezahl-Links direkt in der Ansicht |
-| **Booking** | Verfügbarkeit, Presskit, Anfrage-Formular, Rider (Gruppen mit Geräten) |
+| **Booking** | Verfügbarkeit, Presskit, Anfrage-Formular |
 | **Kontakt** | E-Mail, Telefon, Standort, beliebig viele Social-Links |
 | **Medien** | Upload per Drag & Drop nach Firebase Storage — Bilder **und Videos** (MP4, WebM), max. 250 MB pro Datei; zeigt an, was unbenutzt ist |
 | **Anfragen** | Eingang aus dem Website-Formular, Status (neu / in Abklärung / bestätigt / abgelehnt), Antwort per Mail — **bestätigt legt automatisch einen gebuchten Termin im Kalender an** |
@@ -272,7 +272,7 @@ kennt, kann den Key benutzen; bei Verdacht in der Anthropic-Konsole neu
 erzeugen. Ohne Key funktioniert alles andere weiter, nur der KI-Knopf nicht.
 
 Übersetzt werden nur Texte — keine URLs, Farben, Daten, Dateinamen und keine
-Eigennamen (Clubs, Festivals, Geräte im Rider, Genre-Bezeichnungen). Welche
+Eigennamen (Clubs, Festivals, Genre-Bezeichnungen). Welche
 Felder das sind, steht in `public/js/i18n.js` und muss mit `collectStrings()`
 in `s-mi/scripts/build.mjs` übereinstimmen.
 
