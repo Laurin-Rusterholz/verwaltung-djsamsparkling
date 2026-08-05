@@ -39,7 +39,13 @@ const looksTechnical = (v) =>
   /^#[0-9a-f]{3,8}$/i.test(v) ||
   /^\d{4}-\d{2}-\d{2}$/.test(v);
 
-const NO_TRANSLATE_PATH = /^layout\.|^pages\.\d+\.sections\.|^pages\.\d+\.hero$/;
+// Kanal-Namen sind Eigennamen: "Instagram", "Spotify" und "Mixcloud" heissen
+// in jeder Sprache gleich. Uebersetzt man sie, zeigt die Tabelle ueber die
+// Position auf den Kanal — nach dem Loeschen eines Kanals rutscht der Name des
+// geloeschten auf den naechsten Eintrag. Genau so trug der Mixcloud-Link auf
+// /de/ und /fr/ die Aufschrift "Instagram". Muss mit build.mjs uebereinstimmen.
+const NO_TRANSLATE_PATH =
+  /^layout\.|^pages\.\d+\.sections\.|^pages\.\d+\.hero$|^sections\.contact\.socials\./;
 
 export function collectStrings(node, prefix = "", out = []) {
   if (prefix && NO_TRANSLATE_PATH.test(prefix)) return out;
