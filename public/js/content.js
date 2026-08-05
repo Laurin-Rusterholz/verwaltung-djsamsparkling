@@ -280,46 +280,6 @@ export function renderAbout() {
   ]);
 }
 
-/* ------------------------------------------------------- Abschnitt: Sound */
-
-export function renderSound() {
-  return view([
-    head("Sound & Mixe", "Genres und veröffentlichte Sets."),
-    sectionBasics("sound"),
-    group("Genres", [
-      objectList("sections.sound.genres", null, {
-        addLabel: "Genre hinzufügen",
-        newItem: { name: "", meta: "Genre" },
-        titleOf: (i) => i.name || "(leer)",
-        fields: (base) => [
-          textField(`${base}.name`, "Genre"),
-          textField(`${base}.meta`, "Beschriftung rechts", { placeholder: "Genre" }),
-        ],
-      }),
-      textField("sections.sound.note", "Satz unter den Genres"),
-    ]),
-    group("Mixe", [
-      objectList("sections.sound.mixes", null, {
-        addLabel: "Mix hinzufügen",
-        newItem: { kicker: "Latest Mix", title: "", text: "", linkLabel: "Listen", linkUrl: "", embedUrl: "" },
-        titleOf: (i) => i.title || "(ohne Titel)",
-        emptyText: "Keine Mixe.",
-        fields: (base) => [
-          textField(`${base}.kicker`, "Kleine Zeile oben", { placeholder: "Latest Mix" }),
-          textField(`${base}.title`, "Titel"),
-          textArea(`${base}.text`, "Kurzbeschreibung", { rows: 2 }),
-          textField(`${base}.linkLabel`, "Button-Text", { placeholder: "Listen on Mixcloud" }),
-          textField(`${base}.linkUrl`, "Button-Link", { mono: true }),
-          textField(`${base}.embedUrl`, "Player einbetten (optional)", {
-            mono: true,
-            hint: "Embed-URL von Mixcloud/SoundCloud/Spotify. Leer = nur Button.",
-          }),
-        ],
-      }),
-    ]),
-  ]);
-}
-
 /* ------------------------------------------------------- Abschnitt: Shows */
 
 /** Monatsübersicht der Termine — dieselbe Ansicht wie auf der Website. */
@@ -426,40 +386,6 @@ function showsCalendar() {
   return host;
 }
 
-/* ---------------------------------------------------- Abschnitt: Erlebnis */
-
-export function renderExperience() {
-  return view([
-    head("Erlebnis", "Was ein Sam-Sparkling-Set ausmacht — für Booker und Fans."),
-    sectionBasics("experience"),
-    group("Einstieg", [
-      textArea("sections.experience.lede", "Einstiegssatz (gross gesetzt)", { rows: 2 }),
-    ]),
-    group("Momente", [
-      objectList("sections.experience.moments", null, {
-        addLabel: "Moment hinzufügen",
-        newItem: { kicker: "", title: "", text: "" },
-        titleOf: (i) => i.title || "(leer)",
-        emptyText: "Keine Momente.",
-        fields: (base) => [
-          textField(`${base}.kicker`, "Kleine Zeile oben", { placeholder: "Peak time" }),
-          textField(`${base}.title`, "Titel", { placeholder: "The Drop" }),
-          textArea(`${base}.text`, "Text", { rows: 2 }),
-        ],
-      }),
-    ]),
-    group("Aftermovie (optional)", [
-      textField("sections.experience.embedUrl", "Einbett-Link (YouTube/Vimeo, embed-URL)", { mono: true }),
-      textField("sections.experience.embedLabel", "Titel für Screenreader", { placeholder: "Aftermovie" }),
-    ], { cols: 2 }),
-    group("Zitat (optional)", [
-      textArea("sections.experience.quote.text", "Zitat", { rows: 2 }),
-      textField("sections.experience.quote.name", "Person"),
-      textField("sections.experience.quote.venue", "Club / Festival"),
-    ], { cols: 2 }),
-  ]);
-}
-
 export function renderShows() {
   const today = new Date().toISOString().slice(0, 10);
   const items = getPath(S.content, "sections.shows.items") || [];
@@ -518,66 +444,6 @@ export function renderShows() {
     ], {
       hint: "Der Abschnitt erscheint erst, sobald oben mindestens ein echter Termin angelegt ist. Der Kalender im Booking-Formular bleibt für Wunschanfragen trotzdem verfügbar.",
     }),
-  ]);
-}
-
-/* ------------------------------------------------------- Abschnitt: Shop */
-
-export function renderShop() {
-  return view([
-    head(
-      "Shop",
-      "Merch verkaufen, ohne eigenen Server: jedes Produkt bekommt einen Bezahl-Link. " +
-        "Ohne Link zeigt die Website einen „Per Mail bestellen“-Knopf an die Kontakt-Adresse."
-    ),
-    sectionBasics("shop"),
-    group("Allgemein", [
-      textField("sections.shop.currency", "Währung", { placeholder: "CHF", maxlength: 5 }),
-      textField("sections.shop.twint", "TWINT-Nummer", {
-        placeholder: "+41 77 509 11 71",
-        hint: "Deine eigene Bezahlmethode: Produkte ohne Bezahl-Link zeigen dann einen TWINT-Kauf an (Nummer, Betrag, Vermerk, Mail-Bestätigung).",
-      }),
-      textField("sections.shop.buyLabel", "Kauf-Knopf", { placeholder: "Kaufen" }),
-      textArea("sections.shop.note", "Einleitung", { rows: 2 }),
-      textArea("sections.shop.emptyText", "Text, solange keine Produkte da sind", { rows: 2 }),
-    ], { cols: 2 }),
-    group("Produkte", [
-      objectList("sections.shop.items", null, {
-        addLabel: "Produkt hinzufügen",
-        newItem: { name: "", price: "", note: "", src: "", alt: "", linkUrl: "", status: "available" },
-        titleOf: (i) => [i.name, i.price].filter(Boolean).join("  ·  ") || "(neues Produkt)",
-        emptyText: "Noch keine Produkte — die Website zeigt solange den Text oben.",
-        fields: (base) => [
-          imageField(base, "Produktbild", { kind: "image", alt: true }),
-          textField(`${base}.name`, "Name", { placeholder: "Sparkling T-Shirt" }),
-          textField(`${base}.price`, "Preis", { placeholder: "45", maxlength: 12, hint: "Nur die Zahl — die Währung kommt aus der Einstellung oben." }),
-          textField(`${base}.note`, "Beschreibung (kurz)", { placeholder: "Schwarz, Logo vorne, S–XL" }),
-          textField(`${base}.linkUrl`, "Bezahl-Link", {
-            mono: true,
-            hint: "Stripe Payment Link oder PayPal.me — auf stripe.com bzw. paypal.me erstellen und hier einsetzen. Leer = Bestellung per Mail.",
-          }),
-          selectField(`${base}.status`, "Status", [
-            ["available", "verfügbar"],
-            ["soldout", "ausverkauft"],
-          ]),
-        ],
-      }),
-    ]),
-    group("So läuft das Bezahlen", [
-      el("p", { class: "field-hint" }, "Pro Produkt gilt: Bezahl-Link gesetzt → Kauf über den Link. Sonst TWINT-Nummer gesetzt → TWINT-Kauf. Sonst → Bestellung per Mail."),
-      el("h4", { class: "group-title" }, "Weg 1 — TWINT (deine eigene Bezahlmethode, sofort startklar)"),
-      el("ol", { class: "steps" }, [
-        el("li", {}, "Oben deine TWINT-Handynummer eintragen und publizieren — fertig."),
-        el("li", {}, "Die Kundschaft zahlt per TWINT (Betrag + Produktname als Vermerk) und bestätigt per Mail mit Lieferadresse."),
-        el("li", {}, "Zahlung in der TWINT-App prüfen, Paket verschicken."),
-      ]),
-      el("h4", { class: "group-title" }, "Weg 2 — Stripe Payment Link (Kartenzahlung, automatische Quittung)"),
-      el("ol", { class: "steps" }, [
-        el("li", {}, "Konto bei stripe.com anlegen (einmalig — Gebühr fällt nur pro Verkauf an)."),
-        el("li", {}, "Stripe → Payment Links → „+ Neu“: Produkt, Preis und Versand eintragen."),
-        el("li", {}, "Den Link beim Produkt als Bezahl-Link einsetzen und publizieren."),
-      ]),
-    ]),
   ]);
 }
 

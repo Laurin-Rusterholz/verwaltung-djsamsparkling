@@ -262,12 +262,9 @@ function normalize(c) {
     "sections.about.paragraphs",
     "sections.about.words",
     "sections.about.facts",
-    "sections.sound.genres",
-    "sections.sound.mixes",
     "sections.shows.items",
     "sections.references.items",
     "sections.gallery.items",
-    "sections.shop.items",
     "sections.booking.available",
     "sections.contact.socials",
   ];

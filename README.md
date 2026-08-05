@@ -146,11 +146,9 @@ wegprogrammieren lassen — beide sind mit einer langen Passphrase unkritisch:
 | **Sprachen** | Deutsch, Englisch, Französisch: Stand je Sprache, Übersetzungen von Hand bearbeiten, „Fehlende mit KI übersetzen“ |
 | **Abschnitte** | Sichtbarkeit, Menü-Beschriftungen, zweifarbige Überschriften |
 | **About** | Portrait, Einstiegstext, Absätze (`**fett**`, `[Link](url)`), Stichworte, Fakten-Leiste |
-| **Sound & Mixe** | Genres, beliebig viele Mixe mit Link und optionalem Player-Embed |
 | **Shows** | Termine mit Datum, Location, Stadt, Ticket-Link, Status (bestätigt / **gebucht** / ausverkauft / abgesagt) — plus Monatskalender als Übersicht |
 | **Referenzen** | Clubs und Festivals |
 | **Galerie** | Bilder aus der Medienbibliothek, sortierbar, mit Alt-Text und Bildnachweis; Anzahl der zunächst sichtbaren Mobile-Bilder einstellbar |
-| **Shop** | Produkte mit Bild, Preis, Beschreibung und Bezahl-Link (Stripe Payment Link / PayPal.me); ohne Link bestellt die Kundschaft per Mail. Anleitung für Bezahl-Links direkt in der Ansicht |
 | **Booking** | Verfügbarkeit, Presskit, Anfrage-Formular |
 | **Kontakt** | E-Mail, Telefon, Standort, beliebig viele Social-Links |
 | **Medien** | Upload per Drag & Drop nach Firebase Storage — Bilder **und Videos** (MP4, WebM), max. 250 MB pro Datei; zeigt an, was unbenutzt ist |
@@ -191,7 +189,7 @@ wird sie mit vier Seiten:
 
 | Adresse | Abschnitte |
 |---|---|
-| `/` | About, Sound |
+| `/` | About |
 | `/shows/` | Shows (mit Kalender), Referenzen |
 | `/gallery/` | Galerie |
 | `/booking/` | Booking, Kontakt |

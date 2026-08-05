@@ -2,20 +2,17 @@ import { DEFAULT_SITE_URL } from "./config.js";
 import { S } from "./store.js";
 
 const EDITOR_SECTIONS = new Set([
-  "design", "seo", "about", "sound", "experience", "shows",
-  "references", "gallery", "shop", "booking", "contact"
+  "design", "seo", "about", "shows",
+  "references", "gallery", "booking", "contact"
 ]);
 
 const SECTION_HASH = {
   design: "top",
   seo: "top",
   about: "about",
-  sound: "sound",
-  experience: "experience",
   shows: "shows",
   references: "references",
   gallery: "gallery",
-  shop: "shop",
   booking: "booking",
   contact: "contact",
 };
