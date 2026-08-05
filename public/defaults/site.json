@@ -1,6 +1,6 @@
 {
   "hero": {
-    "ctaHref": "#booking",
+    "ctaHref": "#booking-form",
     "ctaLabel": "Book me",
     "kicker": "DJ & producer — St. Gallen, Switzerland",
     "media": {
@@ -1329,6 +1329,7 @@
     },
     "gallery": {
       "enabled": true,
+      "mobileLimit": 4,
       "items": [
         {
           "alt": "Sam Sparkling live — crowd with hands up",
