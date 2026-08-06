@@ -47,7 +47,7 @@ const SCHEMA = {
 
 function systemPrompt(target, brief) {
   return [
-    "Du übersetzt die Website des Schweizer DJs Sam Sparkling aus dem Deutschen ins " +
+    "Du übersetzt die Website des Schweizer DJs Sam Sparking aus dem Deutschen ins " +
       (LANG_NAMES[target] || target) +
       ".",
     "",
@@ -55,7 +55,7 @@ function systemPrompt(target, brief) {
     "Halte diesen Ton. Übersetze Sinn und Wirkung, nicht Wort für Wort.",
     "",
     "Regeln:",
-    "- Eigennamen bleiben: Sam Sparkling, Ortsnamen, Club- und Festivalnamen, Genre-Namen (Techno, Tech House, Afro House, Melodic House).",
+    "- Eigennamen bleiben: Sam Sparking, Ortsnamen, Club- und Festivalnamen, Genre-Namen (Techno, Tech House, Afro House, Melodic House).",
     "- Typografie übernehmen: Endpunkte wie „SHOWS.“, Grossschreibung, Pfeile (↓ → ·), Auslassungspunkte.",
     "- Platzhalter in geschweiften Klammern ({n}, {total}) unverändert stehen lassen.",
     "- Knopf- und Menütexte bleiben ähnlich kurz wie das Original (Platz auf dem Handy).",

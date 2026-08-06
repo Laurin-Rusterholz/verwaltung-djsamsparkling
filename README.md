@@ -1,6 +1,6 @@
-# Verwaltung DJ Sam Sparkling
+# Verwaltung DJ Sam Sparking
 
-Management-Oberfläche für die Website von **Sam Sparkling**
+Management-Oberfläche für die Website von **Sam Sparking**
 ([Repo `s-mi`](https://github.com/Laurin-Rusterholz/s-mi), live auf
 `djsamsparkling.netlify.app`). Hier wird die **ganze Website eingestellt**: Texte, Bilder,
 Shows, SEO, Reihenfolge und Sichtbarkeit der Abschnitte — plus die

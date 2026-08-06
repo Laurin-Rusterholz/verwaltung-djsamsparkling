@@ -1,6 +1,6 @@
 rules_version = '2';
 
-// Storage-Regeln für die Bilder der Sam-Sparkling-Website.
+// Storage-Regeln für die Bilder der Sam-Sparking-Website.
 //
 // WICHTIG: Diese Datei deckt nur den Pfad samsparking/media ab. Wird sie
 // unverändert deployt, verlieren alle anderen Pfade im Bucket ihre Regeln.

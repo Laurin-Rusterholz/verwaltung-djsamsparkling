@@ -65,7 +65,7 @@ export async function sendeWunsch({ text, section, sectionTitle, label, url, lan
   const titel = `Website-Wunsch: ${stelle}`.slice(0, 200);
 
   const zeilen = [text.trim(), ""];
-  zeilen.push("— Anpassungswunsch von der Website Sam Sparkling —");
+  zeilen.push("— Anpassungswunsch von der Website Sam Sparking —");
   if (stelle) zeilen.push(`Abschnitt: ${stelle}${section ? ` (#${section})` : ""}`);
   // Bei einer angetippten Überschrift wäre das dieselbe Angabe zweimal
   if (label && label.replace(/[.!?…]+$/, "") !== stelle) zeilen.push(`Angetippt: ${label}`);
@@ -80,7 +80,7 @@ export async function sendeWunsch({ text, section, sectionTitle, label, url, lan
     priority: 3,
     source: "samsparking-website",
     type: "anpassungswunsch",
-    tags: ["Website", "Sam Sparkling"],
+    tags: ["Website", "Sam Sparking"],
     createdAt: new Date().toISOString(),
     createdBy: S.user?.email || "Verwaltung",
   };

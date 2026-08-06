@@ -87,7 +87,7 @@ function mailtoLink(q) {
     "",
     "Danke für die Anfrage!",
     "",
-    "— Sam Sparkling",
+    "— Sam Sparking",
   ].join("\n");
   return `mailto:${encodeURIComponent(q.email || "")}?subject=${encodeURIComponent(
     subject
