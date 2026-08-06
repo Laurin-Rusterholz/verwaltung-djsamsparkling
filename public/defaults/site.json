@@ -1339,7 +1339,12 @@
       "presskitLabel": "Presskit (PDF)",
       "presskitUrl": "presskit/sam-sparking-presskit-2026.pdf",
       "title": "Boo",
-      "titleAccent": "king."
+      "titleAccent": "king.",
+      "photo": {
+        "src": "https://firebasestorage.googleapis.com/v0/b/jupidu-36804.firebasestorage.app/o/samsparking%2Fmedia%2F-OyU22YYzpKFXkDykqQP%2Fdsc01430.jpg?alt=media&token=a2b80100-cb77-4120-878b-cc9ac62aff65",
+        "alt": "Sam Sparking on stage",
+        "credit": "Sarto Photography"
+      }
     },
     "contact": {
       "base": "St. Gallen, Switzerland",
@@ -1710,5 +1715,5 @@
   },
   "updatedAt": "2026-07-27T04:36:05.224Z",
   "updatedBy": "Verwaltung",
-  "contentRevision": 2
+  "contentRevision": 3
 }
