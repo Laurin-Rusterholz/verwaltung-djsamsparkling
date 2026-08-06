@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Verwaltung DJ Sam Sparkling — Konfiguration
+   Verwaltung DJ Sam Sparking — Konfiguration
    Firebase-Werte identisch zu ai-sync (public/index.html, public/drive.html).
    Diese Werte sind bewusst öffentlich (Web-API-Key); der Schutz kommt aus den
    Realtime-Database- und Storage-Regeln, siehe firebase/.
