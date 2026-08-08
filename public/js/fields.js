@@ -79,6 +79,34 @@ export function checkboxField(path, label, hint) {
   ]);
 }
 
+/**
+ * Schalter, der von Haus aus AUS ist — für Auszeichnungen wie „gross zeigen“.
+ * (checkboxField ist bewusst umgekehrt: dort bedeutet „nichts gespeichert“ an.)
+ *
+ * opts.allow(neuerWert) darf die Änderung ablehnen: liefert es `false`, springt
+ * der Schalter zurück und es wird nichts geschrieben. opts.onChange läuft erst,
+ * wenn der neue Wert steht — von dort aus darf neu gezeichnet werden.
+ */
+export function flagField(path, label, hint, opts = {}) {
+  const box = el("input", {
+    type: "checkbox",
+    onchange: (e) => {
+      const an = e.target.checked;
+      if (typeof opts.allow === "function" && opts.allow(an) === false) {
+        e.target.checked = !an;
+        return;
+      }
+      write(path, an);
+      if (typeof opts.onChange === "function") opts.onChange(an);
+    },
+  });
+  box.checked = read(path) === true;
+  return el("div", { class: "field field-check" }, [
+    el("label", { class: "check" }, [box, el("span", {}, label)]),
+    hint ? el("p", { class: "field-hint" }, hint) : null,
+  ]);
+}
+
 export function colorField(path, label, hint) {
   const value = read(path) || "#000000";
   const text = el("input", {

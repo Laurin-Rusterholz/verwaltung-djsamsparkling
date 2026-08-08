@@ -206,6 +206,7 @@
               "city": "Schaan, FL"
             }
           },
+          "moreLabel": "Ausserdem gespielt",
           "navLabel": "Referenzen",
           "note": "Dein Club oder Festival als Nächstes?",
           "noteLinkLabel": "Schreib mir →",
@@ -218,6 +219,12 @@
           "pastLabel": "Schon gespielt",
           "title": "Sh",
           "titleAccent": "ows."
+        },
+        "follow": {
+          "lede": "Neue Tracks, Sets und alles zwischen den Shows landen zuerst auf meinen Kanälen. Folg mir und sei dabei, wenn das Nächste kommt.",
+          "navLabel": "Folgen",
+          "title": "Werde Teil der ",
+          "titleAccent": "Bewegung."
         }
       },
       "site": {
@@ -415,6 +422,7 @@
           "pastLabel": "Déjà joué"
         },
         "references": {
+          "moreLabel": "A également joué à",
           "navLabel": "Références",
           "title": "Réfé",
           "titleAccent": "rences.",
@@ -548,6 +556,12 @@
           "titleAccent": "takt.",
           "kicker": "Booking & demandes",
           "base": "Saint-Gall, Suisse"
+        },
+        "follow": {
+          "lede": "Nouveaux morceaux, sets et tout ce qui se passe entre les shows arrivent d'abord sur mes canaux. Suis-moi et sois là pour la suite.",
+          "navLabel": "Suivre",
+          "title": "Rejoins le ",
+          "titleAccent": "mouvement."
         }
       },
       "ui": {
@@ -830,7 +844,8 @@
           "note": "4ff8935f",
           "noteLinkLabel": "0d549953",
           "title": "4e18ba45",
-          "titleAccent": "1f0cb59f"
+          "titleAccent": "1f0cb59f",
+          "moreLabel": "e95df1de"
         },
         "shows": {
           "emptyText": "335e234f",
@@ -838,6 +853,12 @@
           "pastLabel": "dcef0772",
           "title": "3f025d7e",
           "titleAccent": "505289f2"
+        },
+        "follow": {
+          "lede": "3a18b677",
+          "navLabel": "8aad7d90",
+          "title": "bb1b80ba",
+          "titleAccent": "dcab23c2"
         }
       },
       "site": {
@@ -1082,7 +1103,8 @@
             "14": {
               "city": "3e5d36c9"
             }
-          }
+          },
+          "moreLabel": "e95df1de"
         },
         "gallery": {
           "navLabel": "d7b54cdd",
@@ -1164,6 +1186,12 @@
           "titleAccent": "a26feecd",
           "kicker": "c49a5387",
           "base": "23df4a6c"
+        },
+        "follow": {
+          "lede": "3a18b677",
+          "navLabel": "8aad7d90",
+          "title": "bb1b80ba",
+          "titleAccent": "dcab23c2"
         }
       },
       "ui": {
@@ -1264,12 +1292,13 @@
     "about",
     "sound",
     "experience",
-    "booking",
-    "shows",
-    "references",
     "gallery",
+    "booking",
+    "follow",
+    "shows",
     "shop",
-    "contact"
+    "contact",
+    "references"
   ],
   "pages": [
     {
@@ -1283,12 +1312,13 @@
         "about",
         "sound",
         "experience",
-        "booking",
-        "shows",
-        "references",
         "gallery",
+        "booking",
+        "follow",
+        "shows",
         "shop",
-        "contact"
+        "contact",
+        "references"
       ],
       "enabled": true
     }
@@ -1350,13 +1380,22 @@
       "phone": "+41 77 509 11 71",
       "socials": [
         {
+          "handle": "@sam_sparking",
+          "inHeader": true,
           "label": "Instagram",
           "url": "https://www.instagram.com/sam_sparking/"
         },
         {
+          "handle": "",
+          "inHeader": true,
+          "label": "TikTok",
+          "url": ""
+        },
+        {
+          "handle": "samsparking",
+          "inHeader": false,
           "label": "Mixcloud",
-          "url": "https://www.mixcloud.com/samsparking/",
-          "inHeader": false
+          "url": "https://www.mixcloud.com/samsparking/"
         }
       ],
       "title": "Con",
@@ -1446,11 +1485,13 @@
         },
         {
           "city": "St. Gallen",
-          "name": "Kugl"
+          "name": "Kugl",
+          "highlight": true
         },
         {
           "city": "St. Gallen",
-          "name": "B9 eventlocation"
+          "name": "B9 eventlocation",
+          "highlight": true
         },
         {
           "city": "St. Gallen",
@@ -1497,6 +1538,7 @@
           "name": "The Q"
         }
       ],
+      "moreLabel": "Also played at",
       "navLabel": "References",
       "note": "Your club or festival next?",
       "noteLinkLabel": "Write to me →",
@@ -1574,6 +1616,13 @@
       "navLabel": "Experience",
       "title": "Experi",
       "titleAccent": "ence."
+    },
+    "follow": {
+      "enabled": true,
+      "lede": "New tracks, sets and the stuff between the shows land on my channels first. Follow along and be there when the next one drops.",
+      "navLabel": "Follow",
+      "title": "Join the ",
+      "titleAccent": "movement."
     }
   },
   "site": {

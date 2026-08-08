@@ -26,6 +26,7 @@ import {
   renderAbout,
   renderShows,
   renderReferences,
+  renderFollow,
   renderGallery,
   renderShop,
   renderSound,
@@ -113,6 +114,7 @@ const NAV = [
       { id: "shop", label: "Shop", icon: ICON.bag, render: renderShop },
       { id: "booking", label: "Booking", icon: ICON.clipboard, render: renderBooking },
       { id: "contact", label: "Kontakt", icon: ICON.mail, render: renderContact },
+      { id: "follow", label: "Join the Movement", icon: ICON.globe, render: renderFollow },
     ],
   },
   {

@@ -3,7 +3,7 @@ import { S } from "./store.js";
 
 const EDITOR_SECTIONS = new Set([
   "design", "seo", "about", "shows",
-  "references", "gallery", "booking", "contact"
+  "references", "gallery", "booking", "follow", "contact"
 ]);
 
 const SECTION_HASH = {
@@ -14,6 +14,7 @@ const SECTION_HASH = {
   references: "references",
   gallery: "gallery",
   booking: "booking",
+  follow: "follow",
   contact: "contact",
 };
 
