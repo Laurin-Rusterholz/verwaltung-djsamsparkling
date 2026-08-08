@@ -643,11 +643,27 @@ export function renderShop() {
     head("Shop", "Merch mit Bestellung per E-Mail. Ohne Ware bleibt der Abschnitt leer."),
     sectionBasics("shop"),
     group("Grunddaten", [
-      textField("sections.shop.currency", "Währung / Versandzeile", { placeholder: "CHF 5" }),
+      textField("sections.shop.currency", "Währung", {
+        placeholder: "CHF",
+        hint: "Steht vor jedem Preis.",
+      }),
       textField("sections.shop.buyLabel", "Button-Text", { placeholder: "Kaufen" }),
       textField("sections.shop.note", "Zeile unter der Ware"),
       textArea("sections.shop.emptyText", "Text ohne Ware", { rows: 2 }),
     ], { cols: 2 }),
+    group("Versand", [
+      textField("sections.shop.shipping", "Versandzeile", {
+        placeholder: "Free shipping — within Switzerland only",
+        hint:
+          "Steht überall im Shop: unter der Einleitung, auf jedem Artikel und im " +
+          "Bestellformular. Einmal hier geschrieben, überall gleich. " +
+          "Leer = es steht nichts zum Versand da.",
+      }),
+    ], {
+      hint:
+        "Gratis Versand gilt nur innerhalb der Schweiz — das gehört so deutlich hin, " +
+        "dass es niemand erst im Bestellformular entdeckt.",
+    }),
     group("Ware", [
       objectList("sections.shop.items", null, {
         addLabel: "Artikel hinzufügen",

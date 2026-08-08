@@ -225,6 +225,9 @@
           "navLabel": "Folgen",
           "title": "Werde Teil der ",
           "titleAccent": "Bewegung."
+        },
+        "shop": {
+          "shipping": "Gratis Versand — nur innerhalb der Schweiz"
         }
       },
       "site": {
@@ -562,6 +565,9 @@
           "navLabel": "Suivre",
           "title": "Rejoins le ",
           "titleAccent": "mouvement."
+        },
+        "shop": {
+          "shipping": "Livraison gratuite — uniquement en Suisse"
         }
       },
       "ui": {
@@ -859,6 +865,9 @@
           "navLabel": "8aad7d90",
           "title": "bb1b80ba",
           "titleAccent": "dcab23c2"
+        },
+        "shop": {
+          "shipping": "8523a1ab"
         }
       },
       "site": {
@@ -1192,6 +1201,9 @@
           "navLabel": "8aad7d90",
           "title": "bb1b80ba",
           "titleAccent": "dcab23c2"
+        },
+        "shop": {
+          "shipping": "8523a1ab"
         }
       },
       "ui": {
@@ -1557,12 +1569,13 @@
     },
     "shop": {
       "buyLabel": "Kaufen",
-      "currency": "CHF 5",
+      "currency": "CHF",
       "emptyText": "Der Shop ist bald offen — das erste Merch ist in Arbeit. Folg mir auf den Kanälen unten, dann verpasst du den Start nicht.",
       "enabled": false,
       "items": [],
       "navLabel": "Shop",
       "note": "Merch von Sam Sparking — jedes Teil hilft, die nächste Produktion zu stemmen.",
+      "shipping": "Free shipping — within Switzerland only",
       "title": "Sh",
       "titleAccent": "op."
     },
