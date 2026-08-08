@@ -9,6 +9,7 @@ import {
   textField,
   textArea,
   checkboxField,
+  flagField,
   colorField,
   selectField,
   imageField,
@@ -489,7 +490,13 @@ export function renderShows() {
 
 /* -------------------------------------------------- Abschnitt: Referenzen */
 
+/** So viele Referenzen stehen gross — alle weiteren stehen klein darunter. */
+const REFERENZEN_GROSS = 4;
+
 export function renderReferences() {
+  const alle = () => getPath(S.content, "sections.references.items") || [];
+  const grosse = () => alle().filter((i) => i && i.highlight === true);
+
   return view([
     head("Referenzen", "Wo Sam schon gespielt hat."),
     sectionBasics("references"),
@@ -497,12 +504,49 @@ export function renderReferences() {
       objectList("sections.references.items", null, {
         addLabel: "Referenz hinzufügen",
         newItem: { name: "", city: "", url: "" },
-        titleOf: (i) => [i.name, i.city].filter(Boolean).join(" — ") || "(leer)",
-        fields: (base) => [
+        titleOf: (i) =>
+          (i.highlight === true ? "★ " : "") +
+          ([i.name, i.city].filter(Boolean).join(" — ") || "(leer)"),
+        fields: (base, item, i, render) => [
           textField(`${base}.name`, "Club / Festival"),
           textField(`${base}.city`, "Ort"),
           textField(`${base}.url`, "Link (optional)", { mono: true, hint: "Leer = führt zum Booking-Abschnitt." }),
+          flagField(
+            `${base}.highlight`,
+            "Gross zeigen",
+            "Angewählt steht diese Referenz gross und über die ganze Breite.",
+            {
+              // Gross ist nur etwas wert, solange es die Ausnahme bleibt.
+              allow: (an) => {
+                if (an && grosse().length >= REFERENZEN_GROSS) {
+                  toast(
+                    `Es stehen schon ${REFERENZEN_GROSS} Referenzen gross. ` +
+                      "Zuerst eine davon abwählen.",
+                    "err"
+                  );
+                  return false;
+                }
+                return true;
+              },
+              onChange: () => render(),
+            }
+          ),
         ],
+      }),
+    ], {
+      hint:
+        `Die angewählten Referenzen (höchstens ${REFERENZEN_GROSS}) stehen gross über die ganze Breite. ` +
+        "Alle übrigen erscheinen darunter gleich gross in einer ruhigen Liste — mit der Zeile, " +
+        "dass Sam ausserdem dort gespielt hat. Die Reihenfolge hier ist auch die Reihenfolge " +
+        "auf der Website; mit ↑ ↓ verschiebst du einen Eintrag.",
+    }),
+    group("Zeile über den kleinen Referenzen", [
+      textField("sections.references.moreLabel", "Text", {
+        placeholder: "Also played at",
+        hint:
+          "Steht zwischen den grossen und den kleinen Referenzen. Die Anzahl hängt die " +
+          "Website selbst an — aus „Also played at“ wird also „Also played at (11)“. " +
+          "Leer = die kleinen Referenzen stehen ohne Zwischenzeile da.",
       }),
     ]),
     group("Abschlusszeile", [
@@ -538,16 +582,18 @@ export function renderGallery() {
       objectList("sections.gallery.items", null, {
         // Der übliche Weg ist „Bilder aussuchen“ — der leere Platz ist die
         // Ausnahme (z. B. wenn die Adresse von Hand kommt).
-        addLabel: "Bilder aus den Medien hinzufügen",
+        addLabel: "Bilder und Videos aus den Medien hinzufügen",
         onAdd: async (items, render) => {
-          const chosen = await pickMany({ kind: "image" });
+          // Ohne `kind` zeigt die Auswahl Bilder UND Videos — die Galerie kann
+          // beides, und Videos liessen sich sonst gar nicht einsetzen.
+          const chosen = await pickMany();
           if (!chosen || !chosen.length) return;
           chosen.forEach((m) =>
             items.push({ src: m.url, alt: m.alt || "", credit: getPath(S.content, "site.photoCredit") || "" })
           );
           markDirty();
           render();
-          toast(`${chosen.length} Bild(er) hinzugefügt`);
+          toast(`${chosen.length} Medien hinzugefügt`);
         },
         newItem: { src: "", alt: "", credit: "" },
         titleOf: (i, n) => i.alt || `Bild ${n + 1}`,
@@ -565,7 +611,8 @@ export function renderGallery() {
         fields: (base) => {
           const istVideo = looksLikeVideo(getPath(S.content, `${base}.src`));
           return [
-            imageField(base, null, { credit: true, kind: "image" }),
+            // Kein `kind`: hier darf auch ein Video stehen (siehe onAdd).
+            imageField(base, null, { credit: true, emptyText: "Bild oder Video wählen" }),
             ...(istVideo
               ? [
                   selectField(`${base}.fit`, "Anzeige des Videos", [
@@ -596,11 +643,27 @@ export function renderShop() {
     head("Shop", "Merch mit Bestellung per E-Mail. Ohne Ware bleibt der Abschnitt leer."),
     sectionBasics("shop"),
     group("Grunddaten", [
-      textField("sections.shop.currency", "Währung / Versandzeile", { placeholder: "CHF 5" }),
+      textField("sections.shop.currency", "Währung", {
+        placeholder: "CHF",
+        hint: "Steht vor jedem Preis.",
+      }),
       textField("sections.shop.buyLabel", "Button-Text", { placeholder: "Kaufen" }),
       textField("sections.shop.note", "Zeile unter der Ware"),
       textArea("sections.shop.emptyText", "Text ohne Ware", { rows: 2 }),
     ], { cols: 2 }),
+    group("Versand", [
+      textField("sections.shop.shipping", "Versandzeile", {
+        placeholder: "Free shipping — within Switzerland only",
+        hint:
+          "Steht überall im Shop: unter der Einleitung, auf jedem Artikel und im " +
+          "Bestellformular. Einmal hier geschrieben, überall gleich. " +
+          "Leer = es steht nichts zum Versand da.",
+      }),
+    ], {
+      hint:
+        "Gratis Versand gilt nur innerhalb der Schweiz — das gehört so deutlich hin, " +
+        "dass es niemand erst im Bestellformular entdeckt.",
+    }),
     group("Ware", [
       objectList("sections.shop.items", null, {
         addLabel: "Artikel hinzufügen",
@@ -736,26 +799,68 @@ export function renderContact() {
       textField("sections.contact.phone", "Telefon"),
       textField("sections.contact.base", "Standort"),
     ], { cols: 2 }),
-    group("Social Media & Musik", [
-      objectList("sections.contact.socials", null, {
-        addLabel: "Link hinzufügen",
-        newItem: { label: "", url: "" },
-        titleOf: (i) => i.label || "(leer)",
-        hint: "Instagram, Mixcloud, SoundCloud, Spotify, YouTube …",
-        fields: (base) => [
-          textField(`${base}.label`, "Name"),
-          textField(`${base}.url`, "URL", { mono: true }),
-          checkboxField(
-            `${base}.inHeader`,
-            "Zeichen oben im Kopfbereich zeigen",
-            "Im Fussbereich und im Kontakt-Abschnitt steht der Kanal immer. " +
-              "Jeder Kanal bekommt sein eigenes Zeichen — Instagram sieht also " +
-              "anders aus als Mixcloud."
-          ),
-        ],
+    group("Social Media & Musik", [socialsList()], {
+      hint:
+        "Dieselbe Liste wie unter „Join the Movement“ — hier wie dort dieselben Kanäle. " +
+        "Sie stehen im Abschnitt nach dem Booking, im Fussbereich und, wo angewählt, " +
+        "oben im Kopfbereich.",
+    }),
+  ]);
+}
+
+/* --------------------------------------- Abschnitt: Join the Movement */
+
+export function renderFollow() {
+  return view([
+    head(
+      "Join the Movement",
+      "Der Aufruf gleich nach dem Booking: alle Kanäle an einem Ort, damit niemand suchen muss."
+    ),
+    sectionBasics("follow"),
+    group("Einleitung", [
+      textArea("sections.follow.lede", "Text unter dem Titel", {
+        rows: 3,
+        hint: "Ein, zwei Sätze — warum es sich lohnt, Sam zu folgen.",
       }),
     ]),
+    group("Kanäle", [socialsList()], {
+      hint:
+        "Alle Kanäle stehen gleichwertig nebeneinander — TikTok, Instagram, Mixcloud und was " +
+        "noch dazukommt. Es ist dieselbe Liste, die im Fussbereich steht und (wenn angewählt) " +
+        "oben im Kopfbereich: einmal gepflegt, überall aktuell.",
+    }),
   ]);
+}
+
+/**
+ * Die Kanalliste. Sie gehört zum Kontakt-Abschnitt (dort liegt sie seit jeher
+ * gespeichert), bearbeitet wird sie aber hier — „Join the Movement“ ist der
+ * Ort, an dem die Kanäle auf der Website gross herauskommen.
+ */
+function socialsList() {
+  return objectList("sections.contact.socials", null, {
+    addLabel: "Kanal hinzufügen",
+    newItem: { label: "", handle: "", url: "", inHeader: false },
+    titleOf: (i) => [i.label, i.handle].filter(Boolean).join(" — ") || "(leer)",
+    emptyText: "Noch kein Kanal.",
+    fields: (base) => [
+      textField(`${base}.label`, "Kanal", { placeholder: "TikTok" }),
+      textField(`${base}.handle`, "Name / Handle", {
+        placeholder: "@sam_sparking",
+        hint: "Steht klein unter dem Kanal. Leer = nur der Kanalname.",
+      }),
+      textField(`${base}.url`, "URL", {
+        mono: true,
+        hint: "Ohne Adresse bleibt der Kanal auf der Website aussen vor.",
+      }),
+      checkboxField(
+        `${base}.inHeader`,
+        "Zeichen oben im Kopfbereich zeigen",
+        "Im Abschnitt und im Fussbereich steht der Kanal immer. Jeder Kanal bekommt " +
+          "sein eigenes Zeichen — Instagram sieht also anders aus als Mixcloud."
+      ),
+    ],
+  });
 }
 
 /* ------------------------------------------------------------------ Seiten */
