@@ -758,6 +758,91 @@ function renderShell() {
     ])
   );
   render();
+  stelleBeobachten();
+  stelleAnfahren();
+}
+
+/* --------------------------------------------------- zuletzt besuchte Stelle
+
+   Neu laden heisst sonst: zurueck an den Anfang. Nach dem Publizieren, nach
+   einem versehentlichen F5 oder wenn der Browser die Seite selbst neu holt,
+   soll die Verwaltung wieder dort stehen, wo man war — gleiche Ansicht,
+   gleiche Hoehe. Gemerkt wird das im Browser (localStorage), nicht in der
+   Datenbank: es ist eine Eigenheit dieses Geraets, kein Inhalt.
+   -------------------------------------------------------------------------- */
+
+const STELLE_KEY = "sam-verwaltung-stelle";
+
+/** Was gerade zu sehen ist, wegschreiben. Fehler sind hier nie schlimm. */
+function stelleMerken() {
+  try {
+    const main = $("#main");
+    localStorage.setItem(
+      STELLE_KEY,
+      JSON.stringify({
+        id: currentId,
+        main: main ? main.scrollTop : 0,
+        fenster: window.scrollY || 0,
+      })
+    );
+  } catch (e) {
+    /* privater Modus oder voller Speicher — dann eben ohne */
+  }
+}
+
+function stelleLesen() {
+  try {
+    const s = JSON.parse(localStorage.getItem(STELLE_KEY) || "null");
+    return s && typeof s === "object" ? s : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+/** Beim Scrollen mitschreiben — gedrosselt, sonst schreibt es bei jedem Pixel. */
+let wartetAufNotiz = false;
+function notiereStelle() {
+  if (wartetAufNotiz) return;
+  wartetAufNotiz = true;
+  requestAnimationFrame(() => {
+    wartetAufNotiz = false;
+    stelleMerken();
+  });
+}
+
+/* Die Fenster-Ereignisse nur einmal binden; #main entsteht bei jedem
+   renderShell() neu und braucht seinen Zuhoerer jedes Mal. */
+let fensterHoertZu = false;
+
+function stelleBeobachten() {
+  $("#main")?.addEventListener("scroll", notiereStelle, { passive: true });
+  if (fensterHoertZu) return;
+  fensterHoertZu = true;
+  window.addEventListener("scroll", notiereStelle, { passive: true });
+  // Beim Verlassen sicher noch einmal — auch auf dem Handy, wo "unload"
+  // haeufig ausbleibt und nur "pagehide" kommt.
+  window.addEventListener("pagehide", stelleMerken);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") stelleMerken();
+  });
+}
+
+/**
+ * Die gemerkte Hoehe wieder einnehmen. Erst nach dem Zeichnen, und ein zweites
+ * Mal kurz danach: Bilder und Schriften kommen nach und verschieben sonst
+ * genau das, was gerade angefahren wurde.
+ */
+function stelleAnfahren() {
+  const s = stelleLesen();
+  if (!s || s.id !== currentId) return;
+  if (!s.main && !s.fenster) return;
+  const anfahren = () => {
+    const main = $("#main");
+    if (main && s.main) main.scrollTop = s.main;
+    if (s.fenster) window.scrollTo({ top: s.fenster, behavior: "auto" });
+  };
+  requestAnimationFrame(anfahren);
+  setTimeout(anfahren, 180);
 }
 
 function toggleSidebar(force, trigger) {
@@ -931,10 +1016,18 @@ function bindStoreEvents() {
     }
   });
 
-  // Direktlink per #hash
+  // Direktlink per #hash — und ohne einen: dort weiter, wo man zuletzt war.
   const applyHash = () => {
     const id = location.hash.replace("#", "");
-    if (id && allItems().some((i) => i.id === id)) currentId = id;
+    if (id && allItems().some((i) => i.id === id)) {
+      currentId = id;
+      return;
+    }
+    const zuletzt = stelleLesen();
+    if (zuletzt?.id && allItems().some((i) => i.id === zuletzt.id)) {
+      currentId = zuletzt.id;
+      location.hash = "#" + zuletzt.id;
+    }
   };
   applyHash();
   window.addEventListener("hashchange", () => {
