@@ -214,7 +214,11 @@
           "titleAccent": "Bewegung."
         },
         "shop": {
-          "shipping": "Gratis Versand — nur innerhalb der Schweiz"
+          "shipping": "Gratis Versand — nur innerhalb der Schweiz",
+          "stripe": {
+            "label": "Karte & TWINT — sicher bezahlen über Stripe",
+            "note": "Die Bestätigung kommt sofort per E-Mail, das Paket geht raus, sobald die Zahlung durch ist."
+          }
         }
       },
       "site": {
@@ -539,7 +543,11 @@
           "titleAccent": "mouvement."
         },
         "shop": {
-          "shipping": "Livraison gratuite — uniquement en Suisse"
+          "shipping": "Livraison gratuite — uniquement en Suisse",
+          "stripe": {
+            "label": "Carte & TWINT — paiement sécurisé via Stripe",
+            "note": "La confirmation arrive tout de suite par e-mail, le colis part dès que le paiement est passé."
+          }
         }
       },
       "ui": {
@@ -826,7 +834,11 @@
           "titleAccent": "dcab23c2"
         },
         "shop": {
-          "shipping": "8523a1ab"
+          "shipping": "8523a1ab",
+          "stripe": {
+            "label": "a1b9bde1",
+            "note": "7a2c18b6"
+          }
         }
       },
       "site": {
@@ -1147,7 +1159,11 @@
           "titleAccent": "dcab23c2"
         },
         "shop": {
-          "shipping": "8523a1ab"
+          "shipping": "8523a1ab",
+          "stripe": {
+            "label": "a1b9bde1",
+            "note": "7a2c18b6"
+          }
         }
       },
       "ui": {
@@ -1511,6 +1527,11 @@
       "navLabel": "Shop",
       "note": "Merch von Sam Sparking — jedes Teil hilft, die nächste Produktion zu stemmen.",
       "shipping": "Free shipping — within Switzerland only",
+      "stripe": {
+        "enabled": true,
+        "label": "Card & TWINT — secure checkout with Stripe",
+        "note": "You get the confirmation by e-mail right away; the parcel goes out as soon as the payment is through."
+      },
       "title": "Sh",
       "titleAccent": "op."
     },

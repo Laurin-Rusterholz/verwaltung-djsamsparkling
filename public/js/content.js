@@ -664,6 +664,27 @@ export function renderShop() {
         "Gratis Versand gilt nur innerhalb der Schweiz — das gehört so deutlich hin, " +
         "dass es niemand erst im Bestellformular entdeckt.",
     }),
+    group("Bezahlung mit Stripe", [
+      flagField(
+        "sections.shop.stripe.enabled",
+        "Bezahlung über Stripe anbieten",
+        "Aus = es bleibt bei TWINT und Überweisung, so wie bisher."
+      ),
+      textField("sections.shop.stripe.label", "Beschriftung", {
+        placeholder: "Card & TWINT — secure checkout with Stripe",
+        hint: "Steht bei den Bezahlwegen neben TWINT und Überweisung.",
+      }),
+      textField("sections.shop.stripe.note", "Zeile darunter", {
+        hint: "Optional — zum Beispiel, dass die Bestätigung sofort per E-Mail kommt.",
+      }),
+    ], {
+      hint:
+        "Stripe braucht keinen eigenen Server: Für jeden Artikel legst du im " +
+        "Stripe-Dashboard unter „Zahlungslinks“ einen Link an und trägst ihn unten " +
+        "beim Artikel ein. Der Kauf-Knopf führt dann direkt zu Stripe — Karte, " +
+        "TWINT und Apple Pay laufen dort. Ohne hinterlegte Links zeigt die Website " +
+        "keinen Stripe-Weg an, auch wenn er hier eingeschaltet ist.",
+    }),
     group("Ware", [
       objectList("sections.shop.items", null, {
         addLabel: "Artikel hinzufügen",
@@ -679,9 +700,12 @@ export function renderShop() {
             ["available", "verfügbar"],
             ["soldout", "ausverkauft"],
           ]),
-          textField(`${base}.linkUrl`, "Link (optional)", {
+          textField(`${base}.linkUrl`, "Stripe-Zahlungslink", {
             mono: true,
-            hint: "Leer = Bestellung läuft über die Kontakt-Adresse.",
+            hint:
+              "Stripe-Dashboard → Zahlungslinks → Link kopieren. Jede andere " +
+              "Bezahlseite geht genauso. Leer = die Bestellung läuft über das " +
+              "Formular bzw. die Kontakt-Adresse.",
           }),
         ],
       }),
