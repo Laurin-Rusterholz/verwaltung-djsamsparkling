@@ -67,7 +67,15 @@ export function renderDesign() {
         titleOf: (i) => [i.value, i.label].filter(Boolean).join(" — ") || "(leer)",
         emptyText: "Keine Zahlen — die Leiste im Hero wird dann nicht angezeigt.",
         fields: (base) => [
-          textField(`${base}.value`, "Zahl / Wert", { placeholder: "7+" }),
+          textField(`${base}.value`, "Zahl / Wert", {
+            placeholder: "30",
+            hint:
+              'Die Zahl neben "Shows" nennt die Gesamtzahl gespielter Shows und ' +
+              "steht auf 30. Sie wird beim Bauen der Website fest gesetzt " +
+              "(content/korrekturen.json im Website-Repo, Block heroShows) — " +
+              "eine Änderung hier bleibt deshalb ohne Wirkung, bis der Block " +
+              "dort entfernt wird.",
+          }),
           textField(`${base}.label`, "Beschriftung", { placeholder: "Shows" }),
         ],
       }),
