@@ -452,6 +452,21 @@ export function objectList(path, label, opts = {}) {
 }
 
 /** Gruppierung mit Titel. */
+/**
+ * Ein erklaerender Absatz statt eines Eingabefelds.
+ *
+ * Es gibt Stellen, an denen frueher etwas einzustellen war und heute nichts
+ * mehr — etwa das Ziel der Booking-Anfragen, das inzwischen die Website selbst
+ * ist. Ein Feld einfach wegzunehmen laesst die Frage offen, wohin die
+ * Anfragen denn nun gehen; deshalb steht hier die Antwort.
+ */
+export function note(text, detail) {
+  return el("div", { class: "field note-field" }, [
+    el("p", { class: "field-note-text" }, text),
+    detail ? el("p", { class: "field-hint" }, detail) : null,
+  ]);
+}
+
 export function group(title, children, opts = {}) {
   return el("section", { class: "group" + (opts.class ? " " + opts.class : "") }, [
     title ? el("h3", { class: "group-title" }, title) : null,

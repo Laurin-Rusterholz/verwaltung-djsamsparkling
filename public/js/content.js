@@ -15,6 +15,7 @@ import {
   stringList,
   objectList,
   group,
+  note,
 } from "./fields.js";
 
 /** Kopf einer Ansicht mit Titel und Erklärung. */
@@ -50,8 +51,12 @@ export function renderDesign() {
       textField("hero.kicker", "Kleine Zeile oben", { placeholder: "DJ & Producer — St. Gallen, Switzerland" }),
       textField("hero.nameSpaced", "Name, gesperrt (kleine Zeile)", { placeholder: "S A M" }),
       textField("hero.nameMain", "Name, gross", { placeholder: "Sparking" }),
-      textField("hero.tagline", "Slogan"),
-      textField("hero.meta", "Genre-Zeile"),
+      textField("hero.tagline", "Slogan", {
+        hint:
+          "Steht als einzige Zeile unter dem Namen, in der Akzentfarbe. " +
+          "Die frühere Genre-Zeile daneben gibt es nicht mehr — sie wiederholte " +
+          "nur, was der Sound-Abschnitt sagt.",
+      }),
       textField("hero.ctaLabel", "Button-Text"),
       textField("hero.ctaHref", "Button-Ziel", { mono: true, hint: "#booking, #contact oder eine ganze URL." }),
     ], { cols: 2 }),
@@ -63,7 +68,7 @@ export function renderDesign() {
         emptyText: "Keine Zahlen — die Leiste im Hero wird dann nicht angezeigt.",
         fields: (base) => [
           textField(`${base}.value`, "Zahl / Wert", { placeholder: "7+" }),
-          textField(`${base}.label`, "Beschriftung", { placeholder: "Clubs & Festivals" }),
+          textField(`${base}.label`, "Beschriftung", { placeholder: "Shows" }),
         ],
       }),
     ], {
@@ -246,12 +251,17 @@ export function renderSeo() {
         hint: "Querformat, ideal 1200×630 px. Videos gehen hier nicht.",
       }),
     ]),
-    group("Booking-Formular", [
-      textField("site.bookingApi", "Ziel der Anfragen", {
-        mono: true,
-        hint:
-          "Die Datenbank-Adresse, an die das Formular schreibt. Leer lassen = Formular ausblenden, dann steht nur die E-Mail-Adresse auf der Seite.",
-      }),
+    group("Booking-Formular und Bestellungen", [
+      note(
+        "Anfragen und Bestellungen gehen seit August 2026 an die Website selbst " +
+          "(/api/booking und /api/order). Dort werden sie geprüft, in den Eingang " +
+          "gelegt und per E-Mail an info@samsparking.ch gemeldet. Vorher schrieb " +
+          "das Formular direkt in die Datenbank — die Adresse stand damit im " +
+          "Quelltext der Seite, und eine E-Mail ging nie raus.",
+        "Nichts einzustellen: Der Eingang und die E-Mail-Adresse stehen als " +
+          "Umgebungsvariablen bei Netlify (INBOX_API_URL, MAIL_TO, RESEND_API_KEY). " +
+          "Das Formular selbst schaltest du unter Booking an und aus."
+      ),
     ]),
     liveCounters(),
   ]);
@@ -496,15 +506,34 @@ export function renderReferences() {
     group("Liste", [
       objectList("sections.references.items", null, {
         addLabel: "Referenz hinzufügen",
-        newItem: { name: "", city: "", url: "" },
-        titleOf: (i) => [i.name, i.city].filter(Boolean).join(" — ") || "(leer)",
+        newItem: { name: "", city: "", url: "", highlight: false, group: "" },
+        titleOf: (i) =>
+          [i.highlight ? "★" : null, i.name, i.city].filter(Boolean).join(" ") || "(leer)",
         fields: (base) => [
           textField(`${base}.name`, "Club / Festival"),
           textField(`${base}.city`, "Ort"),
-          textField(`${base}.url`, "Link (optional)", { mono: true, hint: "Leer = führt zum Booking-Abschnitt." }),
+          checkboxField(
+            `${base}.highlight`,
+            "Ganz oben hervorheben",
+            "Hervorgehobene Referenzen stehen als grosse Zeilen zuoberst und " +
+              "behalten die Reihenfolge dieser Liste — das ist die Rangfolge. " +
+              "Mehr als fünf werden schnell beliebig."
+          ),
+          textField(`${base}.group`, "Bündel (optional)", {
+            hint:
+              'Nur für die nicht hervorgehobenen: "Ostschweiz", "Schweiz", ' +
+              '"International" … Innerhalb eines Bündels wird alphabetisch ' +
+              "sortiert. Leer = erster Block ohne Überschrift.",
+          }),
+          textField(`${base}.url`, "Link (optional)", { mono: true, hint: "Leer = führt zum Booking." }),
         ],
       }),
-    ]),
+    ], {
+      hint:
+        "Zwei Stufen: die hervorgehobenen ganz oben als grosse Zeilen, alles " +
+        "Weitere darunter kleiner und nach Bündeln sortiert. So bleibt die " +
+        "Liste vollständig, ohne den Abschnitt zu erschlagen.",
+    }),
     group("Abschlusszeile", [
       textField("sections.references.note", "Text"),
       textField("sections.references.noteLinkLabel", "Link-Text"),
@@ -593,10 +622,28 @@ export function renderGallery() {
 
 export function renderShop() {
   return view([
-    head("Shop", "Merch mit Bestellung per E-Mail. Ohne Ware bleibt der Abschnitt leer."),
+    head(
+      "Shop",
+      "Eigene Seite unter /shop/ mit Bestellformular und Bezahlung über Stripe. " +
+        "Ohne Ware — oder ausgeschaltet — gibt es die Seite gar nicht."
+    ),
     sectionBasics("shop"),
+    group("Bezahlung", [
+      note(
+        "Bezahlt wird über Stripe. Das Bestellformular nimmt die Kundendaten " +
+          "auf (Name, E-Mail, Lieferadresse, Artikel, Anzahl), meldet sie per " +
+          "E-Mail und schickt danach zur Bezahlseite von Stripe.",
+        "Der Zahlungslink wird bei Netlify als STRIPE_PAYMENT_LINK_URL hinterlegt, " +
+          "die Bestätigung kommt über den Webhook (STRIPE_WEBHOOK_SECRET). " +
+          "Die frühere Bezahlung per TWINT-/Bank-QR gibt es nicht mehr: dort wusste " +
+          "niemand, ob das Geld je kam."
+      ),
+    ]),
     group("Grunddaten", [
-      textField("sections.shop.currency", "Währung / Versandzeile", { placeholder: "CHF 5" }),
+      textField("sections.shop.currency", "Währung", {
+        placeholder: "CHF",
+        hint: 'Nur das Währungskürzel — "CHF", nicht "CHF 5".',
+      }),
       textField("sections.shop.buyLabel", "Button-Text", { placeholder: "Kaufen" }),
       textField("sections.shop.note", "Zeile unter der Ware"),
       textArea("sections.shop.emptyText", "Text ohne Ware", { rows: 2 }),
@@ -604,7 +651,7 @@ export function renderShop() {
     group("Ware", [
       objectList("sections.shop.items", null, {
         addLabel: "Artikel hinzufügen",
-        newItem: { name: "", price: "", note: "", src: "", alt: "", linkUrl: "", status: "available" },
+        newItem: { name: "", price: "", note: "", src: "", alt: "", status: "available" },
         titleOf: (i) => [i.name, i.price].filter(Boolean).join(" — ") || "(neuer Artikel)",
         emptyText: "Keine Ware — es steht dann nur der Text von oben da.",
         fields: (base) => [
@@ -616,73 +663,7 @@ export function renderShop() {
             ["available", "verfügbar"],
             ["soldout", "ausverkauft"],
           ]),
-          textField(`${base}.linkUrl`, "Link (optional)", {
-            mono: true,
-            hint: "Leer = Bestellung läuft über die Kontakt-Adresse.",
-          }),
-        ],
-      }),
-    ]),
-  ]);
-}
 
-/* ------------------------------------------------- Abschnitt: Sound & Genres */
-
-export function renderSound() {
-  return view([
-    head("Sound & Genres", "Womit Sam auflegt und wo man es hören kann."),
-    sectionBasics("sound"),
-    group("Einleitung", [textArea("sections.sound.note", "Text unter der Überschrift", { rows: 2 })]),
-    group("Genres", [
-      objectList("sections.sound.genres", null, {
-        addLabel: "Genre hinzufügen",
-        newItem: { name: "", meta: "Genre" },
-        titleOf: (i) => i.name || "(leer)",
-        emptyText: "Keine Genres.",
-        fields: (base) => [
-          textField(`${base}.name`, "Name", { placeholder: "Euphoric Hardstyle" }),
-          textField(`${base}.meta`, "Kleine Zeile", { placeholder: "Genre" }),
-        ],
-      }),
-    ]),
-    group("Mixe", [
-      objectList("sections.sound.mixes", null, {
-        addLabel: "Mix hinzufügen",
-        newItem: { kicker: "", title: "", text: "", linkLabel: "", linkUrl: "" },
-        titleOf: (i) => i.title || "(neuer Mix)",
-        emptyText: "Keine Mixe.",
-        fields: (base) => [
-          textField(`${base}.kicker`, "Kleine Zeile", { placeholder: "Latest Mix" }),
-          textField(`${base}.title`, "Titel"),
-          textArea(`${base}.text`, "Text", { rows: 3 }),
-          textField(`${base}.linkLabel`, "Link-Text", { placeholder: "Auf Mixcloud hören" }),
-          textField(`${base}.linkUrl`, "Link", { mono: true }),
-        ],
-      }),
-    ]),
-  ]);
-}
-
-/* ---------------------------------------------------- Abschnitt: Erlebnis */
-
-export function renderExperience() {
-  return view([
-    head("Erlebnis", "Wie ein Set von Sam abläuft — der Bogen von Warm-up bis Schluss."),
-    sectionBasics("experience"),
-    group("Einleitung", [
-      textArea("sections.experience.lede", "Einstieg (gross gesetzt)", { rows: 3 }),
-      textField("sections.experience.embedLabel", "Beschriftung beim Video", { placeholder: "Aftermovie" }),
-    ]),
-    group("Momente", [
-      objectList("sections.experience.moments", null, {
-        addLabel: "Moment hinzufügen",
-        newItem: { kicker: "", title: "", text: "" },
-        titleOf: (i) => [i.kicker, i.title].filter(Boolean).join(" — ") || "(neuer Moment)",
-        emptyText: "Keine Momente — der Abschnitt bleibt dann leer.",
-        fields: (base) => [
-          textField(`${base}.kicker`, "Kleine Zeile", { placeholder: "Peak time" }),
-          textField(`${base}.title`, "Titel", { placeholder: "The Drop" }),
-          textArea(`${base}.text`, "Text", { rows: 3 }),
         ],
       }),
     ]),
@@ -741,16 +722,18 @@ export function renderContact() {
         addLabel: "Link hinzufügen",
         newItem: { label: "", url: "" },
         titleOf: (i) => i.label || "(leer)",
-        hint: "Instagram, Mixcloud, SoundCloud, Spotify, YouTube …",
+        hint:
+          "Instagram, TikTok, Spotify, Mixcloud, SoundCloud, YouTube … — jeweils " +
+          "die komplette Profil-Adresse. Ohne Adresse wird der Kanal nirgends verlinkt.",
         fields: (base) => [
           textField(`${base}.label`, "Name"),
           textField(`${base}.url`, "URL", { mono: true }),
           checkboxField(
             `${base}.inHeader`,
-            "Zeichen oben im Kopfbereich zeigen",
-            "Im Fussbereich und im Kontakt-Abschnitt steht der Kanal immer. " +
-              "Jeder Kanal bekommt sein eigenes Zeichen — Instagram sieht also " +
-              "anders aus als Mixcloud."
+            "Zeichen zusätzlich oben im Kopfbereich zeigen",
+            "Standardmässig aus: der Kopf trägt den Namen und das Menü, sonst " +
+              "nichts. Im Fussbereich und im Kontakt-Abschnitt steht der Kanal " +
+              "immer — jeder mit seinem eigenen Zeichen."
           ),
         ],
       }),
