@@ -28,8 +28,6 @@ import {
   renderReferences,
   renderGallery,
   renderShop,
-  renderSound,
-  renderExperience,
   renderBooking,
   renderContact,
   renderLayout,
@@ -108,8 +106,11 @@ const NAV = [
       { id: "shows", label: "Shows", icon: ICON.calendar, render: renderShows },
       { id: "references", label: "Referenzen", icon: ICON.star, render: renderReferences },
       { id: "gallery", label: "Galerie", icon: ICON.image, render: renderGallery },
-      { id: "sound", label: "Sound & Genres", icon: ICON.music, render: renderSound },
-      { id: "experience", label: "Erlebnis", icon: ICON.bolt, render: renderExperience },
+      /* "Sound & Genres" und "Erlebnis" standen bis August 2026 hier. Die
+         Website baut beide Abschnitte nicht mehr (siehe BAUBAR in
+         scripts/build.mjs) — ein Eingabefeld dafuer wuerde nur Arbeit machen,
+         die nirgends ankommt. Die Inhalte bleiben in der Datenbank stehen und
+         werden schlicht nicht mehr gelesen. */
       { id: "shop", label: "Shop", icon: ICON.bag, render: renderShop },
       { id: "booking", label: "Booking", icon: ICON.clipboard, render: renderBooking },
       { id: "contact", label: "Kontakt", icon: ICON.mail, render: renderContact },
