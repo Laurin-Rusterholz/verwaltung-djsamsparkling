@@ -229,6 +229,9 @@
           "titleAccent": "Bewegung."
         },
         "shop": {
+          "buyLabel": "Kaufen",
+          "emptyText": "Der Shop ist bald offen — das erste Merch ist in Arbeit. Folg mir auf den Kanälen unten, dann verpasst du den Start nicht.",
+          "note": "Merch von Sam Sparking — jedes Teil hilft, die nächste Produktion zu stemmen.",
           "shipping": "Gratis Versand — nur innerhalb der Schweiz"
         }
       },
@@ -567,6 +570,10 @@
           "titleAccent": "mouvement."
         },
         "shop": {
+          "buyLabel": "Acheter",
+          "emptyText": "La boutique ouvre bientôt — le premier merch est en préparation. Suis-moi sur les canaux ci-dessous pour ne pas manquer la sortie.",
+          "navLabel": "Boutique",
+          "note": "Du merch de Sam Sparking — chaque pièce aide à financer la prochaine production.",
           "shipping": "Livraison gratuite — uniquement en Suisse"
         }
       },
@@ -1549,13 +1556,13 @@
       "items": []
     },
     "shop": {
-      "buyLabel": "Kaufen",
+      "buyLabel": "Buy",
       "currency": "CHF",
-      "emptyText": "Der Shop ist bald offen — das erste Merch ist in Arbeit. Folg mir auf den Kanälen unten, dann verpasst du den Start nicht.",
+      "emptyText": "The shop opens soon — the first merch is in the works. Follow me on the channels below so you don't miss the drop.",
       "enabled": false,
       "items": [],
       "navLabel": "Shop",
-      "note": "Merch von Sam Sparking — jedes Teil hilft, die nächste Produktion zu stemmen.",
+      "note": "Merch from Sam Sparking — every piece helps fund the next production.",
       "shipping": "Free shipping — within Switzerland only",
       "title": "Sh",
       "titleAccent": "op."
