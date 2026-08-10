@@ -15,12 +15,8 @@
     "tagline": "Turning energy into euphoria.",
     "stats": [
       {
-        "value": "2021",
-        "label": "First set"
-      },
-      {
-        "value": "7+",
-        "label": "Clubs & Festivals"
+        "value": "30",
+        "label": "Shows"
       },
       {
         "value": "150",
@@ -40,12 +36,9 @@
         "tagline": "Aus Energie wird Euphorie.",
         "stats": {
           "0": {
-            "label": "Erstes Set"
+            "label": "Shows"
           },
           "1": {
-            "label": "Clubs & Festivals"
-          },
-          "2": {
             "label": "BPM Zuhause"
           }
         }
@@ -161,49 +154,58 @@
         "references": {
           "items": {
             "0": {
-              "city": "Zürich"
+              "city": "St. Gallen"
             },
             "1": {
-              "city": "Wattwil"
+              "city": "Zürich"
             },
             "2": {
               "city": "St. Gallen"
             },
             "3": {
-              "city": "St. Gallen"
+              "city": "Gossau"
             },
             "4": {
-              "city": "St. Gallen"
+              "city": "Luzern"
             },
             "5": {
-              "city": "St. Gallen"
+              "city": "Herisau"
             },
             "6": {
               "city": "St. Gallen"
             },
             "7": {
-              "city": "Herisau"
+              "city": "St. Gallen"
             },
             "8": {
               "city": "Herisau"
             },
             "9": {
-              "city": "Sirnach"
-            },
-            "10": {
-              "city": "Glarus"
-            },
-            "11": {
-              "city": "Bazenheid"
-            },
-            "12": {
               "city": "Wittenbach"
             },
+            "10": {
+              "city": "St. Gallen"
+            },
+            "11": {
+              "city": "Wattwil"
+            },
+            "12": {
+              "city": "St. Gallen"
+            },
             "13": {
-              "city": "Gossau"
+              "city": "St. Gallen"
             },
             "14": {
               "city": "Schaan, FL"
+            },
+            "15": {
+              "city": "Sirnach"
+            },
+            "16": {
+              "city": "Bazenheid"
+            },
+            "17": {
+              "city": "Glarus"
             }
           },
           "moreLabel": "Ausserdem gespielt",
@@ -433,49 +435,58 @@
           "noteLinkLabel": "Écris-moi →",
           "items": {
             "0": {
-              "city": "Zurich"
+              "city": "Saint-Gall"
             },
             "1": {
-              "city": "Wattwil"
+              "city": "Zurich"
             },
             "2": {
               "city": "Saint-Gall"
             },
             "3": {
-              "city": "Saint-Gall"
+              "city": "Gossau"
             },
             "4": {
-              "city": "Saint-Gall"
+              "city": "Lucerne"
             },
             "5": {
-              "city": "Saint-Gall"
+              "city": "Herisau"
             },
             "6": {
               "city": "Saint-Gall"
             },
             "7": {
-              "city": "Herisau"
+              "city": "Saint-Gall"
             },
             "8": {
               "city": "Herisau"
             },
             "9": {
-              "city": "Sirnach"
-            },
-            "10": {
-              "city": "Glaris"
-            },
-            "11": {
-              "city": "Bazenheid"
-            },
-            "12": {
               "city": "Wittenbach"
             },
+            "10": {
+              "city": "Saint-Gall"
+            },
+            "11": {
+              "city": "Wattwil"
+            },
+            "12": {
+              "city": "Saint-Gall"
+            },
             "13": {
-              "city": "Gossau"
+              "city": "Saint-Gall"
             },
             "14": {
               "city": "Schaan, FL"
+            },
+            "15": {
+              "city": "Sirnach"
+            },
+            "16": {
+              "city": "Bazenheid"
+            },
+            "17": {
+              "city": "Glarus"
             }
           }
         },
@@ -656,12 +667,9 @@
         },
         "stats": {
           "0": {
-            "label": "Premier set"
+            "label": "Shows"
           },
           "1": {
-            "label": "Clubs & Festivals"
-          },
-          "2": {
             "label": "BPM de référence"
           }
         }
@@ -680,12 +688,9 @@
         "tagline": "e5af84f1",
         "stats": {
           "0": {
-            "label": "a58cd7b1"
-          },
-          "1": {
             "label": "8172eb91"
           },
-          "2": {
+          "1": {
             "label": "6921445a"
           }
         }
@@ -1288,12 +1293,9 @@
         },
         "stats": {
           "0": {
-            "label": "a58cd7b1"
-          },
-          "1": {
             "label": "8172eb91"
           },
-          "2": {
+          "1": {
             "label": "6921445a"
           }
         }
@@ -1398,15 +1400,21 @@
       "socials": [
         {
           "handle": "@sam_sparking",
-          "inHeader": true,
+          "inHeader": false,
           "label": "Instagram",
           "url": "https://www.instagram.com/sam_sparking/"
         },
         {
           "handle": "",
-          "inHeader": true,
+          "inHeader": false,
           "label": "TikTok",
           "url": ""
+        },
+        {
+          "label": "Spotify",
+          "handle": "",
+          "url": "",
+          "inHeader": false
         },
         {
           "handle": "samsparking",
@@ -1491,68 +1499,80 @@
       "enabled": true,
       "items": [
         {
-          "city": "Zürich",
-          "name": "Sektor 11",
-          "highlight": true
-        },
-        {
-          "city": "Wattwil",
-          "name": "Jugendopenair",
-          "highlight": true
-        },
-        {
-          "city": "St. Gallen",
           "name": "Kugl",
+          "city": "St. Gallen",
           "highlight": true
         },
         {
-          "city": "St. Gallen",
-          "name": "B9 eventlocation",
+          "name": "Sektor 11",
+          "city": "Zürich",
           "highlight": true
         },
         {
+          "name": "Ultrawild Festival",
           "city": "St. Gallen",
-          "name": "IVY"
+          "highlight": true
         },
         {
-          "city": "St. Gallen",
-          "name": "Ultrawild Festival"
-        },
-        {
-          "city": "St. Gallen",
-          "name": "Monoevents"
-        },
-        {
-          "city": "Herisau",
-          "name": "Amadeusbar"
-        },
-        {
-          "city": "Herisau",
-          "name": "Dorffest Herisau"
-        },
-        {
-          "city": "Sirnach",
-          "name": "Turnunterhaltung Sirnach"
-        },
-        {
-          "city": "Glarus",
-          "name": "Xploration Events"
-        },
-        {
-          "city": "Bazenheid",
-          "name": "Winterzauber Bazenheid"
-        },
-        {
-          "city": "Wittenbach",
-          "name": "Firehouse Party Wittenbach"
-        },
-        {
+          "name": "BBC",
           "city": "Gossau",
-          "name": "BBC"
+          "highlight": true
         },
         {
-          "city": "Schaan, FL",
-          "name": "The Q"
+          "name": "Aftersun Festival",
+          "city": "Luzern"
+        },
+        {
+          "name": "Amadeusbar",
+          "city": "Herisau"
+        },
+        {
+          "name": "B9 eventlocation",
+          "city": "St. Gallen"
+        },
+        {
+          "name": "Club Eden",
+          "city": "St. Gallen"
+        },
+        {
+          "name": "Dorffest Herisau",
+          "city": "Herisau"
+        },
+        {
+          "name": "Firehouse Party Wittenbach",
+          "city": "Wittenbach"
+        },
+        {
+          "name": "Jugendopenair",
+          "city": "St. Gallen"
+        },
+        {
+          "name": "Jugendopenair",
+          "city": "Wattwil"
+        },
+        {
+          "name": "Monoevents",
+          "city": "St. Gallen"
+        },
+        {
+          "name": "Picante",
+          "city": "St. Gallen"
+        },
+        {
+          "name": "The Q",
+          "city": "Schaan, FL"
+        },
+        {
+          "name": "Turnunterhaltung Sirnach",
+          "city": "Sirnach"
+        },
+        {
+          "name": "Winterzauber Bazenheid",
+          "city": "Bazenheid"
+        },
+        {
+          "name": "Xploration Events",
+          "city": "Glarus"
         }
       ],
       "moreLabel": "Also played at",
