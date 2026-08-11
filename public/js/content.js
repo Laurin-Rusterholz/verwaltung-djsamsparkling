@@ -454,6 +454,7 @@ export function renderShows() {
         addLabel: "Termin hinzufügen",
         newItem: {
           date: "",
+          time: "",
           name: "",
           venue: "",
           city: "",
@@ -464,9 +465,19 @@ export function renderShows() {
         },
         titleOf: (i) => [i.date, i.name].filter(Boolean).join("  ·  ") || "(neuer Termin)",
         emptyText: "Noch keine Termine — der Shows-Abschnitt und sein Menüpunkt bleiben dann vollständig verborgen.",
+        hint:
+          "Die Reihenfolge hier spielt keine Rolle: auf der Website stehen die " +
+          "kommenden Termine immer chronologisch, bei gleichem Datum nach Uhrzeit.",
         onChange: () => cal._redraw(),
         fields: (base) => [
           textField(`${base}.date`, "Datum", { type: "date" }),
+          /* Die Uhrzeit entscheidet nur die Reihenfolge, wenn zwei Termine auf
+             denselben Tag fallen. Auf der Website steht sie nicht — dort zaehlt
+             das Datum. Leer lassen ist normal. */
+          textField(`${base}.time`, "Uhrzeit (optional)", {
+            type: "time",
+            hint: "Nur für die Reihenfolge bei zwei Terminen am selben Tag.",
+          }),
           textField(`${base}.name`, "Event / Club", { placeholder: "Ultrawild Festival" }),
           textField(`${base}.venue`, "Location", { placeholder: "Olma Halle" }),
           textField(`${base}.city`, "Stadt"),
@@ -576,8 +587,8 @@ export function renderGallery() {
         el("strong", {}, "Fotos und Videos. "),
         el("span", {}, [
           "Beim Auswählen filtern die Reiter „Alle | Bilder | Videos“. Ein Video steht in ",
-          "der Bilderwand als Kachel mit Play-Zeichen und ist zusätzlich auf der eigenen ",
-          "Seite /videos/ zu sehen.",
+          "der Bilderwand als Kachel mit Play-Zeichen — angespielt wird es erst beim ",
+          "Darüberfahren, auf dem Handy sobald es im Bild ist.",
         ]),
       ]),
     ], { class: "basics" }),
@@ -600,13 +611,13 @@ export function renderGallery() {
         addLabel: "Aus den Medien hinzufügen",
         onAdd: async (items, render) => {
           /* Der Dialog zeigt Bilder UND Videos — getrennt ueber die Tabs
-             "Bilder | Videos | Alle". Er beginnt bei den Bildern, weil hier die
-             Bilderwand gepflegt wird; wer trotzdem ein Video sucht, findet es
-             einen Klick daneben.
+             "Alle | Bilder | Videos". Er beginnt bei den Bildern, weil hier die
+             Bilderwand gepflegt wird; wer ein Video sucht, findet es einen
+             Klick daneben.
 
-             Auf der Website landet ein Video nicht in der Bilderwand: dort
-             stehen nur Fotos, Videos auf /videos/. Kommt hier eines herein,
-             sagt das Feld darunter, wohin es gehoert. */
+             Beides gehoert in die Bilderwand: ein Video steht dort als eigene
+             Kachel mit Play-Zeichen zwischen den Fotos. Eine separate
+             Video-Seite gibt es nicht mehr (zurueckgenommen am 11.08.2026). */
           const chosen = await pickMany({ kind: "image" });
           if (!chosen || !chosen.length) return;
           chosen.forEach((m) =>
@@ -633,16 +644,15 @@ export function renderGallery() {
           const istVideo = looksLikeVideo(getPath(S.content, `${base}.src`));
           return [
             imageField(base, null, { credit: true, emptyText: "Bild oder Video wählen" }),
-            /* Ein Video in der Bilderwand: erlaubt und gewollt (Vorgabe vom
-               10.08.2026). Es steht dort als eigene Kachel mit Play-Zeichen und
-               erscheint zusaetzlich auf /videos/. */
+            /* Ein Video in der Bilderwand: erlaubt und gewollt. Es steht dort
+               als eigene Kachel mit Play-Zeichen zwischen den Fotos — das ist
+               der einzige Ort, an dem es oeffentlich erscheint. */
             ...(istVideo
               ? [
                   el("p", { class: "field-hint" }, [
                     el("strong", {}, "Video. "),
                     el("span", {}, [
-                      "Steht als Kachel mit Play-Zeichen in der Bilderwand und ist ",
-                      "zusätzlich auf der Seite /videos/ zu sehen.",
+                      "Steht als Kachel mit Play-Zeichen in der Bilderwand.",
                     ]),
                   ]),
                   selectField(`${base}.fit`, "Anzeige des Videos", [
@@ -667,65 +677,6 @@ export function renderGallery() {
 }
 
 /* -------------------------------------------------------- Abschnitt: Shop */
-
-/* --------------------------------------------------------------- Videos */
-
-/**
- * Videos — eigene Ansicht, getrennt von den Fotos.
- *
- * Bis August 2026 lagen Videos in derselben Liste wie die Bilder der Galerie
- * und standen auf der Website zwischen den Fotos. Sie haben jetzt eine eigene
- * Seite (/videos/); hier werden sie auch getrennt gepflegt. Das Bildfeld der
- * Galerie nimmt darum nur noch Bilder an.
- */
-export function renderVideos() {
-  return view([
-    head(
-      "Videos",
-      "Aftermovies und Mitschnitte. Sie stehen auf der eigenen Seite /videos/ — " +
-        "nicht zwischen den Fotos der Galerie."
-    ),
-    sectionBasics("videos"),
-    group("Einleitung", [
-      textField("sections.videos.note", "Zeile unter der Überschrift"),
-      textField("sections.videos.emptyText", "Text, solange kein Video da ist", {
-        hint: "Steht auf der Seite, wenn die Liste unten leer ist — die Seite bleibt erreichbar.",
-      }),
-    ]),
-    group("Videos", [
-      objectList("sections.videos.items", null, {
-        addLabel: "Video hinzufügen",
-        newItem: { title: "", event: "", src: "", poster: "", alt: "", credit: "" },
-        titleOf: (i) => [i.title, i.event].filter(Boolean).join(" — ") || "(neues Video)",
-        emptyText:
-          "Noch kein Video. Die Seite /videos/ bleibt erreichbar und zeigt den Text von oben.",
-        fields: (base) => [
-          // Nur Videos: der Dialog geht im Video-Tab auf.
-          imageField(base, "Video-Datei", { kind: "video", credit: false, emptyText: "Video wählen" }),
-          imageField(`${base}.poster`, "Vorschaubild (optional)", {
-            asObject: false,
-            kind: "image",
-            hint:
-              "Steht still da, bis jemand abspielt. Ohne Vorschaubild zeigt der Browser " +
-              "das erste Bild des Videos.",
-          }),
-          textField(`${base}.title`, "Titel"),
-          textField(`${base}.event`, "Event / Ort"),
-          textField(`${base}.alt`, "Beschreibung für Screenreader"),
-          textField(`${base}.credit`, "Wer hat gefilmt"),
-          textField(`${base}.embedUrl`, "YouTube-/Vimeo-Adresse (statt Datei)", {
-            mono: true,
-            hint: "Nur ausfüllen, wenn das Video nicht als Datei hochgeladen ist.",
-          }),
-        ],
-      }),
-    ], {
-      hint:
-        "Auf /videos/ laufen die Videos nicht von allein: sie haben Bedienelemente und Ton, " +
-        "und geladen wird erst beim Abspielen.",
-    }),
-  ]);
-}
 
 export function renderShop() {
   return view([

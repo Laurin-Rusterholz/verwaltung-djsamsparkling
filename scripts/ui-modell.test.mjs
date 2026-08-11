@@ -143,20 +143,25 @@ console.log("\nWerks-Stand selbst:");
 pruefe("ist das Mehrseiten-Modell", () => {
   const m = abschnittsModell(werksstand);
   assert.equal(m.einseiter, false);
-  // Eigene Seiten fuer Videos, Booking und Shop — plus die Startseite.
+  // Eigene Seiten fuer Booking und Shop — plus die Startseite. Die Video-Seite
+  // ist am 11.08.2026 zurueckgenommen worden und darf nicht wiederkommen.
   const slugs = werksstand.pages.map((p) => p.slug);
   assert.ok(slugs.includes(""), "Startseite fehlt");
-  for (const eigen of ["videos", "booking", "shop"])
+  for (const eigen of ["booking", "shop"])
     assert.ok(slugs.includes(eigen), `Seite /${eigen}/ fehlt: ${slugs.join(", ")}`);
+  assert.ok(!slugs.includes("videos"), "Die Video-Seite ist wieder da: " + slugs.join(", "));
+  assert.equal(werksstand.sections.videos, undefined, "Der Video-Abschnitt ist wieder da");
 });
 
 pruefe("jeder eingeschaltete baubare Abschnitt steht auf einer Seite", () => {
   assert.deepEqual(abschnittsModell(werksstand).ohneSeite, []);
 });
 
-pruefe("trägt keine Ware und keine Zahlungsadresse", () => {
+pruefe("Werks-Stand liefert ohne eigene Ware aus, ohne Zahlungsadresse", () => {
+  // Die Vorlage selbst bringt keine Ware mit — echte Artikel kommen aus der
+  // Verwaltung. Der Shop-Abschnitt ist eingeschaltet, damit /shop/ existiert.
   assert.deepEqual(werksstand.sections.shop.items, []);
-  assert.equal(werksstand.sections.shop.enabled, true, "/shop/ muss es geben (200)");
+  assert.equal(werksstand.sections.shop.enabled, true);
   assert.ok(!/stripe\.com|link\.com/i.test(JSON.stringify(werksstand)));
 });
 

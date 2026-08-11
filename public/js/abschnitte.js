@@ -17,16 +17,13 @@ export const BAUBAR = [
   "shows",
   "references",
   "gallery",
-  // Videos haben seit August 2026 eine eigene Seite (/videos/) — zusaetzlich zu
-  // den Videos, die in der Bilderwand stehen duerfen.
-  "videos",
   "booking",
   "shop",
   "contact",
 ];
 
 /** Abschnitte, die eine eigene Seite haben — nicht Teil der Startseite. */
-export const EIGENE_SEITE = ["videos", "booking", "shop"];
+export const EIGENE_SEITE = ["booking", "shop"];
 
 /** Auf welcher Seite ein Abschnitt steht (oder null, wenn nirgends). */
 export function seiteFuerAbschnitt(content, key) {

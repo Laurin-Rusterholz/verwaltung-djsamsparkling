@@ -2,7 +2,7 @@
    Formular-Bausteine — an S.content gebundene Eingabefelder
    ========================================================================== */
 
-import { el, getPath, setPath, clone, toast, confirmDialog, looksLikeVideo } from "./util.js";
+import { el, getPath, setPath, clone, toast, confirmDialog, looksLikeVideo, stummesVideo } from "./util.js";
 import { S, markDirty } from "./store.js";
 import { DEFAULT_SITE_URL } from "./config.js";
 
@@ -197,9 +197,8 @@ export function imageField(path, label, opts = {}) {
           ]
         : [
             video
-              ? el("video", {
+              ? stummesVideo({
                   src: previewSrc(src),
-                  muted: true,
                   loop: true,
                   playsinline: true,
                   autoplay: true,
