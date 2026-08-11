@@ -47,6 +47,9 @@ function wrap(labelText, control, hint, cls = "") {
 export function textField(path, label, opts = {}) {
   const input = el("input", {
     type: opts.type || "text",
+    // Der Pfad steht am Feld — so laesst sich im Browser pruefen, dass eine
+    // Ansicht wirklich die gemeinte Stelle im Inhalt bearbeitet.
+    "data-path": path,
     value: read(path) ?? "",
     placeholder: opts.placeholder || "",
     maxlength: opts.maxlength || 400,
@@ -58,6 +61,7 @@ export function textField(path, label, opts = {}) {
 
 export function textArea(path, label, opts = {}) {
   const ta = el("textarea", {
+    "data-path": path,
     rows: opts.rows || 4,
     placeholder: opts.placeholder || "",
     maxlength: opts.maxlength || 8000,

@@ -849,6 +849,7 @@ export function renderContact() {
   return view([
     head("Kontakt", "Wie Veranstalter Sam erreichen."),
     sectionBasics("contact"),
+    kanaeleHinweis(),
     group("Kontaktdaten", [
       textField("sections.contact.kicker", "Kleine Zeile"),
       textField("sections.contact.email", "E-Mail", { type: "email" }),
@@ -864,6 +865,53 @@ export function renderContact() {
   ]);
 }
 
+/* ---------------------------------------------------------- Impressum */
+
+/**
+ * Das Impressum ist eine eigene, sehr kurze Seite: /impressum/, /de/impressum/
+ * und /fr/impressum/. Es ist kein Abschnitt der Startseite — es steht deshalb
+ * nicht in der Abschnittsliste und nicht im Menü, sondern nur im Fussbereich
+ * jeder Seite.
+ *
+ * Bearbeitbar sind die Angaben selbst. Die Aufschriften („E-Mail", „Standort")
+ * setzt der Generator je Sprache; beim Standort übersetzt er nur das Landeswort,
+ * der Ort bleibt wie er hier steht.
+ */
+export function renderImpressum() {
+  return view([
+    head("Impressum", "Die kurze Pflichtseite — verlinkt im Fussbereich jeder Seite."),
+    group(null, [
+      el("p", { class: "field-hint" }, [
+        "Diese Seite steht unter ",
+        el("strong", {}, "/impressum/"),
+        " und in jeder Sprache unter derselben Adresse. Der Link dazu steht im ",
+        "Fussbereich jeder Seite. Absichtlich knapp: nur Name, E-Mail und Standort.",
+      ]),
+    ], { class: "basics" }),
+    group("Angaben", [
+      textField("imprint.email", "E-Mail", {
+        type: "email",
+        placeholder: "info@samsparking.ch",
+        hint: "Leer = die E-Mail aus dem Kontakt-Abschnitt wird verwendet.",
+      }),
+      textField("imprint.location", "Standort", {
+        placeholder: "Herisau, Schweiz",
+        hint:
+          "Ort und Land, ohne Strasse und Hausnummer. Das Landeswort übersetzt die " +
+          "Website selbst — aus „Herisau, Schweiz“ wird auf /fr/ „Herisau, Suisse“.",
+      }),
+    ], { cols: 2 }),
+    group(null, [
+      el("p", { class: "field-hint" }, [
+        "Der Künstlername kommt aus „Start & Design“. Weitere Pflichtangaben ",
+        "(Handelsregister, Mehrwertsteuernummer, Postadresse) stehen bewusst nicht ",
+        "auf der Seite — sie sind nicht bekannt und werden nicht erfunden. Brauchst du ",
+        "sie, trag sie hier ein, sobald sie feststehen.",
+      ]),
+    ], { class: "basics" }),
+  ]);
+}
+
 /* --------------------------------------- Abschnitt: Join the Movement */
 
 export function renderFollow() {
@@ -873,6 +921,7 @@ export function renderFollow() {
       "Der Aufruf gleich nach dem Booking: alle Kanäle an einem Ort, damit niemand suchen muss."
     ),
     nichtGebaut("Join the Movement"),
+    kanaeleHinweis(),
     group("Einleitung", [
       textArea("sections.follow.lede", "Text unter dem Titel", {
         rows: 3,
@@ -886,6 +935,34 @@ export function renderFollow() {
         "oben im Kopfbereich: einmal gepflegt, überall aktuell.",
     }),
   ]);
+}
+
+/**
+ * Hinweis, wenn beim Laden Kanäle nachgetragen wurden.
+ *
+ * Bis zum 11.08.2026 legte der Website-Generator fehlende Kanäle beim Bauen
+ * selbst an. In der Datenbank stand davon nichts — die Verwaltung zeigte darum
+ * nur „Mixcloud", während auf der Website vier Kanäle standen. Der Generator
+ * tut das nicht mehr; damit kein Kanal verloren geht, holt die Verwaltung sie
+ * beim Laden in die Liste (kanaele-nachtragen.js). Einmal speichern, und alle
+ * drei Stände sind gleich.
+ */
+function kanaeleHinweis() {
+  const dazu = S.nachgetrageneKanaele || [];
+  if (!dazu.length) return null;
+  return group(null, [
+    el("p", { class: "warn-box" }, [
+      el("strong", {}, `${dazu.length} Kanal/Kanäle nachgetragen: ${dazu.join(", ")}. `),
+      el("span", {}, [
+        "Diese Kanäle standen auf der Website, in der Datenbank aber nicht — der ",
+        "Website-Generator hatte sie beim Bauen selbst ergänzt. Das tut er nicht mehr: ",
+        "die Website zeigt jetzt genau, was hier gespeichert ist. Die Kanäle stehen ",
+        "unten als normale Zeilen und lassen sich bearbeiten oder löschen. ",
+        el("strong", {}, "Bitte einmal speichern"),
+        " — danach stehen Verwaltung, Vorschau und Website auf demselben Stand.",
+      ]),
+    ]),
+  ], { class: "basics" });
 }
 
 /**

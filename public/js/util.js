@@ -93,14 +93,28 @@ export function withDefaults(target, defaults) {
  * Leere Strings zu null machen: die Realtime Database loescht null-Werte,
  * damit bleiben keine leeren Felder im Datensatz haengen. Arrays behalten
  * ihre Laenge (dort wuerde null Loecher reissen → leerer String bleibt).
+ *
+ * Wichtig fuer Listen: `imArray` gilt fuer die Eintraege einer Liste. Dort
+ * bleiben leere Felder als leerer String stehen, statt zu null zu werden. Sonst
+ * konnte ein Eintrag, in dem noch nichts ausgefuellt ist, komplett leer werden
+ * ({}) — und ein leeres Objekt speichert die Realtime Database gar nicht. Der
+ * Platz in der Liste fiel damit weg, alles dahinter rutschte eine Stelle nach
+ * vorne, und die positionsgebundenen Uebersetzungen zeigten auf den falschen
+ * Eintrag. Ein gerade angelegter Kanal oder eine leere Referenz waren nach dem
+ * Speichern einfach weg.
  */
-export function pruneForRtdb(value) {
-  if (Array.isArray(value)) return value.map((v) => (Array.isArray(v) || (v && typeof v === "object") ? pruneForRtdb(v) : v === undefined ? "" : v));
+export function pruneForRtdb(value, imArray = false) {
+  if (Array.isArray(value))
+    return value.map((v) =>
+      Array.isArray(v) || (v && typeof v === "object") ? pruneForRtdb(v, true) : v === undefined ? "" : v
+    );
   if (value && typeof value === "object") {
     const out = {};
     for (const [k, v] of Object.entries(value)) {
-      const p = Array.isArray(v) || (v && typeof v === "object") ? pruneForRtdb(v) : v;
-      out[k] = p === "" || p === undefined ? null : p;
+      const p = Array.isArray(v) || (v && typeof v === "object") ? pruneForRtdb(v, false) : v;
+      if (p === undefined) out[k] = imArray ? "" : null;
+      else if (p === "") out[k] = imArray ? "" : null;
+      else out[k] = p;
     }
     return out;
   }

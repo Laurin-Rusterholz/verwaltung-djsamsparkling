@@ -11,6 +11,7 @@ import {
   DEMO,
 } from "./config.js";
 import { clone, withDefaults, pruneForRtdb, toast, sha256Hex, setPath } from "./util.js";
+import { kanaeleNachtragen } from "./kanaele-nachtragen.js";
 
 export const S = {
   user: null,
@@ -23,6 +24,10 @@ export const S = {
   dirty: false,
   ready: false,
   contentStamp: 0, // zählt Änderungen — für Zwischenspeicher, die den Inhalt lesen
+  /* Kanäle, die beim Laden nachgetragen wurden, weil sie auf der Website
+     stehen, in der Datenbank aber fehlten. Die Kontakt-Ansicht sagt es und
+     bittet um einmal Speichern — siehe kanaele-nachtragen.js. */
+  nachgetrageneKanaele: [],
 };
 
 let db = null;
@@ -170,12 +175,16 @@ export async function loadAll() {
   S.content = normalize(withDefaults(content ? clone(content) : clone(defaults), defaults));
   S.contentStamp++;
   S.saved = content ? clone(S.content) : null; // null ⇒ noch nie gespeichert
+  /* Kanäle nachtragen, bevor irgendetwas gerendert wird. `S.saved` steht
+     bewusst schon auf dem Stand der Datenbank — die Ergänzung gilt damit als
+     ungespeicherte Änderung, und der Speichern-Knopf wird aktiv. */
+  S.nachgetrageneKanaele = kanaeleNachtragen(S.content, defaults);
   S.config = cfg || {};
   const configuredSite = String(S.config.siteUrl || "").replace(/\/+$/, "");
   if (!configuredSite || LEGACY_SITE_URLS.includes(configuredSite)) {
     S.config.siteUrl = DEFAULT_SITE_URL;
   }
-  S.dirty = S.saved === null;
+  S.dirty = S.saved === null || S.nachgetrageneKanaele.length > 0;
   S.ready = true;
 
   // Medien und Anfragen live mitverfolgen
@@ -202,6 +211,9 @@ async function loadForDemo() {
 
   S.content = normalize(withDefaults(content ? clone(content) : clone(defaults), defaults));
   S.contentStamp++;
+  /* Auch im Vorführ-Modus die Kanäle nachtragen — sonst zeigt die Vorführung
+     etwas anderes als die Website. Gespeichert wird hier ohnehin nichts. */
+  S.nachgetrageneKanaele = kanaeleNachtragen(S.content, defaults);
   S.saved = clone(S.content);
   S.config = { siteUrl: DEFAULT_SITE_URL };
   S.inquiries = {};
