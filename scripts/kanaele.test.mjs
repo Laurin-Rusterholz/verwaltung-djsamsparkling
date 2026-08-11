@@ -17,6 +17,7 @@ import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { kanaeleNachtragen } from "../public/js/kanaele-nachtragen.js";
 import {
+  fotografLoeschen,
   referenzenNachtragen,
   wareNachtragen,
   shopInfoNachtragen,
@@ -27,6 +28,10 @@ import { pruneForRtdb, withDefaults, clone } from "../public/js/util.js";
 
 const HIER = dirname(fileURLToPath(import.meta.url));
 const werksstand = JSON.parse(await readFile(resolve(HIER, "../public/defaults/site.json"), "utf8"));
+const quellen = {
+  "content.js": await readFile(resolve(HIER, "../public/js/content.js"), "utf8"),
+  "fields.js": await readFile(resolve(HIER, "../public/js/fields.js"), "utf8"),
+};
 
 let fehler = 0;
 const pruefe = (name, fn) => {
@@ -349,6 +354,56 @@ pruefe("die alte Telefonnummer wird geleert, eine neue nicht", () => {
   // Und im Werks-Stand steht keine mehr.
   if (String(werksstand.sections?.contact?.phone || "").trim())
     throw new Error("der Werks-Stand traegt wieder eine Telefonnummer");
+});
+
+/* --------------------------------------------------------------- Fotograf */
+
+pruefe("der Fotograf ist ueberall geloescht, nicht nur versteckt", () => {
+  const c = {
+    site: { artist: "Sam Sparking", photoCredit: "Sarto Photography" },
+    sections: {
+      gallery: { items: [{ src: "a.jpg", alt: "A", credit: "Sarto Photography" }, { src: "b.jpg", alt: "B" }] },
+      about: { photo: { src: "p.jpg", credit: "Photo — Sarto Photography" } },
+      booking: { photo: { src: "q.jpg", credit: "Sarto Photography" } },
+    },
+    i18n: { de: { site: { photoCredit: "Sarto Photography" }, sections: { gallery: { items: { 0: { credit: "Sarto" } } } } } },
+    i18nHash: { de: { site: { photoCredit: "abc123" } } },
+  };
+  const weg = fotografLoeschen(c);
+  if (!weg) throw new Error("nichts geloescht");
+  const roh = JSON.stringify(c);
+  if (roh.includes("Sarto")) throw new Error("Sarto steht noch drin: " + roh);
+  if (roh.includes("photoCredit")) throw new Error("photoCredit steht noch drin");
+  if (roh.includes('"credit"')) throw new Error("ein credit-Feld steht noch drin");
+  // Die Bilder selbst bleiben.
+  if (c.sections.gallery.items.length !== 2) throw new Error("ein Medium ist verschwunden");
+  if (c.sections.gallery.items[0].src !== "a.jpg" || c.sections.gallery.items[0].alt !== "A")
+    throw new Error("das Medium wurde veraendert: " + JSON.stringify(c.sections.gallery.items[0]));
+  if (c.sections.about.photo.src !== "p.jpg") throw new Error("das Portrait wurde veraendert");
+  // Zweimal aufgerufen: nichts mehr zu tun, nichts kaputt.
+  if (fotografLoeschen(c) !== 0) throw new Error("beim zweiten Lauf erneut geloescht");
+});
+
+pruefe("im Werks-Stand steht kein Fotograf mehr", () => {
+  const roh = JSON.stringify(werksstand);
+  for (const wort of ["Sarto", "photoCredit", '"credit"'])
+    if (roh.includes(wort)) throw new Error(`"${wort}" steht wieder im Werks-Stand`);
+});
+
+pruefe("kein Editor bietet den Fotografen wieder an", () => {
+  // Am Quelltext geprueft — die Ansicht selbst prueft die Browser-Abnahme.
+  for (const datei of ["content.js", "fields.js"]) {
+    /* Kommentare zaehlen nicht — sie erklaeren, warum es das Feld nicht mehr
+       gibt. Geprueft wird der Code. */
+    const quelle = quellen[datei]
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/^\s*\/\/.*$/gm, "");
+    const zeilen = quelle
+      .split("\n")
+      .filter((z) => /photoCredit|\.credit`|"Bildnachweis"|Fotograf/.test(z));
+    if (zeilen.length)
+      throw new Error(`${datei} bietet es wieder an: ${zeilen[0].trim().slice(0, 90)}`);
+  }
 });
 
 /* ----------------------------------------------------------------- Release */

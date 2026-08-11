@@ -156,7 +156,7 @@ export function selectField(path, label, options, opts = {}) {
  * einen Extra-Knopf. Ist noch nichts gesetzt, steht dort ein grosses „+“.
  * Die Adresse von Hand einzutippen geht weiterhin, aber eingeklappt.
  *
- * `path` zeigt auf das Objekt {src, alt, credit?} oder direkt auf einen String.
+ * `path` zeigt auf das Objekt {src, alt} oder direkt auf einen String.
  */
 export function imageField(path, label, opts = {}) {
   const asObject = opts.asObject !== false;
@@ -271,11 +271,10 @@ export function imageField(path, label, opts = {}) {
     });
     extras.push(wrap("Alt-Text", altInput, null, "sub"));
   }
-  if (asObject && opts.credit) {
-    extras.push(
-      textField(`${path}.credit`, "Bildnachweis", { class: "sub", placeholder: "Photo — …" })
-    );
-  }
+  /* Ein Feld "Bildnachweis" gab es hier bis zum 11.08.2026. Es ist ganz weg,
+     nicht nur ausgeblendet: der Kunde will den Fotografen ueberall los, und ein
+     Feld, das nirgends erscheint, ist nur eine Falle fuer den naechsten, der es
+     ausfuellt. Der alte Wert wird beim Laden geloescht (nachtragen.js). */
 
   return el("div", { class: "field img-field" }, [
     label ? el("label", { class: "field-label" }, label) : null,

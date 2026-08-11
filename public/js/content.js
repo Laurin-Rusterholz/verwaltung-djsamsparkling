@@ -41,13 +41,10 @@ export function renderDesign() {
       textField("site.artist", "Künstlername", { hint: "Erscheint in Titel, Footer und strukturierten Daten." }),
       textField("site.logoText", "Logo-Text (oben links)"),
       textField("site.claim", "Claim im Footer"),
-      /* Der Fotocredit wird auf der Website seit dem 11.08.2026 nirgends mehr
-         angezeigt — weder im Fuss noch an der Galerie oder am Booking-Bild
-         (Kundenwunsch). Das Feld bleibt hier, damit der Eintrag nicht verloren
-         geht, sagt aber klar, dass es nichts mehr bewirkt. */
-      textField("site.photoCredit", "Fotograf/in", {
-        hint: "Wird auf der Website nicht mehr angezeigt. Der Eintrag bleibt hier erhalten.",
-      }),
+      /* Das Feld "Fotograf/in" gab es hier bis zum 11.08.2026. Es ist ganz weg,
+         samt altem Wert — der Kunde will den Fotografen ueberall los, nicht nur
+         auf der Website unsichtbar. Geloescht wird der Wert beim Laden
+         (nachtragen.js) und bei jedem Build der Website. */
       selectField("site.lang", "Hauptsprache", [
         ["de", "Deutsch"],
         ["en", "Englisch"],
@@ -306,7 +303,7 @@ export function renderAbout() {
   return view([
     head("About", "Der Text über Sam."),
     sectionBasics("about"),
-    group("Bild", [imageField("sections.about.photo", "Portrait", { credit: false, kind: "image" })]),
+    group("Bild", [imageField("sections.about.photo", "Portrait", { kind: "image" })]),
     group("Text", [
       textArea("sections.about.lede", "Einstieg (gross gesetzt)", { rows: 3 }),
       stringList("sections.about.paragraphs", "Absätze", {
@@ -628,7 +625,7 @@ export function renderGallery() {
         fields: (base) => {
           const istVideo = looksLikeVideo(getPath(S.content, `${base}.src`));
           return [
-            imageField(base, null, { credit: false, emptyText: "Bild oder Video wählen" }),
+            imageField(base, null, { emptyText: "Bild oder Video wählen" }),
             /* Ein Video in der Bilderwand: erlaubt und gewollt. Es steht dort
                als eigene Kachel mit Play-Zeichen zwischen den Fotos — das ist
                der einzige Ort, an dem es oeffentlich erscheint. */
@@ -705,7 +702,7 @@ export function renderShop() {
         titleOf: (i) => [i.name, i.price].filter(Boolean).join(" — ") || "(neuer Artikel)",
         emptyText: "Keine Ware — es steht dann nur der Text von oben da.",
         fields: (base) => [
-          imageField(base, "Bild", { credit: false, kind: "image" }),
+          imageField(base, "Bild", { kind: "image" }),
           textField(`${base}.name`, "Name"),
           textField(`${base}.price`, "Preis", { placeholder: "35" }),
           textField(`${base}.note`, "Kurze Zeile darunter"),
@@ -847,7 +844,6 @@ export function renderBooking() {
     sectionBasics("booking"),
     group("Bild", [
       imageField("sections.booking.photo", "Bild neben der Anfrage", {
-        credit: false,
         kind: "image",
         hint: "Steht unter „Verfügbar für“. Ohne Bild entfällt der Platz dafür.",
       }),
