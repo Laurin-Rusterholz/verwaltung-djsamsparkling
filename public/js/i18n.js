@@ -44,8 +44,12 @@ const looksTechnical = (v) =>
 // Position auf den Kanal — nach dem Loeschen eines Kanals rutscht der Name des
 // geloeschten auf den naechsten Eintrag. Genau so trug der Mixcloud-Link auf
 // /de/ und /fr/ die Aufschrift "Instagram". Muss mit build.mjs uebereinstimmen.
+/* `imprint.*` steht ebenfalls nicht drin: die E-Mail ist technisch, und beim
+   Standort uebersetzt die Website nur das Landeswort ("Herisau, Schweiz" →
+   "Herisau, Suisse"). Eine zweite Uebersetzung von Hand wuerde daneben stehen
+   und auseinanderlaufen. */
 const NO_TRANSLATE_PATH =
-  /^layout\.|^pages\.\d+\.sections\.|^pages\.\d+\.hero$|^sections\.contact\.socials\./;
+  /^layout\.|^pages\.\d+\.sections\.|^pages\.\d+\.hero$|^sections\.contact\.socials\.|^imprint\./;
 
 export function collectStrings(node, prefix = "", out = []) {
   if (prefix && NO_TRANSLATE_PATH.test(prefix)) return out;
