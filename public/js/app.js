@@ -35,6 +35,7 @@ import {
   renderContact,
   renderLayout,
   renderImpressum,
+  renderRelease,
   renderPages,
 } from "./content.js";
 import { renderMedia, mediaList, usageCount, notifyMediaChanged, notifyUploadsChanged } from "./media.js";
@@ -95,6 +96,7 @@ const NAV = [
       { id: "pages", label: "Seiten", icon: ICON.page, render: renderPages },
       { id: "layout", label: "Abschnitte", icon: ICON.layout, render: renderLayout },
       { id: "impressum", label: "Impressum — /impressum/", icon: ICON.page, render: renderImpressum },
+      { id: "release", label: "Website-Release", icon: ICON.bolt, render: renderRelease },
       {
         id: "i18n",
         label: "Sprachen",

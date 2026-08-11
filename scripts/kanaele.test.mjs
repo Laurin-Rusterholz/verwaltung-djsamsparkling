@@ -16,6 +16,13 @@ import { readFile } from "node:fs/promises";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { kanaeleNachtragen } from "../public/js/kanaele-nachtragen.js";
+import {
+  referenzenNachtragen,
+  wareNachtragen,
+  shopInfoNachtragen,
+  telefonRaeumen,
+  nachtragenBeimLaden,
+} from "../public/js/nachtragen.js";
 import { pruneForRtdb, withDefaults, clone } from "../public/js/util.js";
 
 const HIER = dirname(fileURLToPath(import.meta.url));
@@ -214,7 +221,138 @@ pruefe("das Impressum trägt keine erfundenen Pflichtangaben", () => {
     throw new Error("der Standort sieht nach einer Strassenadresse aus");
 });
 
-/* ------------------------------------------------------------ Referenzen */
+/* ------------------------------------------------------- einmalig, nie zweimal */
+
+pruefe("jeder Nachtrag laeuft genau einmal — sonst liesse sich nichts loeschen", () => {
+  const c = {
+    migrationen: {},
+    sections: {
+      contact: { socials: [], phone: "+41 77 509 11 71" },
+      references: { items: [] },
+      shop: { items: [], info: [] },
+    },
+  };
+  const erst = nachtragenBeimLaden(c, werksstand);
+  if (!erst.meldungen.length) throw new Error("beim ersten Laden wurde nichts nachgetragen");
+  for (const marke of ["kanaele", "referenzen", "ware", "shopInfo", "telefon"])
+    if (c.migrationen[marke] !== true) throw new Error(`Marke "${marke}" nicht gesetzt`);
+
+  // Jetzt loescht der Kunde alles wieder — und es bleibt geloescht.
+  c.sections.shop.items = [];
+  c.sections.references.items = [];
+  c.sections.contact.socials = [];
+  const zweit = nachtragenBeimLaden(c, werksstand);
+  if (zweit.meldungen.length)
+    throw new Error("beim zweiten Laden erneut nachgetragen: " + zweit.meldungen.join(" / "));
+  if (c.sections.shop.items.length) throw new Error("geloeschte Ware kam zurueck");
+  if (c.sections.references.items.length) throw new Error("geloeschte Referenzen kamen zurueck");
+  if (c.sections.contact.socials.length) throw new Error("geloeschte Kanaele kamen zurueck");
+});
+
+/* ------------------------------------------------------------- Referenzen */
+
+pruefe("fehlende Referenzen werden nachgetragen, bestehende nicht angefasst", () => {
+  const c = {
+    sections: {
+      references: {
+        items: [
+          { name: "Kugl", city: "St. Gallen", highlight: true },
+          { name: "IVY", city: "St. Gallen" },
+        ],
+      },
+    },
+  };
+  const dazu = referenzenNachtragen(c, werksstand);
+  const items = c.sections.references.items;
+  // Die bestehenden bleiben vorne, in ihrer Reihenfolge, mit ihrem Zustand.
+  if (items[0].name !== "Kugl" || items[0].highlight !== true)
+    throw new Error("bestehender Favorit veraendert: " + JSON.stringify(items[0]));
+  if (items[1].name !== "IVY") throw new Error("Reihenfolge veraendert: " + items.map((r) => r.name).join(", "));
+  // Keine Dubletten.
+  const paare = items.map((r) => `${r.name}|${r.city}`);
+  const doppelt = paare.filter((x, i) => paare.indexOf(x) !== i);
+  if (doppelt.length) throw new Error("Dublette: " + doppelt.join(", "));
+  // Alle Referenzen des Werks-Stands sind jetzt da.
+  for (const r of werksstand.sections.references.items)
+    if (!paare.includes(`${r.name}|${r.city}`)) throw new Error(`"${r.name}" fehlt weiter`);
+  // Und nichts Nachgetragenes ist automatisch gross.
+  const grossNeu = items.slice(2).filter((r) => r.highlight === true);
+  if (grossNeu.length) throw new Error("nachgetragen und gross: " + grossNeu.map((r) => r.name).join(", "));
+  if (!dazu.length) throw new Error("nichts als nachgetragen gemeldet");
+});
+
+pruefe("die verbindliche Liste ist vollstaendig, IVY inklusive", () => {
+  const paare = (werksstand.sections.references.items || []).map((r) => `${r.name} — ${r.city}`);
+  const muss = [
+    "Sektor 11 — Zürich", "Kugl — St. Gallen", "BBC — Gossau", "Maiaiaiparty — Appenzell Ausserrhoden",
+    "B9 eventlocation — St. Gallen", "Amadeusbar — Herisau", "Fasnacht Oberegg — Appenzell Innerrhoden",
+    "Party Weekend Sirnach — St. Gallen", "IVY — St. Gallen", "Kantonales Musik fest — Appenzell Ausserrhoden",
+    "Jugendopenair — St. Gallen", "Monoevents — St. Gallen", "Ultrawild Festival — St. Gallen",
+    "Jublasurium — Aargau", "Dorffest Herisau — Herisau", "Turnunterhaltung Sirnach — Sirnach",
+    "Xploration Events — Glarus", "Winterzauber Bazenheid — Bazenheid",
+    "Firehouse Party Wittenbach — Wittenbach", "Cyberspace party — St. Gallen", "Talhof — St. Gallen",
+    "Volleyballturnier Malters — Luzern", "Metzertor — St. Gallen", "Abschlussball Wittenbach — St. Gallen",
+    "The Q — Schaan, FL",
+  ];
+  for (const eintrag of muss) if (!paare.includes(eintrag)) throw new Error(`"${eintrag}" fehlt`);
+  const doppelt = paare.filter((x, i) => paare.indexOf(x) !== i);
+  if (doppelt.length) throw new Error("Dublette: " + [...new Set(doppelt)].join(", "));
+  // Die vier bisherigen Favoriten stehen als erste vier, in ihrer Reihenfolge.
+  if (paare.slice(0, 4).join(" | ") !== "Kugl — St. Gallen | Sektor 11 — Zürich | BBC — Gossau | Ultrawild Festival — St. Gallen")
+    throw new Error("die ersten vier stimmen nicht: " + paare.slice(0, 4).join(", "));
+});
+
+/* -------------------------------------------------------- Shop und Telefon */
+
+pruefe("die veroeffentlichte Ware kommt zurueck, wenn der Shop leer ist", () => {
+  const c = { sections: { shop: { items: [] } } };
+  const dazu = wareNachtragen(c, werksstand);
+  if (!c.sections.shop.items.length) throw new Error("nichts nachgetragen");
+  if (!dazu.includes("Beispiel")) throw new Error("falsche Ware: " + dazu.join(", "));
+  // Und ein voller Shop wird nicht angefasst.
+  const voll = { sections: { shop: { items: [{ name: "Hoodie", price: "79" }] } } };
+  wareNachtragen(voll, werksstand);
+  if (voll.sections.shop.items.length !== 1) throw new Error("voller Shop veraendert");
+});
+
+pruefe("der Infostreifen wird angelegt und verspricht nichts Unbelegtes", () => {
+  const c = { sections: { shop: { items: [], info: [] } } };
+  shopInfoNachtragen(c, werksstand);
+  const info = c.sections.shop.info || [];
+  if (info.length !== 3) throw new Error(`${info.length} Punkte statt drei`);
+  for (const i of info) {
+    if (!i.title || !i.text) throw new Error("ein Punkt ohne Titel oder Text");
+    if (!["zahlung", "versand", "fragen"].includes(i.icon)) throw new Error("unbekanntes Zeichen: " + i.icon);
+  }
+  const text = JSON.stringify(info);
+  for (const wort of ["Stripe", "TWINT", "Apple Pay", "gratis", "kostenlos", "24h", "48h"])
+    if (text.includes(wort)) throw new Error(`der Streifen verspricht "${wort}"`);
+});
+
+pruefe("die alte Telefonnummer wird geleert, eine neue nicht", () => {
+  const c = { sections: { contact: { phone: "+41 77 509 11 71" } } };
+  telefonRaeumen(c);
+  if (c.sections.contact.phone) throw new Error("nicht geleert: " + c.sections.contact.phone);
+  const eigen = { sections: { contact: { phone: "+41 44 000 00 00" } } };
+  telefonRaeumen(eigen);
+  if (eigen.sections.contact.phone !== "+41 44 000 00 00") throw new Error("eigene Nummer geleert");
+  // Und im Werks-Stand steht keine mehr.
+  if (String(werksstand.sections?.contact?.phone || "").trim())
+    throw new Error("der Werks-Stand traegt wieder eine Telefonnummer");
+});
+
+/* ----------------------------------------------------------------- Release */
+
+pruefe("die Release-Sperre steht im Werks-Stand", () => {
+  const r = werksstand.release || {};
+  if (r.enabled !== true) throw new Error("nicht eingeschaltet");
+  if (r.date !== "2026-08-12" || r.time !== "18:00")
+    throw new Error(`steht auf ${r.date} ${r.time}`);
+  if (r.zone !== "Europe/Zurich") throw new Error("Zeitzone: " + r.zone);
+  if (!r.headline) throw new Error("keine Ueberschrift fuer den Countdown");
+});
+
+/* ---------------------------------------------- frueher: Referenzen (alt) */
 
 pruefe("der Werks-Stand trägt die Referenzen der Verwaltung, mit IVY", () => {
   const items = werksstand.sections?.references?.items || [];

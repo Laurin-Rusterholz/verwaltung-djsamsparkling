@@ -41,7 +41,13 @@ export function renderDesign() {
       textField("site.artist", "Künstlername", { hint: "Erscheint in Titel, Footer und strukturierten Daten." }),
       textField("site.logoText", "Logo-Text (oben links)"),
       textField("site.claim", "Claim im Footer"),
-      textField("site.photoCredit", "Fotograf/in (Footer)"),
+      /* Der Fotocredit wird auf der Website seit dem 11.08.2026 nirgends mehr
+         angezeigt — weder im Fuss noch an der Galerie oder am Booking-Bild
+         (Kundenwunsch). Das Feld bleibt hier, damit der Eintrag nicht verloren
+         geht, sagt aber klar, dass es nichts mehr bewirkt. */
+      textField("site.photoCredit", "Fotograf/in", {
+        hint: "Wird auf der Website nicht mehr angezeigt. Der Eintrag bleibt hier erhalten.",
+      }),
       selectField("site.lang", "Hauptsprache", [
         ["de", "Deutsch"],
         ["en", "Englisch"],
@@ -300,7 +306,7 @@ export function renderAbout() {
   return view([
     head("About", "Der Text über Sam."),
     sectionBasics("about"),
-    group("Bild", [imageField("sections.about.photo", "Portrait", { credit: true, kind: "image" })]),
+    group("Bild", [imageField("sections.about.photo", "Portrait", { credit: false, kind: "image" })]),
     group("Text", [
       textArea("sections.about.lede", "Einstieg (gross gesetzt)", { rows: 3 }),
       stringList("sections.about.paragraphs", "Absätze", {
@@ -506,63 +512,42 @@ export function renderShows() {
 
 /* -------------------------------------------------- Abschnitt: Referenzen */
 
-/** So viele Referenzen stehen gross — alle weiteren stehen klein darunter. */
-const REFERENZEN_GROSS = 4;
-
 export function renderReferences() {
-  const alle = () => getPath(S.content, "sections.references.items") || [];
-  const grosse = () => alle().filter((i) => i && i.highlight === true);
-
   return view([
     head("Referenzen", "Wo Sam schon gespielt hat."),
     sectionBasics("references"),
+    nachtragHinweis(),
     group("Liste", [
       objectList("sections.references.items", null, {
         addLabel: "Referenz hinzufügen",
         newItem: { name: "", city: "", url: "" },
-        titleOf: (i) =>
-          (i.highlight === true ? "★ " : "") +
-          ([i.name, i.city].filter(Boolean).join(" — ") || "(leer)"),
-        fields: (base, item, i, render) => [
+        titleOf: (i) => [i.name, i.city].filter(Boolean).join(" — ") || "(leer)",
+        fields: (base) => [
           textField(`${base}.name`, "Club / Festival"),
           textField(`${base}.city`, "Ort"),
           textField(`${base}.url`, "Link (optional)", { mono: true, hint: "Leer = führt zum Booking-Abschnitt." }),
-          flagField(
-            `${base}.highlight`,
-            "Gross zeigen",
-            "Angewählt steht diese Referenz gross und über die ganze Breite.",
-            {
-              // Gross ist nur etwas wert, solange es die Ausnahme bleibt.
-              allow: (an) => {
-                if (an && grosse().length >= REFERENZEN_GROSS) {
-                  toast(
-                    `Es stehen schon ${REFERENZEN_GROSS} Referenzen gross. ` +
-                      "Zuerst eine davon abwählen.",
-                    "err"
-                  );
-                  return false;
-                }
-                return true;
-              },
-              onChange: () => render(),
-            }
-          ),
         ],
       }),
     ], {
       hint:
-        `Die angewählten Referenzen (höchstens ${REFERENZEN_GROSS}) stehen gross über die ganze Breite. ` +
-        "Alle übrigen erscheinen darunter gleich gross in einer ruhigen Liste — mit der Zeile, " +
-        "dass Sam ausserdem dort gespielt hat. Die Reihenfolge hier ist auch die Reihenfolge " +
-        "auf der Website; mit ↑ ↓ verschiebst du einen Eintrag.",
+        "Alle Referenzen erscheinen auf der Website im selben Stil, fortlaufend in " +
+        "genau dieser Reihenfolge — mit ↑ ↓ verschiebst du einen Eintrag. Was oben " +
+        "steht, steht auch auf der Website oben.",
     }),
-    group("Zeile über den kleinen Referenzen", [
+    /* Das Häkchen „Gross zeigen" ist am 11.08.2026 weggefallen. Es hat eine
+       zweite Rangfolge neben dieser Liste aufgemacht: wer hier etwas nach oben
+       schob, sah davon nichts, solange der Eintrag nicht auch gross stand — und
+       wer gross setzte, sprengte die Reihenfolge. Jetzt entscheidet allein die
+       Reihenfolge, und die ist eins zu eins auf der Website zu sehen.
+
+       Ein früher gesetztes `highlight` bleibt im Inhalt stehen (nichts geht
+       verloren), wirkt aber nirgends mehr. */
+    group("Zeile über den Referenzen", [
       textField("sections.references.moreLabel", "Text", {
         placeholder: "Also played at",
         hint:
-          "Steht zwischen den grossen und den kleinen Referenzen. Die Anzahl hängt die " +
-          "Website selbst an — aus „Also played at“ wird also „Also played at (11)“. " +
-          "Leer = die kleinen Referenzen stehen ohne Zwischenzeile da.",
+          "Wird auf der Website nicht mehr angezeigt — die Referenzen stehen ohne " +
+          "Zwischenzeile in einer Liste. Der Text bleibt hier erhalten.",
       }),
     ]),
     group("Abschlusszeile", [
@@ -621,20 +606,20 @@ export function renderGallery() {
           const chosen = await pickMany({ kind: "image" });
           if (!chosen || !chosen.length) return;
           chosen.forEach((m) =>
-            items.push({ src: m.url, alt: m.alt || "", credit: getPath(S.content, "site.photoCredit") || "" })
+            items.push({ src: m.url, alt: m.alt || "" })
           );
           markDirty();
           render();
           toast(`${chosen.length} Medien hinzugefügt`);
         },
-        newItem: { src: "", alt: "", credit: "" },
+        newItem: { src: "", alt: "" },
         titleOf: (i, n) => i.alt || `Bild ${n + 1}`,
         emptyText: "Keine Bilder.",
         extraAdd: [
           {
             label: "leerer Platz",
             onClick: (items, render) => {
-              items.push({ src: "", alt: "", credit: "" });
+              items.push({ src: "", alt: "" });
               markDirty();
               render();
             },
@@ -643,7 +628,7 @@ export function renderGallery() {
         fields: (base) => {
           const istVideo = looksLikeVideo(getPath(S.content, `${base}.src`));
           return [
-            imageField(base, null, { credit: true, emptyText: "Bild oder Video wählen" }),
+            imageField(base, null, { credit: false, emptyText: "Bild oder Video wählen" }),
             /* Ein Video in der Bilderwand: erlaubt und gewollt. Es steht dort
                als eigene Kachel mit Play-Zeichen zwischen den Fotos — das ist
                der einzige Ort, an dem es oeffentlich erscheint. */
@@ -680,34 +665,43 @@ export function renderGallery() {
 
 export function renderShop() {
   return view([
-    head("Shop", "Merch mit Bestellung per E-Mail. Ohne Ware bleibt der Abschnitt leer."),
+    head("Shop", "Die Merch-Seite: Einladung oben, Katalog darunter, Infostreifen zum Schluss."),
     sectionBasics("shop"),
+    nachtragHinweis(),
+    /* Die helle Fläche ganz oben im Shop. Sie ersetzt seit dem 11.08.2026 die
+       alte Zeile „Merch from Sam Sparking …" über der Ware. */
+    group("Einladung oben", [
+      textField("sections.shop.kicker", "Kleine Zeile", {
+        placeholder: "MERCH",
+        hint: "Steht klein über der Überschrift.",
+      }),
+      textField("sections.shop.headline", "Überschrift", { placeholder: "Sam Sparking Shop" }),
+      textArea("sections.shop.intro", "Kurze Beschreibung", {
+        rows: 2,
+        hint: "Ein, zwei Sätze. Leer = es steht nur die Überschrift da.",
+      }),
+      textField("sections.shop.ctaLabel", "Knopf zum Katalog", {
+        placeholder: "Zum Katalog",
+        hint: "Der Knopf springt zu den Produktkarten. Leer = kein Knopf.",
+      }),
+    ], { cols: 2 }),
     group("Grunddaten", [
       textField("sections.shop.currency", "Währung", {
         placeholder: "CHF",
         hint: "Steht vor jedem Preis.",
       }),
       textField("sections.shop.buyLabel", "Button-Text", { placeholder: "Kaufen" }),
-      textField("sections.shop.note", "Zeile unter der Ware"),
+      textField("sections.shop.note", "Zeile im leeren Shop", {
+        hint:
+          "Erscheint nur, wenn kein Artikel da ist. Über Ware steht sie nicht mehr — " +
+          "die Ware spricht für sich.",
+      }),
       textArea("sections.shop.emptyText", "Text ohne Ware", { rows: 2 }),
     ], { cols: 2 }),
-    group("Versand", [
-      textField("sections.shop.shipping", "Versandzeile", {
-        placeholder: "Free shipping — within Switzerland only",
-        hint:
-          "Steht überall im Shop: unter der Einleitung, auf jedem Artikel und im " +
-          "Bestellformular. Einmal hier geschrieben, überall gleich. " +
-          "Leer = es steht nichts zum Versand da.",
-      }),
-    ], {
-      hint:
-        "Gratis Versand gilt nur innerhalb der Schweiz — das gehört so deutlich hin, " +
-        "dass es niemand erst im Bestellformular entdeckt.",
-    }),
     group("Ware", [
       objectList("sections.shop.items", null, {
         addLabel: "Artikel hinzufügen",
-        newItem: { name: "", price: "", note: "", src: "", alt: "", paymentLink: "", linkUrl: "", status: "available" },
+        newItem: { name: "", price: "", note: "", badge: "", src: "", alt: "", paymentLink: "", linkUrl: "", status: "available" },
         titleOf: (i) => [i.name, i.price].filter(Boolean).join(" — ") || "(neuer Artikel)",
         emptyText: "Keine Ware — es steht dann nur der Text von oben da.",
         fields: (base) => [
@@ -715,6 +709,13 @@ export function renderShop() {
           textField(`${base}.name`, "Name"),
           textField(`${base}.price`, "Preis", { placeholder: "35" }),
           textField(`${base}.note`, "Kurze Zeile darunter"),
+          /* Das Abzeichen sitzt oben links auf dem Produktbild. Frei
+             beschriftbar; leer heisst kein Abzeichen. Ausverkauft schlägt es:
+             dann sagt die Karte das Wichtigere. */
+          textField(`${base}.badge`, "Abzeichen (optional)", {
+            placeholder: "Bestseller",
+            hint: "Steht oben links auf dem Bild. Leer = kein Abzeichen.",
+          }),
           selectField(`${base}.status`, "Verfügbarkeit", [
             ["available", "verfügbar"],
             ["soldout", "ausverkauft"],
@@ -741,7 +742,37 @@ export function renderShop() {
           }),
         ],
       }),
-    ]),
+    ], {
+      hint:
+        "Die Reihenfolge hier ist auch die Reihenfolge im Katalog. Drei Karten " +
+        "nebeneinander am Rechner, zwei am Tablet, eine am Handy.",
+    }),
+    /* Der Streifen unter den Karten. Drei Punkte, mehr zeigt die Website nicht.
+       Wichtig: keine Versprechen, die niemand einlösen kann — keine festen
+       Lieferfristen, kein „gratis Versand", kein Zahlungsanbieter, der gar
+       nicht eingerichtet ist. */
+    group("Informationsstreifen unter dem Katalog", [
+      objectList("sections.shop.info", null, {
+        addLabel: "Punkt hinzufügen",
+        newItem: { icon: "fragen", title: "", text: "" },
+        titleOf: (i) => i.title || "(leer)",
+        emptyText: "Kein Streifen — dann steht unter den Karten nichts.",
+        fields: (base) => [
+          selectField(`${base}.icon`, "Zeichen", [
+            ["zahlung", "Karte — Zahlung"],
+            ["versand", "Paket — Versand"],
+            ["fragen", "Fragezeichen — Fragen"],
+          ]),
+          textField(`${base}.title`, "Titel", { placeholder: "Versand" }),
+          textArea(`${base}.text`, "Text", { rows: 2 }),
+        ],
+      }),
+    ], {
+      hint:
+        "Höchstens drei Punkte — mehr zeigt die Website nicht. Bitte nichts " +
+        "versprechen, was nicht feststeht: keine Lieferfrist, kein „gratis Versand“, " +
+        "kein Zahlungsanbieter, der nicht eingerichtet ist.",
+    }),
   ]);
 }
 
@@ -816,7 +847,7 @@ export function renderBooking() {
     sectionBasics("booking"),
     group("Bild", [
       imageField("sections.booking.photo", "Bild neben der Anfrage", {
-        credit: true,
+        credit: false,
         kind: "image",
         hint: "Steht unter „Verfügbar für“. Ohne Bild entfällt der Platz dafür.",
       }),
@@ -853,7 +884,12 @@ export function renderContact() {
     group("Kontaktdaten", [
       textField("sections.contact.kicker", "Kleine Zeile"),
       textField("sections.contact.email", "E-Mail", { type: "email" }),
-      textField("sections.contact.phone", "Telefon"),
+      /* Die Telefonnummer gehoert nicht mehr auf die oeffentliche Website
+         (Kundenwunsch 11.08.2026). Das Feld bleibt optional stehen: leer heisst
+         nirgends gerendert, und wer wieder eine eintraegt, sieht sie auch. */
+      textField("sections.contact.phone", "Telefon (optional)", {
+        hint: "Leer = steht nirgends auf der Website. Nur was hier steht, wird angezeigt.",
+      }),
       textField("sections.contact.base", "Standort"),
     ], { cols: 2 }),
     group("Social Media & Musik", [socialsList()], {
@@ -862,6 +898,83 @@ export function renderContact() {
         "Sie stehen im Abschnitt nach dem Booking, im Fussbereich und, wo angewählt, " +
         "oben im Kopfbereich.",
     }),
+  ]);
+}
+
+/* ---------------------------------------------------- Website-Release */
+
+/**
+ * Der Start der Website. Bis zum eingestellten Zeitpunkt liegt ein Vorhang mit
+ * Countdown über allen öffentlichen Seiten; danach ist die Website da.
+ *
+ * Umgeschaltet wird im Browser des Besuchers: der Zeitpunkt steht als Zahl in
+ * der Seite, ein kleines Skript zählt herunter und nimmt den Vorhang bei null
+ * weg. Es braucht also weder einen neuen Deploy noch einen Cache-Griff, und
+ * eine Seite, die offen liegen bleibt, schaltet von selbst um.
+ *
+ * Die Vorführ-Fassung unter /site/ und diese Verwaltung sind nie gesperrt —
+ * dort wird gearbeitet.
+ */
+export function renderRelease() {
+  const an = getPath(S.content, "release.enabled") !== false;
+  const datum = String(getPath(S.content, "release.date") || "");
+  const zeit = String(getPath(S.content, "release.time") || "");
+  let wann = "";
+  if (datum) {
+    const [j, m, t] = datum.split("-");
+    wann = `${t}.${m}.${j}` + (zeit ? `, ${zeit} Uhr` : "");
+  }
+  return view([
+    head("Website-Release", "Bis zum Start zeigt die öffentliche Website einen Countdown."),
+    group(null, [
+      el("p", { class: "field-hint" }, [
+        an && datum
+          ? `Die Website ist gesperrt und öffnet sich am ${wann} (Zeitzone Europe/Zurich) von selbst. `
+          : "Die Sperre ist aus — die Website ist öffentlich erreichbar. ",
+        "Umgeschaltet wird im Browser: eine Seite, die über den Zeitpunkt hinaus offen ",
+        "bleibt, wechselt ohne Neuladen. Ein neuer Deploy ist dafür nicht nötig.",
+      ]),
+    ], { class: "basics" }),
+    group("Schalter", [
+      checkboxField(
+        "release.enabled",
+        "Website bis zum Release sperren",
+        "Aus = die Website ist sofort öffentlich, ohne Countdown."
+      ),
+    ]),
+    group("Zeitpunkt", [
+      textField("release.date", "Datum", {
+        type: "date",
+        hint: "Ohne Datum greift die Sperre nicht.",
+      }),
+      textField("release.time", "Uhrzeit", {
+        type: "time",
+        hint: "Ortszeit in der Schweiz (Europe/Zurich). Sommer- und Winterzeit sind berücksichtigt.",
+      }),
+      textField("release.zone", "Zeitzone", {
+        mono: true,
+        placeholder: "Europe/Zurich",
+        hint: "Nur ändern, wenn der Start wirklich in einer anderen Zeitzone gilt.",
+      }),
+    ], { cols: 3 }),
+    group("Was auf dem Countdown steht", [
+      textField("release.kicker", "Kleine Zeile", { placeholder: "Release" }),
+      textField("release.headline", "Überschrift", { placeholder: "Sam Sparking" }),
+      textArea("release.text", "Text", {
+        rows: 3,
+        hint: "Ein, zwei Sätze. Darunter läuft der Zähler in Tagen, Stunden, Minuten und Sekunden.",
+      }),
+    ], { cols: 2 }),
+    group(null, [
+      el("p", { class: "field-hint" }, [
+        el("strong", {}, "Gut zu wissen: "),
+        "Während der Sperre steht der Inhalt der Seite trotzdem im Quelltext — wer ",
+        "„Seitenquelltext anzeigen“ wählt, kann ihn lesen. Wirklich unsichtbar wäre er ",
+        "nur mit einer Sperre auf dem Server, und die bräuchte genau zum Startzeitpunkt ",
+        "einen neuen Deploy. Für Suchmaschinen und normale Besucher ist die Seite bis ",
+        "zum Start der Countdown.",
+      ]),
+    ], { class: "basics" }),
   ]);
 }
 
@@ -947,23 +1060,28 @@ export function renderFollow() {
  * beim Laden in die Liste (kanaele-nachtragen.js). Einmal speichern, und alle
  * drei Stände sind gleich.
  */
-function kanaeleHinweis() {
-  const dazu = S.nachgetrageneKanaele || [];
+function nachtragHinweis() {
+  const dazu = S.nachgetragen || [];
   if (!dazu.length) return null;
   return group(null, [
     el("p", { class: "warn-box" }, [
-      el("strong", {}, `${dazu.length} Kanal/Kanäle nachgetragen: ${dazu.join(", ")}. `),
+      el("strong", {}, "Einmalig nachgetragen. "),
       el("span", {}, [
-        "Diese Kanäle standen auf der Website, in der Datenbank aber nicht — der ",
+        "Diese Angaben standen auf der Website, in der Datenbank aber nicht — der ",
         "Website-Generator hatte sie beim Bauen selbst ergänzt. Das tut er nicht mehr: ",
-        "die Website zeigt jetzt genau, was hier gespeichert ist. Die Kanäle stehen ",
-        "unten als normale Zeilen und lassen sich bearbeiten oder löschen. ",
+        "die Website zeigt jetzt genau, was hier gespeichert ist. Alles Nachgetragene ",
+        "steht als normaler Eintrag da und lässt sich bearbeiten oder löschen. ",
         el("strong", {}, "Bitte einmal speichern"),
-        " — danach stehen Verwaltung, Vorschau und Website auf demselben Stand.",
+        " — danach stehen Verwaltung, Vorschau und Website auf demselben Stand, und ",
+        "der Nachtrag läuft nie wieder.",
       ]),
+      el("span", { class: "field-hint" }, dazu.join(" · ")),
     ]),
   ], { class: "basics" });
 }
+
+// Alter Name, damit bestehende Aufrufe weiter stimmen.
+const kanaeleHinweis = nachtragHinweis;
 
 /**
  * Die Kanalliste. Sie gehört zum Kontakt-Abschnitt (dort liegt sie seit jeher

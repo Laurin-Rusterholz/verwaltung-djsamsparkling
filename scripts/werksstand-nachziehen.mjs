@@ -155,17 +155,28 @@ if (Array.isArray(neu.sections?.shows?.items) && neu.sections.shows.items.length
   neu.sections.shows.items = [];
 }
 
-/* 4b) Ware gehoert genauso wenig in eine Vorlage. Auf der Website steht seit
+/* 4a) Die Ware bleibt AUSNAHMSWEISE in der Vorlage — siehe unten. Erst die
+      Erklaerung, warum sich das am 11.08.2026 gedreht hat:
+
+      Der Generator holte den Artikel "Beispiel" frueher selbst zurueck, wenn
+      die Warenliste leer war. Diese Regel ist weg (sie machte das Loeschen des
+      letzten Artikels unmoeglich). Damit der veroeffentlichte Artikel trotzdem
+      nicht verloren geht, traegt ihn jetzt der Werks-Stand, und die Verwaltung
+      holt ihn EINMALIG in den Inhalt, wenn der Shop dort leer ist
+      (public/js/nachtragen.js). Danach merkt sie sich das und mischt sich nie
+      wieder ein. Deshalb steht die Ware hier drin statt draussen. */
+
+/* 4b) Frueher: Ware gehoert nicht in eine Vorlage. Auf der Website steht seit
        dem 11.08.2026 wieder ein veroeffentlichter Artikel — richtig so, der
        Kunde hat ihn angelegt. Der Werks-Stand ist aber der Punkt, an dem eine
        leere Verwaltung startet: dort waere derselbe Artikel ein Platzhalter,
        den niemand bestellt hat, mit einem Preis, der zu keiner Lieferung
        gehoert. Der Shop-Abschnitt bleibt eingeschaltet, /shop/ entsteht also,
        und zeigt bis zur ersten eigenen Ware seinen Leer-Text. */
-if (Array.isArray(neu.sections?.shop?.items) && neu.sections.shop.items.length) {
-  getan.push(`${neu.sections.shop.items.length} Artikel aus der Vorlage genommen`);
-  neu.sections.shop.items = [];
-}
+/* Ausser Kraft seit dem 11.08.2026 — die Begruendung steht direkt darueber.
+   if (Array.isArray(neu.sections?.shop?.items) && neu.sections.shop.items.length) {
+     neu.sections.shop.items = [];
+   } */
 
 // 5) Stillgelegte Kennzahlen ("First set 2021") gar nicht erst mitnehmen.
 const wegHero = ohneStillgelegte(neu, ["hero", "stats"]);
@@ -189,8 +200,12 @@ for (const pfad of AUS_DEM_WERKSSTAND) {
    Bestellformular und keine Bezahl-Angaben — aber die Vorlage darf ihm auch
    keine Ware und keine Adresse unterschieben. */
 const fehler = [];
-if (!Array.isArray(neu.sections?.shop?.items) || neu.sections.shop.items.length)
-  fehler.push("Der Werks-Stand traegt Ware im Shop — ohne verifizierte Artikeldaten darf dort nichts stehen.");
+/* Die Ware darf im Werks-Stand stehen (siehe 4a), aber sie muss echt sein:
+   Name und Preis, keine erfundene Bezahladresse. */
+for (const ware of neu.sections?.shop?.items || []) {
+  if (!String(ware?.name || "").trim()) fehler.push("Ein Artikel im Werks-Stand hat keinen Namen.");
+  if (ware?.paymentLink) fehler.push(`Artikel "${ware.name}" traegt eine Bezahladresse — die gehoert nicht in die Vorlage.`);
+}
 if (neu.sections?.shop?.enabled !== true)
   fehler.push("Der Shop-Abschnitt muss eingeschaltet sein, sonst gibt es /shop/ gar nicht (404 statt 200).");
 /* Keine Zahlungsadresse im Werks-Stand. Die Payment Links der Artikel sind
