@@ -6,6 +6,11 @@ import { el, getPath, setPath, toast, looksLikeVideo } from "./util.js";
 import { pickMany } from "./media.js";
 import { S, markDirty } from "./store.js";
 import {
+  abschnittsModell,
+  aufMehrseitigStellen,
+  zielSeiteFuer,
+} from "./abschnitte.js";
+import {
   textField,
   textArea,
   checkboxField,
@@ -566,6 +571,16 @@ export function renderGallery() {
         "Videos in der Galerie laufen erst, wenn der Zeiger auf der Kachel liegt."
     ),
     sectionBasics("gallery"),
+    group(null, [
+      el("p", { class: "field-hint" }, [
+        el("strong", {}, "Fotos und Videos. "),
+        el("span", {}, [
+          "Beim Auswählen filtern die Reiter „Alle | Bilder | Videos“. Ein Video steht in ",
+          "der Bilderwand als Kachel mit Play-Zeichen und ist zusätzlich auf der eigenen ",
+          "Seite /videos/ zu sehen.",
+        ]),
+      ]),
+    ], { class: "basics" }),
     group("Mobile Darstellung", [
       selectField("sections.gallery.mobileLimit", "Bilder vor „Mehr anzeigen“", [
         ["2", "2 Bilder"],
@@ -582,11 +597,17 @@ export function renderGallery() {
       objectList("sections.gallery.items", null, {
         // Der übliche Weg ist „Bilder aussuchen“ — der leere Platz ist die
         // Ausnahme (z. B. wenn die Adresse von Hand kommt).
-        addLabel: "Bilder und Videos aus den Medien hinzufügen",
+        addLabel: "Aus den Medien hinzufügen",
         onAdd: async (items, render) => {
-          // Ohne `kind` zeigt die Auswahl Bilder UND Videos — die Galerie kann
-          // beides, und Videos liessen sich sonst gar nicht einsetzen.
-          const chosen = await pickMany();
+          /* Der Dialog zeigt Bilder UND Videos — getrennt ueber die Tabs
+             "Bilder | Videos | Alle". Er beginnt bei den Bildern, weil hier die
+             Bilderwand gepflegt wird; wer trotzdem ein Video sucht, findet es
+             einen Klick daneben.
+
+             Auf der Website landet ein Video nicht in der Bilderwand: dort
+             stehen nur Fotos, Videos auf /videos/. Kommt hier eines herein,
+             sagt das Feld darunter, wohin es gehoert. */
+          const chosen = await pickMany({ kind: "image" });
           if (!chosen || !chosen.length) return;
           chosen.forEach((m) =>
             items.push({ src: m.url, alt: m.alt || "", credit: getPath(S.content, "site.photoCredit") || "" })
@@ -611,10 +632,19 @@ export function renderGallery() {
         fields: (base) => {
           const istVideo = looksLikeVideo(getPath(S.content, `${base}.src`));
           return [
-            // Kein `kind`: hier darf auch ein Video stehen (siehe onAdd).
             imageField(base, null, { credit: true, emptyText: "Bild oder Video wählen" }),
+            /* Ein Video in der Bilderwand: erlaubt und gewollt (Vorgabe vom
+               10.08.2026). Es steht dort als eigene Kachel mit Play-Zeichen und
+               erscheint zusaetzlich auf /videos/. */
             ...(istVideo
               ? [
+                  el("p", { class: "field-hint" }, [
+                    el("strong", {}, "Video. "),
+                    el("span", {}, [
+                      "Steht als Kachel mit Play-Zeichen in der Bilderwand und ist ",
+                      "zusätzlich auf der Seite /videos/ zu sehen.",
+                    ]),
+                  ]),
                   selectField(`${base}.fit`, "Anzeige des Videos", [
                     ["fill", "Fläche füllen — Ränder abgeschnitten"],
                     ["full", "ganzes Video zeigen — mit Rand"],
@@ -637,6 +667,65 @@ export function renderGallery() {
 }
 
 /* -------------------------------------------------------- Abschnitt: Shop */
+
+/* --------------------------------------------------------------- Videos */
+
+/**
+ * Videos — eigene Ansicht, getrennt von den Fotos.
+ *
+ * Bis August 2026 lagen Videos in derselben Liste wie die Bilder der Galerie
+ * und standen auf der Website zwischen den Fotos. Sie haben jetzt eine eigene
+ * Seite (/videos/); hier werden sie auch getrennt gepflegt. Das Bildfeld der
+ * Galerie nimmt darum nur noch Bilder an.
+ */
+export function renderVideos() {
+  return view([
+    head(
+      "Videos",
+      "Aftermovies und Mitschnitte. Sie stehen auf der eigenen Seite /videos/ — " +
+        "nicht zwischen den Fotos der Galerie."
+    ),
+    sectionBasics("videos"),
+    group("Einleitung", [
+      textField("sections.videos.note", "Zeile unter der Überschrift"),
+      textField("sections.videos.emptyText", "Text, solange kein Video da ist", {
+        hint: "Steht auf der Seite, wenn die Liste unten leer ist — die Seite bleibt erreichbar.",
+      }),
+    ]),
+    group("Videos", [
+      objectList("sections.videos.items", null, {
+        addLabel: "Video hinzufügen",
+        newItem: { title: "", event: "", src: "", poster: "", alt: "", credit: "" },
+        titleOf: (i) => [i.title, i.event].filter(Boolean).join(" — ") || "(neues Video)",
+        emptyText:
+          "Noch kein Video. Die Seite /videos/ bleibt erreichbar und zeigt den Text von oben.",
+        fields: (base) => [
+          // Nur Videos: der Dialog geht im Video-Tab auf.
+          imageField(base, "Video-Datei", { kind: "video", credit: false, emptyText: "Video wählen" }),
+          imageField(`${base}.poster`, "Vorschaubild (optional)", {
+            asObject: false,
+            kind: "image",
+            hint:
+              "Steht still da, bis jemand abspielt. Ohne Vorschaubild zeigt der Browser " +
+              "das erste Bild des Videos.",
+          }),
+          textField(`${base}.title`, "Titel"),
+          textField(`${base}.event`, "Event / Ort"),
+          textField(`${base}.alt`, "Beschreibung für Screenreader"),
+          textField(`${base}.credit`, "Wer hat gefilmt"),
+          textField(`${base}.embedUrl`, "YouTube-/Vimeo-Adresse (statt Datei)", {
+            mono: true,
+            hint: "Nur ausfüllen, wenn das Video nicht als Datei hochgeladen ist.",
+          }),
+        ],
+      }),
+    ], {
+      hint:
+        "Auf /videos/ laufen die Videos nicht von allein: sie haben Bedienelemente und Ton, " +
+        "und geladen wird erst beim Abspielen.",
+    }),
+  ]);
+}
 
 export function renderShop() {
   return view([
@@ -667,7 +756,7 @@ export function renderShop() {
     group("Ware", [
       objectList("sections.shop.items", null, {
         addLabel: "Artikel hinzufügen",
-        newItem: { name: "", price: "", note: "", src: "", alt: "", linkUrl: "", status: "available" },
+        newItem: { name: "", price: "", note: "", src: "", alt: "", paymentLink: "", linkUrl: "", status: "available" },
         titleOf: (i) => [i.name, i.price].filter(Boolean).join(" — ") || "(neuer Artikel)",
         emptyText: "Keine Ware — es steht dann nur der Text von oben da.",
         fields: (base) => [
@@ -679,9 +768,25 @@ export function renderShop() {
             ["available", "verfügbar"],
             ["soldout", "ausverkauft"],
           ]),
+          /* Ein Stripe Payment Link gehoert zu GENAU EINEM Preis. Deshalb steht
+             er am Artikel und nicht global: ein gemeinsamer Link haette bei
+             jedem Artikel denselben Betrag abgerechnet. Ein API-Schluessel wird
+             hier nie gebraucht — ein Payment Link ist eine oeffentliche
+             Adresse. */
+          textField(`${base}.paymentLink`, "Stripe Payment Link", {
+            mono: true,
+            placeholder: "https://buy.stripe.com/…",
+            hint:
+              "So kommst du dran: in Stripe unter Produktkatalog einen Preis anlegen → " +
+              "„Payment Link“ erzeugen → die Adresse hier einsetzen. Sie beginnt mit " +
+              "https://buy.stripe.com/ — nur solche Adressen werden übernommen. " +
+              "Der Kauf-Knopf dieses Artikels führt dann direkt dorthin. " +
+              "Kein API-Schlüssel, keine Netlify-Variable. Leer = kein Kauf-Knopf; " +
+              "die Bestellung läuft dann über das Formular und du meldest dich per E-Mail.",
+          }),
           textField(`${base}.linkUrl`, "Link (optional)", {
             mono: true,
-            hint: "Leer = Bestellung läuft über die Kontakt-Adresse.",
+            hint: "Nur für eine Info-Seite zum Artikel. Bezahlt wird über den Payment Link oben.",
           }),
         ],
       }),
@@ -694,7 +799,7 @@ export function renderShop() {
 export function renderSound() {
   return view([
     head("Sound & Genres", "Womit Sam auflegt und wo man es hören kann."),
-    sectionBasics("sound"),
+    nichtGebaut("Sound & Genres"),
     group("Einleitung", [textArea("sections.sound.note", "Text unter der Überschrift", { rows: 2 })]),
     group("Genres", [
       objectList("sections.sound.genres", null, {
@@ -731,7 +836,7 @@ export function renderSound() {
 export function renderExperience() {
   return view([
     head("Erlebnis", "Wie ein Set von Sam abläuft — der Bogen von Warm-up bis Schluss."),
-    sectionBasics("experience"),
+    nichtGebaut("Erlebnis"),
     group("Einleitung", [
       textArea("sections.experience.lede", "Einstieg (gross gesetzt)", { rows: 3 }),
       textField("sections.experience.embedLabel", "Beschriftung beim Video", { placeholder: "Aftermovie" }),
@@ -816,7 +921,7 @@ export function renderFollow() {
       "Join the Movement",
       "Der Aufruf gleich nach dem Booking: alle Kanäle an einem Ort, damit niemand suchen muss."
     ),
-    sectionBasics("follow"),
+    nichtGebaut("Join the Movement"),
     group("Einleitung", [
       textArea("sections.follow.lede", "Text unter dem Titel", {
         rows: 3,
@@ -1014,59 +1119,122 @@ function alleAbschnitte() {
 
 export function renderLayout() {
   const host = el("div", { class: "layout-list" });
+  const totes = el("div", { class: "layout-list" });
+  const hinweis = el("div", {});
 
   const render = () => {
-    const layout = S.content.layout;
-    const keys = alleAbschnitte();
+    const modell = abschnittsModell(S.content);
     host.innerHTML = "";
-    keys.forEach((key, i) => {
-      const sec = S.content.sections[key] || {};
-      const on = sec.enabled !== false;
+    totes.innerHTML = "";
+    hinweis.innerHTML = "";
+
+    /* Der geladene Stand ist noch der alte Einseiter. Der Generator stellt das
+       beim Bauen still um — die Verwaltung zeigte davon nichts und behauptete
+       damit, Booking und Shop seien Abschnitte der Startseite. Lieber sagen,
+       was ist, und die Umstellung anbieten, als sie hinter dem Rücken zu
+       machen: geschrieben wird erst beim Speichern. */
+    if (modell.einseiter) {
+      hinweis.appendChild(
+        el("div", { class: "warn-box" }, [
+          el("strong", {}, "Dieser Stand ist noch das alte Ein-Seiten-Modell. "),
+          el("span", {}, [
+            "Die ausgelieferte Website hat seit August 2026 eigene Seiten für Booking und ",
+            "Shop; der Generator rechnet das beim Bauen um. Hier steht noch der alte Stand, ",
+            "deshalb sehen Reihenfolge und Nummern anders aus als auf der Seite.",
+          ]),
+          el(
+            "button",
+            {
+              class: "btn sm",
+              onclick: () => {
+                if (!aufMehrseitigStellen(S.content, S.defaults)) {
+                  toast("Die Vorlage kennt das Mehrseiten-Modell nicht.", "err");
+                  return;
+                }
+                markDirty();
+                toast("Auf Startseite, /booking/ und /shop/ umgestellt — noch nicht gespeichert.");
+                render();
+              },
+            },
+            "Auf das Mehrseiten-Modell umstellen"
+          ),
+        ])
+      );
+    }
+
+    if (modell.ohneSeite.length) {
+      hinweis.appendChild(
+        el(
+          "p",
+          { class: "warn-box" },
+          "Eingeschaltet, aber auf keiner Seite eingeplant: " +
+            modell.ohneSeite.join(", ") +
+            " — diese Abschnitte erscheinen nirgends. Unter „Seiten“ zuordnen."
+        )
+      );
+    }
+
+    for (const eintrag of modell.aufDerWebsite) {
+      const sec = S.content.sections[eintrag.key] || {};
       const toggle = el("input", {
         type: "checkbox",
         onchange: (e) => {
           sec.enabled = e.target.checked;
-          if (e.target.checked) einplanen(key);
+          if (e.target.checked) einplanen(eintrag.key);
           markDirty();
           render();
         },
       });
-      toggle.checked = on;
+      toggle.checked = eintrag.enabled;
       host.appendChild(
-        el("div", { class: "layout-row" + (on ? "" : " off") }, [
-          el("span", { class: "layout-num" }, on ? String(numberOf(key)).padStart(2, "0") : "—"),
-          el("strong", { class: "layout-name" }, sec.navLabel || key),
-          el("span", { class: "layout-key mono-input" }, "#" + key),
-          el("label", { class: "check" }, [toggle, el("span", {}, on ? "sichtbar" : "aus")]),
+        el("div", { class: "layout-row" + (eintrag.enabled ? "" : " off") }, [
+          el("span", { class: "layout-num" }, eintrag.nummer ? String(eintrag.nummer).padStart(2, "0") : "—"),
+          el("strong", { class: "layout-name" }, eintrag.navLabel),
+          el("span", { class: "layout-key mono-input" }, "#" + eintrag.key),
+          // Statt einer Gesamt-Nummer: auf welcher Seite der Abschnitt steht.
+          // Booking und Shop sind eigene Seiten, keine Abschnitte der Startseite.
+          el(
+            "span",
+            { class: "tag" + (eintrag.seite ? "" : " off") },
+            eintrag.seite ? eintrag.seite : "keiner Seite zugeordnet"
+          ),
+          el("label", { class: "check" }, [toggle, el("span", {}, eintrag.enabled ? "sichtbar" : "aus")]),
           el("div", { class: "row-tools" }, [
-            el("button", {
-              class: "tool", title: "Nach oben", "aria-label": "Nach oben",
-              onclick: () => move(key, -1),
-            }, "↑"),
-            el("button", {
-              class: "tool", title: "Nach unten", "aria-label": "Nach unten",
-              onclick: () => move(key, 1),
-            }, "↓"),
+            el("button", { class: "tool", title: "Nach oben", "aria-label": "Nach oben",
+              onclick: () => move(eintrag.key, -1) }, "↑"),
+            el("button", { class: "tool", title: "Nach unten", "aria-label": "Nach unten",
+              onclick: () => move(eintrag.key, 1) }, "↓"),
           ]),
         ])
       );
-    });
+    }
+
+    for (const eintrag of modell.stillgelegt) {
+      totes.appendChild(
+        el("div", { class: "layout-row off" }, [
+          el("span", { class: "layout-num" }, "—"),
+          el("strong", { class: "layout-name" }, eintrag.navLabel),
+          el("span", { class: "layout-key mono-input" }, "#" + eintrag.key),
+          el("span", { class: "tag off" }, "nicht mehr Teil der Website"),
+        ])
+      );
+    }
   };
 
   /**
    * Ein wieder eingeschalteter Abschnitt muss auch irgendwo stehen: fehlt er
    * in der Reihenfolge oder auf jeder Seite, erscheint er sonst trotz Häkchen
-   * nirgends. Darum hier beides nachziehen.
+   * nirgends. Er gehört dabei auf SEINE Seite — Booking auf /booking/, Shop
+   * auf /shop/. Früher landete alles auf der Startseite; damit stand der Shop
+   * plötzlich wieder mitten auf der Startseite.
    */
   const einplanen = (key) => {
     if (!Array.isArray(S.content.layout)) S.content.layout = [];
     if (!S.content.layout.includes(key)) S.content.layout.push(key);
-    const pages = S.content.pages || [];
-    const irgendwo = pages.some((p) => (p.sections || []).includes(key));
-    if (!irgendwo && pages[0]) {
-      if (!Array.isArray(pages[0].sections)) pages[0].sections = [];
-      pages[0].sections.push(key);
-    }
+    const ziel = zielSeiteFuer(S.content, key);
+    if (!ziel) return;
+    if (!Array.isArray(ziel.sections)) ziel.sections = [];
+    if (!ziel.sections.includes(key)) ziel.sections.push(key);
   };
 
   const move = (key, delta) => {
@@ -1078,20 +1246,33 @@ export function renderLayout() {
     markDirty();
     render();
   };
-  const numberOf = (key) =>
-    alleAbschnitte().filter((k) => S.content.sections[k]?.enabled !== false).indexOf(key) + 1;
   render();
+
+  const stillgelegte = abschnittsModell(S.content).stillgelegt;
 
   return view([
     head(
       "Abschnitte & Reihenfolge",
       "Jeder Abschnitt der Website steht hier — auch die ausgeschalteten. Das Häkchen " +
         "entscheidet, ob er in der Live-Fassung erscheint; die Pfeile bestimmen die " +
-        "Reihenfolge. Nummerierung (01, 02, …) und Menü richten sich automatisch danach."
+        "Reihenfolge. Die Nummer (01, 02, …) zählt je Seite, genau wie auf der Website."
     ),
+    hinweis,
     group(null, [host]),
+    stillgelegte.length
+      ? group("Nicht mehr Teil der Website", [
+          totes,
+          el(
+            "p",
+            { class: "field-hint" },
+            "Diese Abschnitte liegen noch im Inhalt, aber der Website-Generator baut sie " +
+              "nicht mehr — ein Häkchen hier hätte keine Wirkung. Ihre Texte bleiben " +
+              "erhalten; kommt ein Abschnitt zurück, muss er auch im Generator zurückkommen."
+          ),
+        ])
+      : null,
     group("Beschriftungen", [
-      ...alleAbschnitte().map((key) =>
+      ...abschnittsModell(S.content).aufDerWebsite.map(({ key }) =>
         el("div", { class: "label-row" }, [
           el("span", { class: "label-key" }, key),
           textField(`sections.${key}.navLabel`, "Menü", { class: "inline" }),
@@ -1101,6 +1282,28 @@ export function renderLayout() {
       ),
     ], { hint: "Die Überschrift wird zweifarbig gesetzt: „Boo“ + „king.“ ergibt BOOKING. mit farbigem Ende." }),
   ]);
+}
+
+/**
+ * Kopfhinweis für Abschnitte, die der Website-Generator nicht mehr baut.
+ * Steht anstelle des Sichtbarkeits-Schalters: ein Häkchen wäre hier eine
+ * Zusage, die die Website nicht einhält — genau daran ist am 10.08.2026
+ * aufgefallen, dass „Sound & Genres" und „Erlebnis" sich einschalten liessen,
+ * ohne je auf der Seite zu erscheinen.
+ */
+function nichtGebaut(was) {
+  return group(null, [
+    el("p", { class: "warn-box" }, [
+      el("strong", {}, "Nicht mehr auf der Website. "),
+      el("span", {}, [
+        `„${was}" wird vom Website-Generator nicht mehr gebaut — die Texte hier bleiben `,
+        "erhalten und gehen nicht verloren, erscheinen aber auf keiner Seite. Ein ",
+        "Sichtbarkeits-Häkchen gibt es deshalb nicht: es hätte keine Wirkung. Soll der ",
+        "Abschnitt zurück, muss er zuerst im Generator zurückkommen (BAUBAR in ",
+        "s-mi/scripts/build.mjs).",
+      ]),
+    ]),
+  ], { class: "basics" });
 }
 
 /** Sichtbarkeits-Schalter, den jede Abschnitts-Ansicht oben zeigt. */

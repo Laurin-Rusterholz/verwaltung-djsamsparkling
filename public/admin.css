@@ -476,6 +476,26 @@ select{
 .upl-fill{height:100%;background:var(--accent);transition:width .2s;border-radius:var(--r-pill);}
 .upl-pct{font-family:var(--font-m);font-size:.72rem;color:var(--dim);text-align:right;}
 
+/* Tabs im Medien-Dialog: Bilder | Videos | Alle. Vorher filterte der Dialog
+   still nach dem Feld, aus dem er kam — hochgeladene Videos waren in einem
+   Bildfeld unsichtbar. */
+.pick-tabs{display:flex;gap:4px;margin:14px 0 10px;border-bottom:1px solid var(--line,#e3e5ea);}
+.pick-tab{
+  display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border:0;
+  background:none;cursor:pointer;font:inherit;font-size:.86rem;color:var(--ink-2,#555);
+  border-bottom:2px solid transparent;margin-bottom:-1px;
+}
+.pick-tab:hover{color:var(--ink,#111);}
+.pick-tab.on{color:var(--accent,#2e6bff);border-bottom-color:var(--accent,#2e6bff);font-weight:600;}
+.pick-tab-n{
+  font-family:var(--font-m);font-size:.68rem;padding:1px 6px;border-radius:var(--r-pill,99px);
+  background:var(--surface-3,#eef0f4);color:var(--dim,#777);
+}
+.pick-tab.on .pick-tab-n{background:var(--accent,#2e6bff);color:#fff;}
+/* Gescheiterter Upload: Fehlertext plus Wiederholen statt einer Leiste auf 0 %. */
+.upl.err{grid-template-columns:1fr auto auto auto;}
+.upl-fehler{font-size:.78rem;color:var(--danger,#b42318);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(214px,1fr));gap:13px;}
 .tile{
   border:1px solid var(--line);background:var(--surface);border-radius:var(--r);

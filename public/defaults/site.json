@@ -1,28 +1,31 @@
 {
   "hero": {
-    "ctaHref": "#booking-form",
+    "ctaHref": "#booking",
     "ctaLabel": "Book me",
     "kicker": "DJ & producer — St. Gallen, Switzerland",
     "media": {
       "alt": "Sam Sparking behind the decks, lasers and crowd in front of the stage",
-      "poster": "https://firebasestorage.googleapis.com/v0/b/jupidu-36804.firebasestorage.app/o/samsparking%2Fmedia%2F-OyU22YYzpKFXkDykqQT%2Fdsc01436.jpg?alt=media&token=325c944f-ff1b-479c-bdea-473b0b1257db",
+      "poster": "https://firebasestorage.googleapis.com/v0/b/jupidu-36804.firebasestorage.app/o/samsparking%2Fmedia%2F-OzW52YSBbEFCtz4nl36%2Fimage00001.jpeg?alt=media&token=4e105099-e206-4e5d-929a-8c9af42691ac",
       "src": "https://firebasestorage.googleapis.com/v0/b/jupidu-36804.firebasestorage.app/o/samsparking%2Fmedia%2F-OyU6b8KlknJWsJaay2s%2Fultrawild-nicolas.mp4?alt=media&token=d89f8d1b-067a-49e6-a950-0939b27a4b11",
       "type": "video"
     },
-    "meta": "Euphoric Hardstyle / Melodic Hardstyle",
     "nameMain": "Sparking",
     "nameSpaced": "S A M",
-    "tagline": "Turning energy into euphoria.",
     "stats": [
       {
-        "value": "30",
-        "label": "Shows"
+        "label": "First set",
+        "value": "2021"
       },
       {
-        "value": "150",
-        "label": "BPM home base"
+        "label": "Shows",
+        "value": "30"
+      },
+      {
+        "label": "BPM home base",
+        "value": "150"
       }
-    ]
+    ],
+    "tagline": "Turning energy into euphoria."
   },
   "i18n": {
     "de": {
@@ -32,13 +35,15 @@
         "media": {
           "alt": "Sam Sparking am Pult, Laser und Crowd vor der Bühne"
         },
-        "meta": "Euphoric Hardstyle / Melodic Hardstyle",
         "tagline": "Aus Energie wird Euphorie.",
         "stats": {
           "0": {
-            "label": "Shows"
+            "label": "Erstes Set"
           },
           "1": {
+            "label": "Shows"
+          },
+          "2": {
             "label": "BPM Zuhause"
           }
         }
@@ -46,6 +51,15 @@
       "pages": {
         "0": {
           "navLabel": "Start"
+        },
+        "1": {
+          "navLabel": "Videos"
+        },
+        "2": {
+          "navLabel": "Booking"
+        },
+        "3": {
+          "navLabel": "Shop"
         }
       },
       "sections": {
@@ -74,7 +88,8 @@
           "available": {
             "0": "Clubs & Venues",
             "1": "Festivals",
-            "2": "Schweiz & Europa"
+            "2": "Private & Firmen-Events",
+            "3": "Schweiz & Europa"
           },
           "availableKicker": "Verfügbar für",
           "form": {
@@ -87,7 +102,10 @@
           "navLabel": "Booking",
           "presskitLabel": "Presskit (PDF)",
           "title": "Boo",
-          "titleAccent": "king."
+          "titleAccent": "king.",
+          "lead": "Club, Festival, private oder Firmen-Feier — schreib mir, was du vorhast, und du hast innert 48 Stunden eine Antwort.",
+          "claim": "Machen wir",
+          "claimAccent": "was Eigenes."
         },
         "contact": {
           "base": "St. Gallen, Schweiz",
@@ -149,7 +167,8 @@
           },
           "navLabel": "Galerie",
           "title": "Gal",
-          "titleAccent": "erie."
+          "titleAccent": "erie.",
+          "aftermoviesNote": "Rückblick auf die letzten Shows."
         },
         "references": {
           "items": {
@@ -208,7 +227,6 @@
               "city": "Glarus"
             }
           },
-          "moreLabel": "Ausserdem gespielt",
           "navLabel": "Referenzen",
           "note": "Dein Club oder Festival als Nächstes?",
           "noteLinkLabel": "Schreib mir →",
@@ -222,17 +240,17 @@
           "title": "Sh",
           "titleAccent": "ows."
         },
-        "follow": {
-          "lede": "Neue Tracks, Sets und alles zwischen den Shows landen zuerst auf meinen Kanälen. Folg mir und sei dabei, wenn das Nächste kommt.",
-          "navLabel": "Folgen",
-          "title": "Werde Teil der ",
-          "titleAccent": "Bewegung."
-        },
         "shop": {
-          "buyLabel": "Kaufen",
-          "emptyText": "Der Shop ist bald offen — das erste Merch ist in Arbeit. Folg mir auf den Kanälen unten, dann verpasst du den Start nicht.",
           "note": "Merch von Sam Sparking — jedes Teil hilft, die nächste Produktion zu stemmen.",
-          "shipping": "Gratis Versand — nur innerhalb der Schweiz"
+          "emptyText": "Der Shop ist bald offen — das erste Merch ist in Arbeit. Folg mir auf den Kanälen unten, dann verpasst du den Start nicht.",
+          "buyLabel": "Kaufen"
+        },
+        "videos": {
+          "navLabel": "Videos",
+          "title": "Vid",
+          "titleAccent": "eos.",
+          "note": "Rückblicke und Mitschnitte — die Shows zum Nachschauen.",
+          "emptyText": "Noch kein Video hinterlegt — die Rückblicke der nächsten Shows kommen hierher."
         }
       },
       "site": {
@@ -296,7 +314,7 @@
         "weekdays": "Mo,Di,Mi,Do,Fr,Sa,So",
         "sending": "Wird gesendet …",
         "formInvalid": "Bitte die markierten Felder prüfen.",
-        "fName": "Dein Name",
+        "fName": "Name",
         "fEmail": "E-Mail",
         "fEvent": "Event / Club",
         "fCity": "Ort",
@@ -387,6 +405,15 @@
       "pages": {
         "0": {
           "navLabel": "Accueil"
+        },
+        "1": {
+          "navLabel": "Vidéos"
+        },
+        "2": {
+          "navLabel": "Booking"
+        },
+        "3": {
+          "navLabel": "Boutique"
         }
       },
       "sections": {
@@ -419,7 +446,6 @@
           "pastLabel": "Déjà joué"
         },
         "references": {
-          "moreLabel": "A également joué à",
           "navLabel": "Références",
           "title": "Réfé",
           "titleAccent": "rences.",
@@ -535,7 +561,8 @@
               "alt": "Dernier moment de la nuit",
               "credit": "Sarto Photography"
             }
-          }
+          },
+          "aftermoviesNote": "Retour sur les derniers shows."
         },
         "booking": {
           "navLabel": "Booking",
@@ -545,7 +572,8 @@
           "available": {
             "0": "Clubs & salles",
             "1": "Festivals",
-            "2": "Suisse & Europe"
+            "2": "Événements privés & d'entreprise",
+            "3": "Suisse & Europe"
           },
           "presskitLabel": "Presskit (PDF)",
           "form": {
@@ -554,7 +582,10 @@
             "successText": "Merci — ta demande est bien arrivée. Tu auras de mes nouvelles sous 48 heures.",
             "errorText": "Quelque chose n'a pas fonctionné. Écris-moi directement à info@samsparking.ch.",
             "submitLabel": "Envoyer la demande"
-          }
+          },
+          "lead": "Club, festival, fête privée ou événement d'entreprise — écris-moi ton projet et tu as une réponse sous 48 heures.",
+          "claim": "Créons",
+          "claimAccent": "quelque chose."
         },
         "contact": {
           "navLabel": "Kontakt",
@@ -563,18 +594,18 @@
           "kicker": "Booking & demandes",
           "base": "Saint-Gall, Suisse"
         },
-        "follow": {
-          "lede": "Nouveaux morceaux, sets et tout ce qui se passe entre les shows arrivent d'abord sur mes canaux. Suis-moi et sois là pour la suite.",
-          "navLabel": "Suivre",
-          "title": "Rejoins le ",
-          "titleAccent": "mouvement."
-        },
         "shop": {
-          "buyLabel": "Acheter",
-          "emptyText": "La boutique ouvre bientôt — le premier merch est en préparation. Suis-moi sur les canaux ci-dessous pour ne pas manquer la sortie.",
-          "navLabel": "Boutique",
           "note": "Du merch de Sam Sparking — chaque pièce aide à financer la prochaine production.",
-          "shipping": "Livraison gratuite — uniquement en Suisse"
+          "emptyText": "La boutique ouvre bientôt — le premier merch est en préparation. Suis-moi sur les canaux ci-dessous pour ne pas manquer la sortie.",
+          "buyLabel": "Acheter",
+          "navLabel": "Boutique"
+        },
+        "videos": {
+          "navLabel": "Vidéos",
+          "title": "Vid",
+          "titleAccent": "éos.",
+          "note": "Retours et enregistrements — les shows à revoir.",
+          "emptyText": "Pas encore de vidéo — les retours des prochains shows arrivent ici."
         }
       },
       "ui": {
@@ -596,7 +627,7 @@
         "weekdays": "Lun,Mar,Mer,Jeu,Ven,Sam,Dim",
         "sending": "Envoi …",
         "formInvalid": "Merci de vérifier les champs signalés.",
-        "fName": "Ton nom",
+        "fName": "Nom",
         "fEmail": "E-mail",
         "fEvent": "Événement / club",
         "fCity": "Ville",
@@ -645,16 +676,18 @@
       "hero": {
         "kicker": "DJ & producteur — Saint-Gall, Suisse",
         "tagline": "L'énergie devient euphorie.",
-        "meta": "Euphoric Hardstyle / Melodic Hardstyle",
         "ctaLabel": "Me réserver",
         "media": {
           "alt": "Sam Sparking aux platines, lasers et public devant la scène"
         },
         "stats": {
           "0": {
-            "label": "Shows"
+            "label": "Premier set"
           },
           "1": {
+            "label": "Shows"
+          },
+          "2": {
             "label": "BPM de référence"
           }
         }
@@ -673,9 +706,12 @@
         "tagline": "e5af84f1",
         "stats": {
           "0": {
-            "label": "8172eb91"
+            "label": "a58cd7b1"
           },
           "1": {
+            "label": "8172eb91"
+          },
+          "2": {
             "label": "6921445a"
           }
         }
@@ -711,7 +747,8 @@
           "available": {
             "0": "adcfb620",
             "1": "d5521852",
-            "2": "621ec3a2"
+            "2": "bfffef16",
+            "3": "621ec3a2"
           },
           "availableKicker": "d7599fd7",
           "form": {
@@ -724,7 +761,10 @@
           "navLabel": "12a938f0",
           "presskitLabel": "d483ae75",
           "title": "e0cb9023",
-          "titleAccent": "454fdf68"
+          "titleAccent": "454fdf68",
+          "lead": "7d9d8d28",
+          "claim": "7d9059c0",
+          "claimAccent": "0f51879f"
         },
         "contact": {
           "base": "23df4a6c",
@@ -786,7 +826,8 @@
           },
           "navLabel": "d7b54cdd",
           "title": "9ea1a68b",
-          "titleAccent": "2759a437"
+          "titleAccent": "2759a437",
+          "aftermoviesNote": "766693dd"
         },
         "references": {
           "items": {
@@ -840,8 +881,7 @@
           "note": "4ff8935f",
           "noteLinkLabel": "0d549953",
           "title": "4e18ba45",
-          "titleAccent": "1f0cb59f",
-          "moreLabel": "e95df1de"
+          "titleAccent": "1f0cb59f"
         },
         "shows": {
           "emptyText": "335e234f",
@@ -849,15 +889,6 @@
           "pastLabel": "dcef0772",
           "title": "3f025d7e",
           "titleAccent": "505289f2"
-        },
-        "follow": {
-          "lede": "3a18b677",
-          "navLabel": "8aad7d90",
-          "title": "bb1b80ba",
-          "titleAccent": "dcab23c2"
-        },
-        "shop": {
-          "shipping": "8523a1ab"
         }
       },
       "site": {
@@ -921,7 +952,7 @@
         "weekdays": "82a27f69",
         "sending": "6e848d37",
         "formInvalid": "18ea1cdc",
-        "fName": "3a0663bd",
+        "fName": "0fe07306",
         "fEmail": "31bb94b0",
         "fEvent": "7b0d982e",
         "fCity": "906b3662",
@@ -1091,8 +1122,7 @@
             "14": {
               "city": "3e5d36c9"
             }
-          },
-          "moreLabel": "e95df1de"
+          }
         },
         "gallery": {
           "navLabel": "d7b54cdd",
@@ -1147,7 +1177,8 @@
               "alt": "8b0c558c",
               "credit": "c9b915c3"
             }
-          }
+          },
+          "aftermoviesNote": "766693dd"
         },
         "booking": {
           "navLabel": "12a938f0",
@@ -1157,7 +1188,8 @@
           "available": {
             "0": "adcfb620",
             "1": "d5521852",
-            "2": "621ec3a2"
+            "2": "bfffef16",
+            "3": "621ec3a2"
           },
           "presskitLabel": "d483ae75",
           "form": {
@@ -1166,7 +1198,10 @@
             "successText": "29f4405b",
             "errorText": "7a37cbc4",
             "submitLabel": "4a783e3a"
-          }
+          },
+          "lead": "7d9d8d28",
+          "claim": "7d9059c0",
+          "claimAccent": "0f51879f"
         },
         "contact": {
           "navLabel": "73ac94c3",
@@ -1174,15 +1209,6 @@
           "titleAccent": "a26feecd",
           "kicker": "c49a5387",
           "base": "23df4a6c"
-        },
-        "follow": {
-          "lede": "3a18b677",
-          "navLabel": "8aad7d90",
-          "title": "bb1b80ba",
-          "titleAccent": "dcab23c2"
-        },
-        "shop": {
-          "shipping": "8523a1ab"
         }
       },
       "ui": {
@@ -1204,7 +1230,7 @@
         "weekdays": "82a27f69",
         "sending": "6e848d37",
         "formInvalid": "18ea1cdc",
-        "fName": "3a0663bd",
+        "fName": "0fe07306",
         "fEmail": "31bb94b0",
         "fEvent": "7b0d982e",
         "fCity": "906b3662",
@@ -1256,9 +1282,12 @@
         },
         "stats": {
           "0": {
-            "label": "8172eb91"
+            "label": "a58cd7b1"
           },
           "1": {
+            "label": "8172eb91"
+          },
+          "2": {
             "label": "6921445a"
           }
         }
@@ -1269,13 +1298,12 @@
     "about",
     "sound",
     "experience",
-    "gallery",
     "booking",
-    "follow",
     "shows",
+    "references",
+    "gallery",
     "shop",
-    "contact",
-    "references"
+    "contact"
   ],
   "pages": [
     {
@@ -1285,19 +1313,51 @@
       "hero": "full",
       "ticker": true,
       "inNav": true,
+      "enabled": true,
       "sections": [
         "about",
-        "sound",
-        "experience",
-        "gallery",
-        "booking",
-        "follow",
         "shows",
-        "shop",
-        "contact",
-        "references"
-      ],
-      "enabled": true
+        "references",
+        "gallery",
+        "contact"
+      ]
+    },
+    {
+      "slug": "videos",
+      "navLabel": "Videos",
+      "title": "Videos",
+      "hero": "compact",
+      "ticker": false,
+      "inNav": true,
+      "enabled": true,
+      "sections": [
+        "videos"
+      ]
+    },
+    {
+      "slug": "booking",
+      "navLabel": "Booking",
+      "title": "Booking",
+      "hero": "compact",
+      "ticker": false,
+      "inNav": true,
+      "enabled": true,
+      "sections": [
+        "booking",
+        "contact"
+      ]
+    },
+    {
+      "slug": "shop",
+      "navLabel": "Shop",
+      "title": "Shop",
+      "hero": "compact",
+      "ticker": false,
+      "inNav": true,
+      "enabled": true,
+      "sections": [
+        "shop"
+      ]
     }
   ],
   "schemaVersion": 2,
@@ -1316,7 +1376,7 @@
       "photo": {
         "alt": "Portrait of Sam Sparking",
         "credit": "Photo — Sarto Photography",
-        "src": "https://firebasestorage.googleapis.com/v0/b/jupidu-36804.firebasestorage.app/o/samsparking%2Fmedia%2F-OyU1vLnR1ajbjuKnSCI%2Fsartophotography-dsc04164-print.jpg?alt=media&token=62cb2959-a9a7-430a-8adf-6fe756495f67"
+        "src": "https://firebasestorage.googleapis.com/v0/b/jupidu-36804.firebasestorage.app/o/samsparking%2Fmedia%2F-OzW4e3aJ4j-O9UTDQHt%2Fsartophotography-dsc04152-print.jpg?alt=media&token=52b99ede-6e42-45de-a489-7bc800a9a63f"
       },
       "title": "About",
       "titleAccent": "Me.",
@@ -1343,15 +1403,18 @@
         "title": "Tell me about your event"
       },
       "navLabel": "Booking",
+      "photo": {
+        "src": "https://firebasestorage.googleapis.com/v0/b/jupidu-36804.firebasestorage.app/o/samsparking%2Fmedia%2F-OzW52YSBbEFCtz4nl36%2Fimage00001.jpeg?alt=media&token=4e105099-e206-4e5d-929a-8c9af42691ac",
+        "alt": "Sam Sparking on stage",
+        "credit": "Sarto Photography"
+      },
       "presskitLabel": "Presskit (PDF)",
       "presskitUrl": "presskit/sam-sparking-presskit-2026.pdf",
       "title": "Boo",
       "titleAccent": "king.",
-      "photo": {
-        "src": "https://firebasestorage.googleapis.com/v0/b/jupidu-36804.firebasestorage.app/o/samsparking%2Fmedia%2F-OyU22YYzpKFXkDykqQP%2Fdsc01430.jpg?alt=media&token=a2b80100-cb77-4120-878b-cc9ac62aff65",
-        "alt": "Sam Sparking on stage",
-        "credit": "Sarto Photography"
-      }
+      "lead": "Club, festival, private or corporate event — tell me what you have in mind and you get an answer within 48 hours.",
+      "claim": "Let's create",
+      "claimAccent": "something."
     },
     "contact": {
       "base": "St. Gallen, Switzerland",
@@ -1362,101 +1425,129 @@
       "phone": "+41 77 509 11 71",
       "socials": [
         {
-          "handle": "@sam_sparking",
-          "inHeader": false,
           "label": "Instagram",
-          "url": "https://www.instagram.com/sam_sparking/"
-        },
-        {
-          "handle": "",
-          "inHeader": false,
-          "label": "TikTok",
-          "url": ""
-        },
-        {
-          "label": "Spotify",
-          "handle": "",
-          "url": "",
+          "url": "https://www.instagram.com/sam_sparking/",
           "inHeader": false
         },
         {
-          "handle": "samsparking",
-          "inHeader": false,
           "label": "Mixcloud",
           "url": "https://www.mixcloud.com/samsparking/"
+        },
+        {
+          "label": "TikTok",
+          "inHeader": false,
+          "url": "https://www.tiktok.com/@sam_sparking"
+        },
+        {
+          "label": "Spotify",
+          "inHeader": false,
+          "url": "https://open.spotify.com/artist/318V87QIgd2VmokY52zP6S"
         }
       ],
       "title": "Con",
       "titleAccent": "tact."
     },
-    "gallery": {
+    "experience": {
+      "embedLabel": "Aftermovie",
       "enabled": true,
-      "mobileLimit": 4,
-      "items": [
+      "lede": "A Sam Sparking set is built like a story: a slow burn, a hard turn, and a last hour nobody wants to end.",
+      "moments": [
         {
-          "alt": "Sam Sparking live — crowd with hands up",
-          "credit": "Sarto Photography",
-          "src": "https://firebasestorage.googleapis.com/v0/b/jupidu-36804.firebasestorage.app/o/samsparking%2Fmedia%2F-OyU22YYzpKFXkDykqQT%2Fdsc01436.jpg?alt=media&token=325c944f-ff1b-479c-bdea-473b0b1257db"
+          "kicker": "Warm-up",
+          "text": "Melodic, patient, and loud enough to pull people off the wall. The room fills before the first kick lands.",
+          "title": "The Build"
         },
         {
-          "alt": "Sam Sparking mixing on CDJs",
-          "credit": "Sarto Photography",
-          "src": "https://firebasestorage.googleapis.com/v0/b/jupidu-36804.firebasestorage.app/o/samsparking%2Fmedia%2F-OyU22YSQPvv3Hryifbq%2Fdsc01427.jpg?alt=media&token=10d04104-b473-49a4-8f33-9af9ca5f3171"
+          "kicker": "Peak time",
+          "text": "Euphoric hardstyle at full width — hard kicks under melodies you can sing back. This is what people come for.",
+          "title": "The Drop"
         },
         {
-          "alt": "Stage lights during a hardstyle set",
-          "credit": "Sarto Photography",
-          "src": "https://firebasestorage.googleapis.com/v0/b/jupidu-36804.firebasestorage.app/o/samsparking%2Fmedia%2F-OyU22YYzpKFXkDykqQQ%2Fdsc01431.jpg?alt=media&token=927faf36-b359-4b57-81f2-46c6ca1cd1aa"
-        },
-        {
-          "alt": "Sam Sparking behind the booth",
-          "credit": "Sarto Photography",
-          "src": "https://firebasestorage.googleapis.com/v0/b/jupidu-36804.firebasestorage.app/o/samsparking%2Fmedia%2F-OyU22YYzpKFXkDykqQR%2Fdsc01432.jpg?alt=media&token=c595b476-15fd-4cc8-a61d-f5288ca30c39"
-        },
-        {
-          "alt": "Crowd at a Sam Sparking show",
-          "credit": "Sarto Photography",
-          "src": "https://firebasestorage.googleapis.com/v0/b/jupidu-36804.firebasestorage.app/o/samsparking%2Fmedia%2F-OyU22YSQPvv3Hryifbl%2Fdsc01363-2.jpg?alt=media&token=a53f40fe-b244-4a1e-89ac-e9f6adc61f8f"
-        },
-        {
-          "alt": "Sam Sparking portrait at the venue",
-          "credit": "Sarto Photography",
-          "src": "https://firebasestorage.googleapis.com/v0/b/jupidu-36804.firebasestorage.app/o/samsparking%2Fmedia%2F-OyU1vLnR1ajbjuKnSCI%2Fsartophotography-dsc04164-print.jpg?alt=media&token=62cb2959-a9a7-430a-8adf-6fe756495f67"
-        },
-        {
-          "alt": "Hands in the air on the dancefloor",
-          "credit": "Sarto Photography",
-          "src": "https://firebasestorage.googleapis.com/v0/b/jupidu-36804.firebasestorage.app/o/samsparking%2Fmedia%2F-OyU22YYzpKFXkDykqQS%2Fdsc01434.jpg?alt=media&token=e1f93b67-3278-4889-9cdc-e400b096bf9a"
-        },
-        {
-          "alt": "Sam Sparking during his set",
-          "credit": "Sarto Photography",
-          "src": "https://firebasestorage.googleapis.com/v0/b/jupidu-36804.firebasestorage.app/o/samsparking%2Fmedia%2F-OyU22YSQPvv3Hryifbm%2Fdsc01363.jpg?alt=media&token=970a22f6-6e46-48d7-823f-9c9089f08e6f"
-        },
-        {
-          "alt": "Light show over the dancefloor",
-          "credit": "Sarto Photography",
-          "src": "https://firebasestorage.googleapis.com/v0/b/jupidu-36804.firebasestorage.app/o/samsparking%2Fmedia%2F-OyU22YSQPvv3Hryifbn%2Fdsc01395.jpg?alt=media&token=9c942a63-b8db-4f72-8520-196106de2b3c"
-        },
-        {
-          "alt": "Sam Sparking on stage",
-          "credit": "Sarto Photography",
-          "src": "https://firebasestorage.googleapis.com/v0/b/jupidu-36804.firebasestorage.app/o/samsparking%2Fmedia%2F-OyU22YYzpKFXkDykqQP%2Fdsc01430.jpg?alt=media&token=a2b80100-cb77-4120-878b-cc9ac62aff65"
-        },
-        {
-          "alt": "Booth view over the crowd",
-          "credit": "Sarto Photography",
-          "src": "https://firebasestorage.googleapis.com/v0/b/jupidu-36804.firebasestorage.app/o/samsparking%2Fmedia%2F-OyU22YSQPvv3Hryifbo%2Fdsc01396.jpg?alt=media&token=98915a35-6435-4e3f-b05c-289364e37aa3"
-        },
-        {
-          "alt": "Closing moment of the night",
-          "credit": "Sarto Photography",
-          "src": "https://firebasestorage.googleapis.com/v0/b/jupidu-36804.firebasestorage.app/o/samsparking%2Fmedia%2F-OyU22YSQPvv3Hryifbp%2Fdsc01426.jpg?alt=media&token=d2664e47-f9d9-4567-bd91-622adb8b567b"
+          "kicker": "Closing",
+          "text": "Raw energy, no filler. Tracks I only play when the floor has earned them.",
+          "title": "The Last Hour"
         }
       ],
+      "navLabel": "Experience",
+      "title": "Experi",
+      "titleAccent": "ence."
+    },
+    "gallery": {
+      "enabled": true,
+      "items": [
+        {
+          "alt": "Sam Sparking performing with a raised hand amid colourful stage lights.",
+          "credit": "Sarto Photography"
+        },
+        {
+          "alt": "DJ headphones and decks ready for Sam Sparking's hardstyle set.",
+          "credit": "Sarto Photography",
+          "src": "https://firebasestorage.googleapis.com/v0/b/jupidu-36804.firebasestorage.app/o/samsparking%2Fmedia%2F-OzW4taELJFkGAtqd2op%2Fsartophotography-dsc4058-web.jpg?alt=media&token=a8e8b84e-8deb-46e5-8537-a61ccd087da7"
+        },
+        {
+          "alt": "Close-up of Sam Sparking's hand at the decks under club lights.",
+          "credit": "Sarto Photography",
+          "src": "https://firebasestorage.googleapis.com/v0/b/jupidu-36804.firebasestorage.app/o/samsparking%2Fmedia%2F-OzW4taJEEU43ln7Hjaa%2Fsartophotography-dsc4078-web.jpg?alt=media&token=60fcaf01-8d88-4e24-aa3f-a0ce2085822c"
+        },
+        {
+          "alt": "Sam Sparking seen from behind at the DJ booth during a club set.",
+          "credit": "Sarto Photography",
+          "src": "https://firebasestorage.googleapis.com/v0/b/jupidu-36804.firebasestorage.app/o/samsparking%2Fmedia%2F-OzW4taB3CDXRaKT2_rn%2Fsartophotography-dsc3972-web.jpg?alt=media&token=c8170381-57ce-4355-9124-dae2a3387a31"
+        },
+        {
+          "alt": "Sam Sparking on stage during a hardstyle performance.",
+          "credit": "Sarto Photography",
+          "src": "https://firebasestorage.googleapis.com/v0/b/jupidu-36804.firebasestorage.app/o/samsparking%2Fmedia%2F-OzW52YPIFnsrxxyruOr%2Fsartophotography-dsc4647-web.jpg?alt=media&token=14c31001-34f0-4239-aab7-c87ff2ef61e0"
+        },
+        {
+          "alt": "Studio portrait of Sam Sparking.",
+          "credit": "Sarto Photography"
+        },
+        {
+          "alt": "Sam Sparking raising a hand during a high-energy club moment.",
+          "credit": "Sarto Photography",
+          "src": "https://firebasestorage.googleapis.com/v0/b/jupidu-36804.firebasestorage.app/o/samsparking%2Fmedia%2F-OzW52YOmQUMPdx_uuNQ%2Fsartophotography-dsc4478-web.jpg?alt=media&token=a82fa06d-0dd9-4b48-9a29-7e83afac0054"
+        },
+        {
+          "alt": "Sam Sparking performing in front of colourful lights.",
+          "credit": "Sarto Photography",
+          "src": "https://firebasestorage.googleapis.com/v0/b/jupidu-36804.firebasestorage.app/o/samsparking%2Fmedia%2F-OzW4e3iWHXEUYpsIBZa%2Fsartophotography-dsc4742-web.jpg?alt=media&token=890a32d9-f744-4c11-a7d9-7355cf7062ab"
+        },
+        {
+          "alt": "Atmospheric club lighting during Sam Sparking's set.",
+          "credit": "Sarto Photography",
+          "src": "https://firebasestorage.googleapis.com/v0/b/jupidu-36804.firebasestorage.app/o/samsparking%2Fmedia%2F-OzW52YILo5q9TU7I_oi%2Fsartophotography-dsc4219-web.jpg?alt=media&token=90384443-09a8-4e3d-b5c3-afbaaf34759a"
+        },
+        {
+          "alt": "Sam Sparking behind the decks on stage.",
+          "credit": "Sarto Photography",
+          "src": "https://firebasestorage.googleapis.com/v0/b/jupidu-36804.firebasestorage.app/o/samsparking%2Fmedia%2F-OzW52YHvd161CnSHPU2%2Fsartophotography-dsc4140-web.jpg?alt=media&token=e44630f0-1794-416c-a8db-e5d4b680d501"
+        },
+        {
+          "alt": "Headphones and equipment at Sam Sparking's DJ booth.",
+          "credit": "Sarto Photography",
+          "src": "https://firebasestorage.googleapis.com/v0/b/jupidu-36804.firebasestorage.app/o/samsparking%2Fmedia%2F-OzW4t_vL7LXd2dZ72tz%2Fimg-0637.png?alt=media&token=8f07fa3f-70f5-40cd-aa12-245354fd3b29"
+        },
+        {
+          "alt": "Wide view from the stage during a Sam Sparking show.",
+          "credit": "Sarto Photography",
+          "src": "https://firebasestorage.googleapis.com/v0/b/jupidu-36804.firebasestorage.app/o/samsparking%2Fmedia%2F-OzW52YILo5q9TU7I_ok%2Fsartophotography-dsc4221-web.jpg?alt=media&token=25ae32de-c987-4ea8-bd17-adbcbdbbd3e7"
+        },
+        {
+          "alt": "Sam Sparking performing live on stage.",
+          "src": "https://firebasestorage.googleapis.com/v0/b/jupidu-36804.firebasestorage.app/o/samsparking%2Fmedia%2F-OzW4t_vL7LXd2dZ72u-%2Fimg-0638.png?alt=media&token=ba98d6e9-4985-4a77-9ebb-17aa40dbe75e"
+        },
+        {
+          "alt": "Sam Sparking performing at Sektor 11.",
+          "src": "https://firebasestorage.googleapis.com/v0/b/jupidu-36804.firebasestorage.app/o/samsparking%2Fmedia%2F-OyU6aLMV74xN0D0QobQ%2Fsektor-11-tim.mp4?alt=media&token=8e6d6360-95bf-4814-a486-b6bcb2850aa7"
+        }
+      ],
+      "mobileLimit": 6,
       "navLabel": "Gallery",
       "title": "Gal",
-      "titleAccent": "lery."
+      "titleAccent": "lery.",
+      "aftermovies": [],
+      "aftermoviesNote": "A look back at the latest shows."
     },
     "references": {
       "enabled": true,
@@ -1538,37 +1629,36 @@
           "city": "Glarus"
         }
       ],
-      "moreLabel": "Also played at",
       "navLabel": "References",
       "note": "Your club or festival next?",
       "noteLinkLabel": "Write to me →",
       "title": "Refe",
-      "titleAccent": "rences."
-    },
-    "shows": {
-      "emptyText": "I haven't announced any dates right now. New shows land here first — or get in touch and book me for your event.",
-      "enabled": true,
-      "navLabel": "Shows",
-      "pastLabel": "Already played",
-      "title": "Sh",
-      "titleAccent": "ows.",
-      "view": "calendar",
-      "items": []
+      "titleAccent": "rences.",
+      "moreLabel": "Also played at"
     },
     "shop": {
       "buyLabel": "Buy",
       "currency": "CHF",
       "emptyText": "The shop opens soon — the first merch is in the works. Follow me on the channels below so you don't miss the drop.",
-      "enabled": false,
+      "enabled": true,
       "items": [],
       "navLabel": "Shop",
       "note": "Merch from Sam Sparking — every piece helps fund the next production.",
-      "shipping": "Free shipping — within Switzerland only",
       "title": "Sh",
       "titleAccent": "op."
     },
+    "shows": {
+      "emptyText": "I haven't announced any dates right now. New shows land here first — or get in touch and book me for your event.",
+      "enabled": true,
+      "items": [],
+      "navLabel": "Shows",
+      "pastLabel": "Already played",
+      "title": "Sh",
+      "titleAccent": "ows.",
+      "view": "calendar"
+    },
     "sound": {
-      "enabled": false,
+      "enabled": true,
       "genres": [
         {
           "meta": "Genre",
@@ -1593,30 +1683,19 @@
       "title": "Gen",
       "titleAccent": "res."
     },
-    "experience": {
-      "embedLabel": "Aftermovie",
-      "enabled": false,
-      "lede": "A Sam Sparking set is built like a story: a slow burn, a hard turn, and a last hour nobody wants to end.",
-      "moments": [
+    "videos": {
+      "items": [
         {
-          "kicker": "Warm-up",
-          "text": "Melodic, patient, and loud enough to pull people off the wall. The room fills before the first kick lands.",
-          "title": "The Build"
-        },
-        {
-          "kicker": "Peak time",
-          "text": "Euphoric hardstyle at full width — hard kicks under melodies you can sing back. This is what people come for.",
-          "title": "The Drop"
-        },
-        {
-          "kicker": "Closing",
-          "text": "Raw energy, no filler. Tracks I only play when the floor has earned them.",
-          "title": "The Last Hour"
+          "src": "https://firebasestorage.googleapis.com/v0/b/jupidu-36804.firebasestorage.app/o/samsparking%2Fmedia%2F-OyU6aLMV74xN0D0QobQ%2Fsektor-11-tim.mp4?alt=media&token=8e6d6360-95bf-4814-a486-b6bcb2850aa7",
+          "alt": "Sam Sparking performing at Sektor 11."
         }
       ],
-      "navLabel": "Experience",
-      "title": "Experi",
-      "titleAccent": "ence."
+      "navLabel": "Videos",
+      "title": "Vid",
+      "titleAccent": "eos.",
+      "enabled": true,
+      "note": "Aftermovies and set recordings — the shows to watch back.",
+      "emptyText": "No video yet — the recaps of the next shows land here."
     },
     "follow": {
       "enabled": true,
@@ -1629,7 +1708,7 @@
   "site": {
     "accentColor": "#2e6bff",
     "artist": "Sam Sparking",
-    "backgroundImage": "img/hero.jpg",
+    "backgroundImage": "https://firebasestorage.googleapis.com/v0/b/jupidu-36804.firebasestorage.app/o/samsparking%2Fmedia%2F-OzW4e3Y6YTa6zJklnO4%2Fdsc00389-verbessert-rr.jpg?alt=media&token=24cc6380-f841-4b19-a437-358805f25892",
     "bookingApi": "https://jupidu-36804-default-rtdb.europe-west1.firebasedatabase.app/samsparking/inquiries.json",
     "claim": "Turning energy into euphoria",
     "description": "I'm Sam Sparking, a hardstyle DJ and producer from St. Gallen, Switzerland. Euphoric and melodic hardstyle for clubs, venues and festivals across Europe.",
@@ -1703,7 +1782,7 @@
     "weekdays": "Mon,Tue,Wed,Thu,Fri,Sat,Sun",
     "sending": "Sending …",
     "formInvalid": "Please check the highlighted fields.",
-    "fName": "Your name",
+    "fName": "Name",
     "fEmail": "E-mail",
     "fEvent": "Event / club",
     "fCity": "City",
@@ -1747,6 +1826,6 @@
     "captchaWrong": "That sum is not right yet.",
     "formFine": "* Required · Your details are used only to handle your enquiry."
   },
-  "updatedAt": "2026-07-27T04:36:05.224Z",
+  "updatedAt": "2026-08-09T11:49:04.770Z",
   "updatedBy": "Verwaltung"
 }

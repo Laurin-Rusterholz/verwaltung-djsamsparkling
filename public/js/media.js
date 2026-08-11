@@ -36,12 +36,26 @@ async function uploadOne(file) {
     toast(`${file.name}: nur Bilder (JPG, PNG, WebP, AVIF, GIF) oder Videos (MP4, WebM)`, "err");
     return;
   }
+  /* Die einzige Grenze, die es wirklich gibt: die Storage-Regel des Projekts
+     (firebase/storage.rules, `request.resource.size < 250 MB`). Sie wird vom
+     Server durchgesetzt — hier wird sie nur vorweggenommen, damit ein zu
+     grosser Upload nicht erst nach Minuten am Server scheitert. Alles darunter
+     geht durch: ein 44-MB-Video wird NICHT abgewiesen. */
   if (file.size > MAX_UPLOAD_BYTES) {
-    toast(`${file.name} ist ${bytes(file.size)} — max. ${bytes(MAX_UPLOAD_BYTES)}`, "err");
+    toast(
+      `${file.name} ist ${bytes(file.size)} — die Storage-Regel des Projekts nimmt bis ` +
+        `${bytes(MAX_UPLOAD_BYTES)}. Grössere Dateien lehnt der Server ab.`,
+      "err"
+    );
     return;
   }
+  /* Grosse Videos sind erlaubt. Der Hinweis sagt nur, was den Nutzer erwartet —
+     er ist keine Abweisung und keine Aufforderung, die Datei kleiner zu machen.
+     Bis August 2026 stand hier eine rote Fehlermeldung ("kürzer schneiden oder
+     stärker komprimieren"); sie sah aus wie eine Sperre, obwohl der Upload
+     weiterlief. */
   if (kind === "video" && file.size > VIDEO_WARN_BYTES) {
-    toast(`${file.name} ist ${bytes(file.size)} — auf dem Handy lädt das spürbar lange. Kürzer schneiden oder stärker komprimieren.`, "err");
+    toast(`${file.name} ist ${bytes(file.size)} — über Mobilfunk kann das Hochladen länger dauern.`);
   }
 
   uploads.set(tempId, { name: file.name, percent: 0 });
@@ -111,10 +125,37 @@ async function uploadOne(file) {
         ? " — CORS für den Storage-Bucket setzen (siehe firebase/set-cors.sh)"
         : "";
     toast(`Upload fehlgeschlagen: ${file.name}${hint}`, "err");
-  } finally {
-    uploads.delete(tempId);
-    emit("uploads");
+    /* Der Eintrag bleibt stehen — mit Fehlertext und der Datei selbst, damit
+       sich derselbe Upload wiederholen laesst. Frueher verschwand die Zeile im
+       finally-Block: bei einem Abbruch nach 40 MB war nicht mehr zu sehen, was
+       gescheitert war, und die Datei musste neu ausgewaehlt werden. */
+    const u = uploads.get(tempId);
+    if (u) {
+      u.error = String(e?.message || e) + hint;
+      u.file = file;
+      u.percent = 0;
+      emit("uploads");
+    }
+    return;
   }
+  uploads.delete(tempId);
+  emit("uploads");
+}
+
+/** Einen gescheiterten Upload noch einmal versuchen. */
+export function uploadWiederholen(tempId) {
+  const u = uploads.get(tempId);
+  if (!u?.file) return;
+  const datei = u.file;
+  uploads.delete(tempId);
+  emit("uploads");
+  uploadOne(datei);
+}
+
+/** Einen gescheiterten Upload aus der Liste nehmen. */
+export function uploadVerwerfen(tempId) {
+  uploads.delete(tempId);
+  emit("uploads");
 }
 
 /** Breite/Höhe (und bei Video die Länge) aus der Datei lesen. */
@@ -307,7 +348,10 @@ function dropZone() {
     },
     [
       el("strong", {}, "Bilder oder Videos hierher ziehen"),
-      el("span", {}, `oder klicken — JPG, PNG, WebP, AVIF, GIF, MP4, WebM · max. ${bytes(MAX_UPLOAD_BYTES)}`),
+      el("span", {}, `oder klicken — JPG, PNG, WebP, AVIF, GIF, MP4, WebM · bis ${bytes(MAX_UPLOAD_BYTES)}`),
+      // Kein Rat zum Komprimieren: grosse Videos sind erlaubt. Gesagt wird nur,
+      // was den Nutzer erwartet.
+      el("span", { class: "field-hint" }, "Grosse Videos gehen durch — über Mobilfunk dauert das Hochladen länger."),
       input,
     ]
   );
@@ -318,7 +362,21 @@ function uploadProgress() {
   const host = el("div", { class: "uploads" });
   const render = () => {
     host.innerHTML = "";
-    uploads.forEach((u) => {
+    uploads.forEach((u, tempId) => {
+      // Gescheitert: Fehlertext plus Wiederholen — statt einer Zeile, die
+      // stillschweigend auf 0 % stehen bleibt.
+      if (u.error) {
+        host.appendChild(
+          el("div", { class: "upl err" }, [
+            el("span", { class: "upl-name" }, u.name),
+            el("span", { class: "upl-fehler" }, "fehlgeschlagen: " + u.error),
+            el("button", { class: "btn ghost sm", onclick: () => uploadWiederholen(tempId) }, "Wiederholen"),
+            el("button", { class: "tool", title: "Verwerfen", "aria-label": "Verwerfen",
+              onclick: () => uploadVerwerfen(tempId) }, "✕"),
+          ])
+        );
+        return;
+      }
       host.appendChild(
         el("div", { class: "upl" }, [
           el("span", { class: "upl-name" }, u.name),
@@ -384,6 +442,62 @@ function filterKind(items, kind) {
   return items.filter((i) => (kind === "video" ? isVideo(i) : !isVideo(i)));
 }
 
+/**
+ * Tabs "Bilder | Videos | Alle" ueber dem Raster.
+ *
+ * ANLASS: Der Dialog filterte still nach dem Feld, aus dem er geoeffnet wurde.
+ * Bei einem Bildfeld sah man deshalb nur Fotos — waehrend die Ablegezone
+ * darueber "Bilder oder Videos hierher ziehen" sagte. Hochgeladene MP4 waren
+ * damit unsichtbar und schienen zu fehlen.
+ *
+ * Der Tab, mit dem der Dialog aufgeht, richtet sich weiter nach dem Feld
+ * (Video-Feld → Videos, Bildfeld → Bilder); umschalten laesst sich jetzt aber.
+ */
+function pickTabs(start, onChange) {
+  const host = el("div", { class: "pick-tabs", role: "tablist" });
+  let aktiv = start;
+  const zeichnen = () => {
+    host.innerHTML = "";
+    for (const [wert, text] of [["alle", "Alle"], ["image", "Bilder"], ["video", "Videos"]]) {
+      const anzahl = filterKind(mediaList(), wert === "alle" ? undefined : wert).length;
+      host.appendChild(
+        el(
+          "button",
+          {
+            class: "pick-tab" + (aktiv === wert ? " on" : ""),
+            role: "tab",
+            "aria-selected": aktiv === wert ? "true" : "false",
+            dataset: { tab: wert },
+            onclick: () => {
+              if (aktiv === wert) return;
+              aktiv = wert;
+              zeichnen();
+              onChange(aktiv);
+            },
+          },
+          [el("span", {}, text), el("span", { class: "pick-tab-n" }, String(anzahl))]
+        )
+      );
+    }
+  };
+  zeichnen();
+  return {
+    host,
+    get: () => aktiv,
+    /** Nach einem Upload auf die Art der neuen Datei umschalten. */
+    zeigen: (wert) => {
+      if (!wert || aktiv === wert) {
+        zeichnen();
+        return false;
+      }
+      aktiv = wert;
+      zeichnen();
+      return true;
+    },
+    neu: zeichnen,
+  };
+}
+
 function pickMedia(opts = {}) {
   return new Promise((resolve) => {
     const grid = el("div", { class: "grid pickgrid" });
@@ -398,17 +512,20 @@ function pickMedia(opts = {}) {
     };
     const onKey = (e) => e.key === "Escape" && close(null);
 
+    const tabs = pickTabs(opts.kind || "alle", () => fill());
     const fill = () => {
-      const items = filterKind(mediaList(), opts.kind);
+      const tab = tabs.get();
+      const items = filterKind(mediaList(), tab === "alle" ? undefined : tab);
+      tabs.neu();
       grid.innerHTML = "";
       if (!items.length) {
         grid.appendChild(
           el(
             "p",
             { class: "empty" },
-            (opts.kind === "video"
+            (tab === "video"
               ? "Noch kein Video hochgeladen"
-              : opts.kind === "image"
+              : tab === "image"
               ? "Noch kein Bild hochgeladen"
               : "Noch nichts hochgeladen") + " — zieh die Dateien oben einfach hier hinein."
           )
@@ -426,14 +543,21 @@ function pickMedia(opts = {}) {
         ]),
         dropZone(),
         prog.host,
+        tabs.host,
         grid,
       ]),
     ]);
     document.body.appendChild(wrap);
     document.addEventListener("keydown", onKey);
 
-    // Neu hochgeladene Bilder sofort im Dialog zeigen
-    const off = mediaChanged(fill);
+    /* Neu hochgeladene Dateien sofort zeigen — und zwar im passenden Tab. Ein
+       MP4, das in einem Bildfeld hochgeladen wird, waere unter "Bilder"
+       unsichtbar; der Dialog schaltet deshalb auf "Videos" um. */
+    const off = mediaChanged(() => {
+      const neueste = mediaList()[0];
+      if (neueste) tabs.zeigen(isVideo(neueste) ? "video" : "image");
+      fill();
+    });
     const offUploads = uploadsChanged(prog.render);
   });
 }
@@ -447,7 +571,9 @@ export function pickMany(opts = {}) {
     const okBtn = el("button", { class: "btn solid", disabled: true, onclick: () => close(list()) }, "Übernehmen");
 
     const list = () => mediaList().filter((m) => chosen.has(m.id));
-    const visible = () => filterKind(mediaList(), opts.kind);
+    const tabs = pickTabs(opts.kind || "alle", () => fill());
+    const visible = () =>
+      filterKind(mediaList(), tabs.get() === "alle" ? undefined : tabs.get());
     const close = (val) => {
       off();
       offUploads();
@@ -459,14 +585,18 @@ export function pickMany(opts = {}) {
 
     const fill = () => {
       const items = visible();
+      tabs.neu();
       grid.innerHTML = "";
       if (!items.length) {
         grid.appendChild(
           el(
             "p",
             { class: "empty" },
-            (opts.kind === "image" ? "Noch kein Bild hochgeladen" : "Noch nichts hochgeladen") +
-              " — zieh die Dateien oben einfach hier hinein."
+            (tabs.get() === "image"
+              ? "Noch kein Bild hochgeladen"
+              : tabs.get() === "video"
+              ? "Noch kein Video hochgeladen"
+              : "Noch nichts hochgeladen") + " — zieh die Dateien oben einfach hier hinein."
           )
         );
       }
@@ -492,6 +622,7 @@ export function pickMany(opts = {}) {
         ]),
         dropZone(),
         prog.host,
+        tabs.host,
         grid,
         el("div", { class: "modal-foot" }, [
           el("button", { class: "btn ghost", onclick: () => close([]) }, "Abbrechen"),
@@ -502,7 +633,13 @@ export function pickMany(opts = {}) {
     document.body.appendChild(wrap);
     document.addEventListener("keydown", onKey);
 
-    const off = mediaChanged(fill);
+    /* Wie im Einzel-Dialog: eine neu hochgeladene Datei erscheint im Tab ihrer
+       Art, damit sie nicht unsichtbar bleibt. */
+    const off = mediaChanged(() => {
+      const neueste = mediaList()[0];
+      if (neueste) tabs.zeigen(isVideo(neueste) ? "video" : "image");
+      fill();
+    });
     const offUploads = uploadsChanged(prog.render);
   });
 }
