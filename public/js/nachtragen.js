@@ -184,9 +184,15 @@ export function nachtragenBeimLaden(content, defaults) {
   const tel = einmal("telefon", () => telefonRaeumen(content));
   if (tel.length) meldungen.push("Telefonnummer geleert — sie steht nicht mehr auf der Website");
 
-  // Ohne Marke: das Feld gibt es nicht mehr, ein Rest darf nie zurueckkommen.
-  const fotograf = fotografLoeschen(content);
-  if (fotograf) meldungen.push(`${fotograf} Fotocredit(s) geloescht — das Feld gibt es nicht mehr`);
+  /* Ohne Marke: das Feld gibt es nicht mehr, ein Rest darf nie zurueckkommen.
+
+     UND ohne Meldung. Hier stand bis zum 11.08.2026 eine Zeile wie
+     "81 Fotocredit(s) geloescht" — die stand dann als sichtbarer Hinweis in der
+     Verwaltung und war damit selbst wieder eine Fotografen-Angabe auf dem
+     Bildschirm. Der Auftrag lautet "ueberall entfernen", also auch die Meldung
+     darueber. Belegt ist das Loeschen durch die Tests (scripts/kanaele.test.mjs),
+     nicht durch einen Hinweis, den jemand lesen muss. */
+  fotografLoeschen(content);
 
   return { meldungen, kanaele };
 }
