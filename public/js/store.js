@@ -30,6 +30,8 @@ export const S = {
   nachgetrageneKanaele: [],
   /* Alle einmaligen Nachträge dieses Ladevorgangs, als lesbare Meldungen. */
   nachgetragen: [],
+  /* Ob das Nachgetragene von selbst gespeichert werden konnte. */
+  nachgetragenGespeichert: false,
 };
 
 let db = null;
@@ -190,6 +192,25 @@ export async function loadAll() {
   }
   S.dirty = S.saved === null || S.nachgetragen.length > 0;
   S.ready = true;
+
+  /* Nachgetragenes sofort sichern — ohne dass jemand einen Knopf druecken muss.
+     Sonst bliebe der Stand in der Datenbank unvollstaendig, und die Website
+     haenge an den Ergaenzungsregeln des Generators. Mit dem Speichern setzt der
+     Inhalt seine Marken unter `migrationen`; ab dann laeuft kein Nachtrag mehr,
+     weder hier noch beim Bauen, und Geloeschtes bleibt geloescht.
+
+     Geht es schief (keine Verbindung, Regeln greifen), bleibt der Stand als
+     ungespeicherte Aenderung stehen — der Hinweis in der Ansicht bittet dann
+     um einmal Speichern. Verloren geht nichts. */
+  if (S.nachgetragen.length && S.saved !== null) {
+    try {
+      await saveContent();
+      S.nachgetragenGespeichert = true;
+    } catch (e) {
+      console.warn("[nachtragen] konnte nicht von selbst speichern:", e?.message || e);
+      S.nachgetragenGespeichert = false;
+    }
+  }
 
   // Medien und Anfragen live mitverfolgen
   watch(PATHS.media, (val) => {

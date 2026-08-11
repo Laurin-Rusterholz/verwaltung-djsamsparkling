@@ -282,10 +282,13 @@ pruefe("fehlende Referenzen werden nachgetragen, bestehende nicht angefasst", ()
 });
 
 pruefe("die verbindliche Liste ist vollstaendig, IVY inklusive", () => {
+  /* Schreibweise "B9": so steht der Eintrag in der Datenbank des Kunden. Mit
+     "B9 eventlocation" daneben staende er zweimal da — Dubletten sind
+     ausdruecklich ausgeschlossen. */
   const paare = (werksstand.sections.references.items || []).map((r) => `${r.name} — ${r.city}`);
   const muss = [
     "Sektor 11 — Zürich", "Kugl — St. Gallen", "BBC — Gossau", "Maiaiaiparty — Appenzell Ausserrhoden",
-    "B9 eventlocation — St. Gallen", "Amadeusbar — Herisau", "Fasnacht Oberegg — Appenzell Innerrhoden",
+    "B9 — St. Gallen", "Amadeusbar — Herisau", "Fasnacht Oberegg — Appenzell Innerrhoden",
     "Party Weekend Sirnach — St. Gallen", "IVY — St. Gallen", "Kantonales Musik fest — Appenzell Ausserrhoden",
     "Jugendopenair — St. Gallen", "Monoevents — St. Gallen", "Ultrawild Festival — St. Gallen",
     "Jublasurium — Aargau", "Dorffest Herisau — Herisau", "Turnunterhaltung Sirnach — Sirnach",
@@ -308,7 +311,14 @@ pruefe("die veroeffentlichte Ware kommt zurueck, wenn der Shop leer ist", () => 
   const c = { sections: { shop: { items: [] } } };
   const dazu = wareNachtragen(c, werksstand);
   if (!c.sections.shop.items.length) throw new Error("nichts nachgetragen");
-  if (!dazu.includes("Beispiel")) throw new Error("falsche Ware: " + dazu.join(", "));
+  /* Welcher Artikel das ist, entscheidet die Verwaltung — hier zaehlt nur, dass
+     genau der Stand des Werks-Standes zurueckkommt und nichts erfunden wird. */
+  const sollNamen = (werksstand.sections.shop.items || []).map((p) => p.name);
+  if (dazu.join(" | ") !== sollNamen.join(" | "))
+    throw new Error(`zurueckgeholt: ${dazu.join(", ")} — erwartet ${sollNamen.join(", ")}`);
+  // Und keine Bezahladresse aus der Vorlage.
+  for (const p of c.sections.shop.items)
+    if (p.paymentLink) throw new Error(`"${p.name}" traegt eine Bezahladresse aus der Vorlage`);
   // Und ein voller Shop wird nicht angefasst.
   const voll = { sections: { shop: { items: [{ name: "Hoodie", price: "79" }] } } };
   wareNachtragen(voll, werksstand);
