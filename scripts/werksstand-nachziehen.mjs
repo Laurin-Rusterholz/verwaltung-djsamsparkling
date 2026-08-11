@@ -178,6 +178,19 @@ if (Array.isArray(neu.sections?.shows?.items) && neu.sections.shows.items.length
      neu.sections.shop.items = [];
    } */
 
+/* 4c) Bezahladressen gehoeren nicht in die Vorlage. Ein Stripe Payment Link
+      zeigt auf einen konkreten Preis im Konto des Kunden; in einem frisch
+      aufgesetzten Projekt waere er eine Kasse, die niemand bestellt hat. Der
+      Artikel selbst bleibt (siehe 4a), nur die Adresse faellt weg. */
+let kassenWeg = 0;
+for (const ware of neu.sections?.shop?.items || []) {
+  if (ware && ware.paymentLink) {
+    delete ware.paymentLink;
+    kassenWeg++;
+  }
+}
+if (kassenWeg) getan.push(`${kassenWeg} Bezahladresse(n) aus der Vorlage genommen`);
+
 // 5) Stillgelegte Kennzahlen ("First set 2021") gar nicht erst mitnehmen.
 const wegHero = ohneStillgelegte(neu, ["hero", "stats"]);
 const wegFakten = ohneStillgelegte(neu, ["sections", "about", "facts"]);

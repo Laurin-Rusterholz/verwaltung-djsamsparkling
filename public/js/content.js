@@ -1063,17 +1063,25 @@ export function renderFollow() {
 function nachtragHinweis() {
   const dazu = S.nachgetragen || [];
   if (!dazu.length) return null;
+  const gespeichert = S.nachgetragenGespeichert === true;
   return group(null, [
     el("p", { class: "warn-box" }, [
-      el("strong", {}, "Einmalig nachgetragen. "),
+      el("strong", {}, gespeichert ? "Einmalig nachgetragen und gespeichert. " : "Einmalig nachgetragen. "),
       el("span", {}, [
         "Diese Angaben standen auf der Website, in der Datenbank aber nicht — der ",
         "Website-Generator hatte sie beim Bauen selbst ergänzt. Das tut er nicht mehr: ",
         "die Website zeigt jetzt genau, was hier gespeichert ist. Alles Nachgetragene ",
         "steht als normaler Eintrag da und lässt sich bearbeiten oder löschen. ",
-        el("strong", {}, "Bitte einmal speichern"),
-        " — danach stehen Verwaltung, Vorschau und Website auf demselben Stand, und ",
-        "der Nachtrag läuft nie wieder.",
+        gespeichert
+          ? el("span", {}, [
+              "Gespeichert ist es schon — du musst nichts tun. Der Nachtrag läuft nie ",
+              "wieder; was du jetzt löschst, bleibt gelöscht.",
+            ])
+          : el("span", {}, [
+              el("strong", {}, "Bitte einmal speichern"),
+              " — automatisch ging es gerade nicht. Danach stehen Verwaltung, Vorschau ",
+              "und Website auf demselben Stand, und der Nachtrag läuft nie wieder.",
+            ]),
       ]),
       el("span", { class: "field-hint" }, dazu.join(" · ")),
     ]),

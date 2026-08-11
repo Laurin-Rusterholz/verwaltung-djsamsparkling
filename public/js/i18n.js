@@ -48,8 +48,11 @@ const looksTechnical = (v) =>
    Standort uebersetzt die Website nur das Landeswort ("Herisau, Schweiz" →
    "Herisau, Suisse"). Eine zweite Uebersetzung von Hand wuerde daneben stehen
    und auseinanderlaufen. */
+/* Und `sections.references.items.*`: Clubs, Festivals und Orte heissen in jeder
+   Sprache gleich. Uebersetzt man sie, haengt die Tabelle am PLATZ in der Liste —
+   kommt vorne ein Eintrag dazu, traegt ploetzlich der falsche Club den Namen. */
 const NO_TRANSLATE_PATH =
-  /^layout\.|^pages\.\d+\.sections\.|^pages\.\d+\.hero$|^sections\.contact\.socials\.|^imprint\./;
+  /^layout\.|^pages\.\d+\.sections\.|^pages\.\d+\.hero$|^sections\.contact\.socials\.|^sections\.references\.items\.|^imprint\./;
 
 export function collectStrings(node, prefix = "", out = []) {
   if (prefix && NO_TRANSLATE_PATH.test(prefix)) return out;
