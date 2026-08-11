@@ -28,6 +28,7 @@ import {
   renderReferences,
   renderFollow,
   renderGallery,
+  renderVideos,
   renderShop,
   renderSound,
   renderExperience,
@@ -102,18 +103,36 @@ const NAV = [
       },
     ],
   },
+  /* Die Abschnitte der Startseite. Booking und Shop stehen bewusst NICHT hier,
+     sondern unter „Eigene Seiten": sie sind seit August 2026 eigene Seiten
+     (/booking/, /shop/) und keine Abschnitte der Startseite mehr. */
   {
-    group: "Abschnitte",
+    group: "Startseite",
     items: [
       { id: "about", label: "About", icon: ICON.user, render: renderAbout },
       { id: "shows", label: "Shows", icon: ICON.calendar, render: renderShows },
       { id: "references", label: "Referenzen", icon: ICON.star, render: renderReferences },
       { id: "gallery", label: "Galerie", icon: ICON.image, render: renderGallery },
+      { id: "contact", label: "Kontakt", icon: ICON.mail, render: renderContact },
+    ],
+  },
+  {
+    group: "Eigene Seiten",
+    items: [
+      { id: "videos", label: "Videos — /videos/", icon: ICON.media, render: renderVideos },
+      { id: "booking", label: "Booking — /booking/", icon: ICON.clipboard, render: renderBooking },
+      { id: "shop", label: "Shop — /shop/", icon: ICON.bag, render: renderShop },
+    ],
+  },
+  /* Abschnitte, die im Inhalt liegen, die der Website-Generator aber nicht mehr
+     baut (sie stehen nicht in BAUBAR). Sie bleiben erreichbar, damit die Texte
+     nicht verloren sind — aber sie stehen nicht mehr zwischen den Abschnitten,
+     die wirklich auf der Seite erscheinen. */
+  {
+    group: "Nicht mehr auf der Website",
+    items: [
       { id: "sound", label: "Sound & Genres", icon: ICON.music, render: renderSound },
       { id: "experience", label: "Erlebnis", icon: ICON.bolt, render: renderExperience },
-      { id: "shop", label: "Shop", icon: ICON.bag, render: renderShop },
-      { id: "booking", label: "Booking", icon: ICON.clipboard, render: renderBooking },
-      { id: "contact", label: "Kontakt", icon: ICON.mail, render: renderContact },
       { id: "follow", label: "Join the Movement", icon: ICON.globe, render: renderFollow },
     ],
   },
