@@ -157,10 +157,19 @@ pruefe("jeder eingeschaltete baubare Abschnitt steht auf einer Seite", () => {
   assert.deepEqual(abschnittsModell(werksstand).ohneSeite, []);
 });
 
-pruefe("Werks-Stand liefert ohne eigene Ware aus, ohne Zahlungsadresse", () => {
-  // Die Vorlage selbst bringt keine Ware mit — echte Artikel kommen aus der
-  // Verwaltung. Der Shop-Abschnitt ist eingeschaltet, damit /shop/ existiert.
-  assert.deepEqual(werksstand.sections.shop.items, []);
+pruefe("Werks-Stand traegt die veroeffentlichte Ware, aber keine Zahlungsadresse", () => {
+  /* Bis zum 11.08.2026 stand hier: die Vorlage bringt KEINE Ware mit. Das hat
+     sich gedreht. Der Generator holte den Artikel frueher selbst zurueck, wenn
+     die Warenliste leer war — diese Regel ist weg, denn sie machte das Loeschen
+     des letzten Artikels unmoeglich. Damit der veroeffentlichte Artikel
+     trotzdem nicht verloren geht, traegt ihn jetzt der Werks-Stand, und die
+     Verwaltung holt ihn EINMALIG in den Inhalt (public/js/nachtragen.js). */
+  const ware = werksstand.sections.shop.items || [];
+  assert.ok(ware.length >= 1, "der Werks-Stand traegt keine Ware mehr");
+  for (const p of ware) {
+    assert.ok(String(p.name || "").trim(), "ein Artikel ohne Namen");
+    assert.ok(!p.paymentLink, `Artikel "${p.name}" traegt eine Bezahladresse`);
+  }
   assert.equal(werksstand.sections.shop.enabled, true);
   assert.ok(!/stripe\.com|link\.com/i.test(JSON.stringify(werksstand)));
 });
