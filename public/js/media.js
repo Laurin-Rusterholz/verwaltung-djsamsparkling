@@ -3,7 +3,7 @@
    ========================================================================== */
 
 import { PATHS, STORAGE_PREFIX, MAX_UPLOAD_BYTES, VIDEO_WARN_BYTES, ACCEPTED_TYPES, ACCEPT_ATTR, DEMO } from "./config.js";
-import { el, bytes, relativeTime, toast, confirmDialog, slug, looksLikeVideo } from "./util.js";
+import { el, bytes, relativeTime, toast, confirmDialog, slug, looksLikeVideo, stummesVideo } from "./util.js";
 import { S, getDb, getStorage, emit } from "./store.js";
 import { setMediaPicker } from "./fields.js";
 
@@ -255,9 +255,8 @@ function tile(item, onPick) {
 
   const thumb = el("div", { class: "tile-img" + (video ? " is-video" : "") }, [
     video
-      ? el("video", {
+      ? stummesVideo({
           src: item.url,
-          muted: true,
           loop: true,
           playsinline: true,
           preload: "metadata",

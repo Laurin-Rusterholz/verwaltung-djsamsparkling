@@ -155,6 +155,18 @@ if (Array.isArray(neu.sections?.shows?.items) && neu.sections.shows.items.length
   neu.sections.shows.items = [];
 }
 
+/* 4b) Ware gehoert genauso wenig in eine Vorlage. Auf der Website steht seit
+       dem 11.08.2026 wieder ein veroeffentlichter Artikel — richtig so, der
+       Kunde hat ihn angelegt. Der Werks-Stand ist aber der Punkt, an dem eine
+       leere Verwaltung startet: dort waere derselbe Artikel ein Platzhalter,
+       den niemand bestellt hat, mit einem Preis, der zu keiner Lieferung
+       gehoert. Der Shop-Abschnitt bleibt eingeschaltet, /shop/ entsteht also,
+       und zeigt bis zur ersten eigenen Ware seinen Leer-Text. */
+if (Array.isArray(neu.sections?.shop?.items) && neu.sections.shop.items.length) {
+  getan.push(`${neu.sections.shop.items.length} Artikel aus der Vorlage genommen`);
+  neu.sections.shop.items = [];
+}
+
 // 5) Stillgelegte Kennzahlen ("First set 2021") gar nicht erst mitnehmen.
 const wegHero = ohneStillgelegte(neu, ["hero", "stats"]);
 const wegFakten = ohneStillgelegte(neu, ["sections", "about", "facts"]);

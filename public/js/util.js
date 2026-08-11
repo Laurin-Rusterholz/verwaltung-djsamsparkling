@@ -23,6 +23,34 @@ export function el(tag, attrs = {}, children = []) {
   return node;
 }
 
+/**
+ * Ein Vorschau-Video, das STUMM startet und stumm bleibt.
+ *
+ * Warum eine eigene Funktion: `el("video", { muted: true })` setzt das
+ * ATTRIBUT `muted`. Bei einem <video>, das per Skript entsteht, richtet sich
+ * der Browser aber nach der EIGENSCHAFT `video.muted` — das Attribut allein
+ * wirkt nur beim Parsen aus dem Quelltext. In der Verwaltung liefen die
+ * Vorschauen deshalb mit Ton.
+ *
+ * `defaultMuted` sorgt zusaetzlich dafuer, dass ein spaeteres `load()` wieder
+ * stumm anfaengt, und der Wachhund stellt den Ton zurueck, falls ihn etwas
+ * (Autoplay-Logik des Browsers, eine Erweiterung, ein Doppelklick auf die
+ * Bedienelemente) doch aufdreht.
+ */
+export function stummesVideo(attrs = {}) {
+  const v = el("video", { ...attrs, muted: true });
+  v.muted = true;
+  v.defaultMuted = true;
+  v.volume = 0;
+  v.addEventListener("volumechange", () => {
+    if (!v.muted || v.volume > 0) {
+      v.muted = true;
+      v.volume = 0;
+    }
+  });
+  return v;
+}
+
 export const $ = (sel, root = document) => root.querySelector(sel);
 export const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 

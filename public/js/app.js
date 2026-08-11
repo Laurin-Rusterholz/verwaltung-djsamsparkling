@@ -28,7 +28,6 @@ import {
   renderReferences,
   renderFollow,
   renderGallery,
-  renderVideos,
   renderShop,
   renderSound,
   renderExperience,
@@ -119,7 +118,6 @@ const NAV = [
   {
     group: "Eigene Seiten",
     items: [
-      { id: "videos", label: "Videos — /videos/", icon: ICON.media, render: renderVideos },
       { id: "booking", label: "Booking — /booking/", icon: ICON.clipboard, render: renderBooking },
       { id: "shop", label: "Shop — /shop/", icon: ICON.bag, render: renderShop },
     ],
