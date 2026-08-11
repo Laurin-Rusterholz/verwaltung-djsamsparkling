@@ -104,6 +104,51 @@ export function telefonRaeumen(content) {
   return ["Telefonnummer"];
 }
 
+/**
+ * Den Fotografen löschen — überall, bei jedem Laden.
+ *
+ * Anders als die Nachträge oben hängt das an KEINER Marke. Der Grund: das Feld
+ * gibt es im Modell nicht mehr. Es steht in keiner Ansicht, lässt sich nirgends
+ * ausfüllen, und ein Wert, der aus einem alten Stand nachkommt, wäre kein
+ * Kundenwunsch, sondern ein Rest. Genau so ist „Sarto Photography“ nach dem
+ * Ausblenden wieder in der Verwaltung aufgetaucht.
+ *
+ * Gelöscht wird `site.photoCredit` und jedes `credit` an einem Bild — in den
+ * Inhalten wie in den Übersetzungstabellen. Die Bilder selbst bleiben; es fällt
+ * nur diese eine Angabe am Eintrag weg.
+ */
+export function fotografLoeschen(content) {
+  if (!content || typeof content !== "object") return 0;
+  let weg = 0;
+  if (content.site && content.site.photoCredit !== undefined) {
+    delete content.site.photoCredit;
+    weg++;
+  }
+  const raeumen = (knoten) => {
+    if (Array.isArray(knoten)) return knoten.forEach(raeumen);
+    if (!knoten || typeof knoten !== "object") return;
+    if (knoten.credit !== undefined) {
+      delete knoten.credit;
+      weg++;
+    }
+    for (const wert of Object.values(knoten)) raeumen(wert);
+  };
+  raeumen(content.sections);
+  for (const wurzel of ["i18n", "i18nHash"]) {
+    const tabellen = content[wurzel];
+    if (!tabellen || typeof tabellen !== "object") continue;
+    for (const tabelle of Object.values(tabellen)) {
+      if (!tabelle || typeof tabelle !== "object") continue;
+      if (tabelle.site && tabelle.site.photoCredit !== undefined) {
+        delete tabelle.site.photoCredit;
+        weg++;
+      }
+      raeumen(tabelle.sections);
+    }
+  }
+  return weg;
+}
+
 /** Alle Nachträge in einem Durchgang. Gibt lesbare Meldungen zurück. */
 export function nachtragenBeimLaden(content, defaults) {
   if (!content || !defaults) return { meldungen: [], kanaele: [] };
@@ -138,6 +183,10 @@ export function nachtragenBeimLaden(content, defaults) {
 
   const tel = einmal("telefon", () => telefonRaeumen(content));
   if (tel.length) meldungen.push("Telefonnummer geleert — sie steht nicht mehr auf der Website");
+
+  // Ohne Marke: das Feld gibt es nicht mehr, ein Rest darf nie zurueckkommen.
+  const fotograf = fotografLoeschen(content);
+  if (fotograf) meldungen.push(`${fotograf} Fotocredit(s) geloescht — das Feld gibt es nicht mehr`);
 
   return { meldungen, kanaele };
 }
