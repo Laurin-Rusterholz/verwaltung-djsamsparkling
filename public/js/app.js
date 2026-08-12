@@ -465,11 +465,58 @@ function renderSettings() {
       el("div", { class: "field" }, [
         el("label", { class: "field-label" }, "Build-Hook der Website"),
         hookInput,
-        el(
-          "p",
-          { class: "field-hint" },
-          "Netlify → Site configuration → Build & deploy → Build hooks → Add build hook. URL hier einsetzen; sie wird beim Publizieren aufgerufen."
-        ),
+        /* Das ist der Unterschied zwischen „sofort“ und „irgendwann“.
+           Ohne Hook wartet die Website auf den Zeitplan im Website-Repo, und der
+           läuft bei GitHub unregelmässig (am 12.08.2026 lagen zwei Läufe
+           1,5 Stunden auseinander). Mit Hook startet der Build in derselben
+           Sekunde, in der du publizierst. Darum steht hier die Anleitung Schritt
+           für Schritt und ein Knopf, der es gleich ausprobiert. */
+        el("ol", { class: "field-hint" }, [
+          el("li", {}, "Netlify öffnen → deine Website → Site configuration"),
+          el("li", {}, "Build & deploy → Build hooks → „Add build hook“"),
+          el("li", {}, "Name z. B. „Verwaltung“, Branch main → speichern"),
+          el("li", {}, "Die Adresse (https://api.netlify.com/build_hooks/…) hier einsetzen und speichern"),
+        ]),
+        el("p", { class: "field-hint" }, [
+          el("strong", {}, "Ohne Hook: "),
+          "Publizieren schreibt den Stand, die Website zieht ihn erst beim nächsten Lauf ",
+          "des Zeitplans nach — das kann über eine Stunde dauern. ",
+          el("strong", {}, "Mit Hook: "),
+          "der Build startet sofort und die Änderung ist in rund einer Minute zu sehen.",
+        ]),
+        el("div", { class: "quick" }, [
+          el(
+            "button",
+            {
+              class: "btn ghost",
+              onclick: async (e) => {
+                const adresse = hookInput.value.trim();
+                if (!/^https:\/\/api\.netlify\.com\/build_hooks\//.test(adresse)) {
+                  toast("Das sieht nicht wie ein Netlify-Build-Hook aus.", "err");
+                  return;
+                }
+                const knopf = e.currentTarget;
+                knopf.disabled = true;
+                const alt = knopf.textContent;
+                knopf.textContent = "starte …";
+                try {
+                  /* no-cors: Netlify antwortet ohne CORS-Kopf, die Antwort ist
+                     für uns also nicht lesbar. Der Aufruf geht trotzdem raus —
+                     mehr als „abgeschickt“ lässt sich hier ehrlich nicht sagen,
+                     nachsehen muss man in Netlify unter Deploys. */
+                  await fetch(adresse, { method: "POST", mode: "no-cors" });
+                  toast("Build angestossen — in Netlify unter „Deploys“ sichtbar.");
+                } catch (err) {
+                  toast("Aufruf fehlgeschlagen: " + err.message, "err");
+                } finally {
+                  knopf.disabled = false;
+                  knopf.textContent = alt;
+                }
+              },
+            },
+            "Build jetzt testen"
+          ),
+        ]),
       ]),
       el("div", { class: "field" }, [
         el("label", { class: "field-label" }, "Adresse der Website"),
