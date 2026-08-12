@@ -92,16 +92,35 @@ export function shopInfoNachtragen(content, defaults) {
   return shop.info.map((i) => String(i.title || "").trim()).filter(Boolean);
 }
 
-/** Die eine bekannte Telefonnummer räumen — sie gehört nicht mehr auf die Website. */
-const ALTE_NUMMERN = ["+41775091171", "0775091171"];
-export function telefonRaeumen(content) {
+/**
+ * Das Telefonfeld löschen — überall, bei jedem Laden.
+ *
+ * Bis zum 12.08.2026 wurde hier nur die eine bekannte Nummer geleert. Das war
+ * halb: das Feld stand danach weiter in der Verwaltung und der Schlüssel weiter
+ * in den Daten. Der Kunde will es gar nicht mehr haben, also wird
+ * `sections.contact.phone` gelöscht — wie beim Fotografen, ohne Marke, weil es
+ * das Feld im Modell nicht mehr gibt.
+ *
+ * Das Telefonfeld IM Booking-Formular bleibt: dort trägt der Besucher seine
+ * eigene Nummer ein, das ist etwas anderes.
+ */
+export function telefonLoeschen(content) {
+  let weg = 0;
   const contact = content?.sections?.contact;
-  if (!contact) return [];
-  const ist = String(contact.phone || "").replace(/[\s/.-]+/g, "");
-  if (!ist) return [];
-  if (!ALTE_NUMMERN.includes(ist)) return []; // eine neue Nummer bleibt stehen
-  contact.phone = "";
-  return ["Telefonnummer"];
+  if (contact && contact.phone !== undefined) {
+    delete contact.phone;
+    weg++;
+  }
+  for (const wurzel of ["i18n", "i18nHash"]) {
+    for (const tabelle of Object.values(content?.[wurzel] || {})) {
+      const dort = tabelle?.sections?.contact;
+      if (dort && dort.phone !== undefined) {
+        delete dort.phone;
+        weg++;
+      }
+    }
+  }
+  return weg;
 }
 
 /**
@@ -181,8 +200,9 @@ export function nachtragenBeimLaden(content, defaults) {
   const info = einmal("shopInfo", () => shopInfoNachtragen(content, defaults));
   if (info.length) meldungen.push(`Shop-Infostreifen: ${info.join(", ")}`);
 
-  const tel = einmal("telefon", () => telefonRaeumen(content));
-  if (tel.length) meldungen.push("Telefonnummer geleert — sie steht nicht mehr auf der Website");
+  /* Ohne Marke und ohne Meldung, wie beim Fotografen: das Feld gibt es im
+     Modell nicht mehr, und ein Wert aus einem alten Stand waere ein Rest. */
+  telefonLoeschen(content);
 
   /* Ohne Marke: das Feld gibt es nicht mehr, ein Rest darf nie zurueckkommen.
 
