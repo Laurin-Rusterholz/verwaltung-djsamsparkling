@@ -880,12 +880,13 @@ export function renderContact() {
     group("Kontaktdaten", [
       textField("sections.contact.kicker", "Kleine Zeile"),
       textField("sections.contact.email", "E-Mail", { type: "email" }),
-      /* Die Telefonnummer gehoert nicht mehr auf die oeffentliche Website
-         (Kundenwunsch 11.08.2026). Das Feld bleibt optional stehen: leer heisst
-         nirgends gerendert, und wer wieder eine eintraegt, sieht sie auch. */
-      textField("sections.contact.phone", "Telefon (optional)", {
-        hint: "Leer = steht nirgends auf der Website. Nur was hier steht, wird angezeigt.",
-      }),
+      /* Das Telefonfeld gab es hier bis zum 12.08.2026. Es ist ganz weg — erst
+         war es nur ausgeblendet, dann leer; beides war halb. Der Kunde will es
+         gar nicht mehr haben. Der alte Wert wird beim Laden geloescht
+         (nachtragen.js) und bei jedem Build der Website.
+
+         Das Telefonfeld IM Booking-Formular bleibt: dort traegt der Besucher
+         seine eigene Nummer ein, das ist etwas anderes. */
       textField("sections.contact.base", "Standort"),
     ], { cols: 2 }),
     group("Social Media & Musik", [socialsList()], {

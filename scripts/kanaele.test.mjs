@@ -21,7 +21,7 @@ import {
   referenzenNachtragen,
   wareNachtragen,
   shopInfoNachtragen,
-  telefonRaeumen,
+  telefonLoeschen,
   nachtragenBeimLaden,
 } from "../public/js/nachtragen.js";
 import { pruneForRtdb, withDefaults, clone } from "../public/js/util.js";
@@ -239,7 +239,9 @@ pruefe("jeder Nachtrag laeuft genau einmal — sonst liesse sich nichts loeschen
   };
   const erst = nachtragenBeimLaden(c, werksstand);
   if (!erst.meldungen.length) throw new Error("beim ersten Laden wurde nichts nachgetragen");
-  for (const marke of ["kanaele", "referenzen", "ware", "shopInfo", "telefon"])
+  /* "telefon" steht nicht mehr dabei: das Feld gibt es nicht mehr, es wird
+     immer geloescht statt einmalig nachgetragen. */
+  for (const marke of ["kanaele", "referenzen", "ware", "shopInfo"])
     if (c.migrationen[marke] !== true) throw new Error(`Marke "${marke}" nicht gesetzt`);
 
   // Jetzt loescht der Kunde alles wieder — und es bleibt geloescht.
@@ -305,9 +307,12 @@ pruefe("die verbindliche Liste ist vollstaendig, IVY inklusive", () => {
   for (const eintrag of muss) if (!paare.includes(eintrag)) throw new Error(`"${eintrag}" fehlt`);
   const doppelt = paare.filter((x, i) => paare.indexOf(x) !== i);
   if (doppelt.length) throw new Error("Dublette: " + [...new Set(doppelt)].join(", "));
-  // Die vier bisherigen Favoriten stehen als erste vier, in ihrer Reihenfolge.
-  if (paare.slice(0, 4).join(" | ") !== "Kugl — St. Gallen | Sektor 11 — Zürich | BBC — Gossau | Ultrawild Festival — St. Gallen")
-    throw new Error("die ersten vier stimmen nicht: " + paare.slice(0, 4).join(", "));
+  /* Die Reihenfolge gehoert seit dem 12.08.2026 der Verwaltung: sie hat den
+     Nachtrag selbst gespeichert und damit die Marke gesetzt. Geprueft wird
+     darum nur noch, dass die vier frueher grossen alle dabei sind — wo sie
+     stehen, entscheidet der Kunde mit ↑ ↓. */
+  for (const eintrag of ["Kugl — St. Gallen", "Sektor 11 — Zürich", "BBC — Gossau", "Ultrawild Festival — St. Gallen"])
+    if (!paare.includes(eintrag)) throw new Error(`"${eintrag}" fehlt`);
 });
 
 /* -------------------------------------------------------- Shop und Telefon */
@@ -344,16 +349,28 @@ pruefe("der Infostreifen wird angelegt und verspricht nichts Unbelegtes", () => 
     if (text.includes(wort)) throw new Error(`der Streifen verspricht "${wort}"`);
 });
 
-pruefe("die alte Telefonnummer wird geleert, eine neue nicht", () => {
-  const c = { sections: { contact: { phone: "+41 77 509 11 71" } } };
-  telefonRaeumen(c);
-  if (c.sections.contact.phone) throw new Error("nicht geleert: " + c.sections.contact.phone);
+pruefe("das Telefonfeld wird geloescht, nicht geleert", () => {
+  /* Bis zum 12.08.2026 wurde nur die eine bekannte Nummer geleert. Das war
+     halb: das Feld stand danach weiter in der Verwaltung und der Schluessel
+     weiter in den Daten. Jetzt ist es weg — jede Nummer, auch in den
+     Uebersetzungen. */
+  const c = {
+    sections: { contact: { phone: "+41 77 509 11 71", email: "info@samsparking.ch" } },
+    i18n: { de: { sections: { contact: { phone: "077 …" } } } },
+  };
+  telefonLoeschen(c);
+  if ("phone" in c.sections.contact) throw new Error("Feld nicht geloescht");
+  if ("phone" in c.i18n.de.sections.contact) throw new Error("in der Uebersetzung geblieben");
+  if (c.sections.contact.email !== "info@samsparking.ch") throw new Error("die E-Mail wurde angefasst");
+
+  // Auch eine neue Nummer bleibt nicht: das Feld gibt es nicht mehr.
   const eigen = { sections: { contact: { phone: "+41 44 000 00 00" } } };
-  telefonRaeumen(eigen);
-  if (eigen.sections.contact.phone !== "+41 44 000 00 00") throw new Error("eigene Nummer geleert");
-  // Und im Werks-Stand steht keine mehr.
-  if (String(werksstand.sections?.contact?.phone || "").trim())
-    throw new Error("der Werks-Stand traegt wieder eine Telefonnummer");
+  telefonLoeschen(eigen);
+  if ("phone" in eigen.sections.contact) throw new Error("eine neue Nummer blieb stehen");
+
+  // Und im Werks-Stand steht keines mehr.
+  if ("phone" in (werksstand.sections?.contact || {}))
+    throw new Error("der Werks-Stand traegt wieder ein Telefonfeld");
 });
 
 /* --------------------------------------------------------------- Fotograf */
