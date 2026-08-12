@@ -240,16 +240,17 @@ for (const [sprache, wort] of [["de", "Kaufen"], ["fr", "Acheter"]]) {
 }
 /* Die eigenen Seiten muessen wirklich da sein, sonst bleibt es ein Einseiter.
 
-   "shop" stand hier bis zum 12.08.2026 mit dabei. Der Shop hat seither keine
-   eigene Seite mehr — er ist ein Abschnitt der Startseite, unter der Galerie.
-   Verlangt wird darum nicht mehr die Seite, sondern dass der Abschnitt
-   irgendwo steht: heimatlos darf er nicht werden. */
+   Der Shop steht seit dem 12.08.2026 an ZWEI Plaetzen: die Einladung (heller
+   Block) auf der Startseite unter der Galerie, der Katalog auf /shop/. Beides
+   kommt aus demselben Abschnitt; welche Ansicht eine Seite zeigt, entscheidet
+   der Website-Generator. Verlangt wird darum die Seite UND der Abschnitt auf
+   der Startseite. */
 const slugs = (neu.pages || []).map((p) => p.slug);
-for (const soll of ["", "booking"])
+for (const soll of ["", "booking", "shop"])
   if (!slugs.includes(soll))
     fehler.push(`Seite "${soll || "/"}" fehlt in pages — der Werks-Stand waere wieder ein Einseiter.`);
-if (!(neu.pages || []).some((p) => (p.sections || []).includes("shop")))
-  fehler.push("Der Abschnitt \"shop\" steht auf keiner Seite — er waere nirgends zu sehen.");
+if (!((neu.pages || [])[0]?.sections || []).includes("shop"))
+  fehler.push("Die Startseite traegt den Shop nicht — die Einladung fehlt.");
 
 if (fehler.length) {
   console.error("Werks-Stand NICHT geschrieben — Sicherheitsregel verletzt:");

@@ -21,7 +21,7 @@ import {
   referenzenNachtragen,
   wareNachtragen,
   shopInfoNachtragen,
-  shopAufStartseite,
+  shopSeiteUndEinladung,
   telefonLoeschen,
   nachtragenBeimLaden,
 } from "../public/js/nachtragen.js";
@@ -474,45 +474,54 @@ console.log(
 process.exit(fehler ? 1 : 0);
 
 {
-  /* Der Shop wandert einmalig auf die Startseite, unter die Galerie.
+  /* Zwei Plaetze fuer den Shop (12.08.2026): Einladung auf der Startseite unter
+     der Galerie, Katalog auf /shop/. Beides kommt aus demselben Abschnitt.
 
-     Anlass (12.08.2026): ein veroeffentlichter Artikel war "nicht zu sehen" — er
-     stand auf der eigenen Seite /shop/, gesucht wurde er auf der Startseite.
-     Derselbe Schritt steht im Website-Generator; die Marke haelt beide davon ab,
-     es zweimal oder gegen eine spaetere Entscheidung zu tun. */
+     Erst hatte der Shop nur die eigene Seite (das Produkt war auf der Startseite
+     nicht angekuendigt), dann wanderte alles auf die Startseite. Beide Male war
+     es nicht gemeint; diese Pruefung haelt die jetzige Aufteilung fest. */
+  const werk = { pages: [{ slug: "shop", navLabel: "Shop", sections: ["shop"] }], i18n: { fr: { pages: { 2: { navLabel: "Boutique" } } } } };
+
+  // Der normale Stand: Seite da, Einladung fehlt noch.
   const inhalt = {
     pages: [
       { slug: "", navLabel: "Home", sections: ["about", "gallery", "contact"] },
       { slug: "booking", navLabel: "Booking", sections: ["booking", "contact"] },
       { slug: "shop", navLabel: "Shop", sections: ["shop"] },
     ],
-    i18n: { de: { pages: { 0: { navLabel: "Start" }, 1: { navLabel: "Booking" }, 2: { navLabel: "Shop" } } } },
   };
-  const gesagt = shopAufStartseite(inhalt);
-  if (!gesagt.length) meckern("der Umzug wurde nicht gemeldet");
-  const start = inhalt.pages[0].sections;
-  if (start.join(",") !== "about,gallery,shop,contact")
-    meckern(`Startseite: ${start.join(", ")} — der Shop steht nicht direkt unter der Galerie`);
-  if (inhalt.pages.length !== 2) meckern(`${inhalt.pages.length} Seiten statt zwei`);
-  if (inhalt.pages.some((p) => p.slug === "shop")) meckern("die Seite /shop/ steht noch da");
-  const namen = inhalt.i18n.de.pages;
-  if (Object.keys(namen).length !== 2) meckern("die Seitennamen wurden nicht mitgezogen");
-  if (namen["1"]?.navLabel !== "Booking")
-    meckern(`Seite 1 heisst "${namen["1"]?.navLabel}" statt "Booking"`);
+  const gesagt = shopSeiteUndEinladung(inhalt, werk);
+  if (!gesagt.length) meckern("die Einladung wurde nicht gemeldet");
+  if (inhalt.pages[0].sections.join(",") !== "about,gallery,shop,contact")
+    meckern(`Startseite: ${inhalt.pages[0].sections.join(", ")}`);
+  if (inhalt.pages.length !== 3) meckern(`${inhalt.pages.length} Seiten statt drei`);
+  if (shopSeiteUndEinladung(inhalt, werk).length) meckern("der Nachtrag lief ein zweites Mal");
 
-  // Steht der Shop schon auf der Startseite, passiert nichts mehr.
-  const nochmal = shopAufStartseite(inhalt);
-  if (nochmal.length) meckern("der Umzug lief ein zweites Mal");
-
-  // Und eine eigene Seite, die noch anderes traegt, bleibt stehen.
-  const gemischt = {
+  /* Reparatur: der erste Anlauf ("shopAufStart") hatte die Shop-Seite
+     aufgeloest. Wer damit gespeichert hat, bekommt sie zurueck — samt
+     uebersetztem Seitennamen. */
+  const zwischen = {
+    migrationen: { shopAufStart: true },
     pages: [
-      { slug: "", navLabel: "Home", sections: ["about", "gallery"] },
-      { slug: "laden", navLabel: "Laden", sections: ["shop", "contact"] },
+      { slug: "", navLabel: "Home", sections: ["about", "gallery", "shop", "contact"] },
+      { slug: "booking", navLabel: "Booking", sections: ["booking", "contact"] },
+    ],
+    i18n: { fr: { pages: { 0: { navLabel: "Accueil" }, 1: { navLabel: "Booking" } } } },
+  };
+  shopSeiteUndEinladung(zwischen, werk);
+  if (!zwischen.pages.some((p) => p.slug === "shop"))
+    meckern("die Shop-Seite kam nicht zurueck: " + zwischen.pages.map((p) => p.slug).join(", "));
+  if (zwischen.i18n.fr.pages["2"]?.navLabel !== "Boutique")
+    meckern(`der franzoesische Name fehlt: ${JSON.stringify(zwischen.i18n.fr.pages)}`);
+
+  /* Eine eigene Aufteilung OHNE jene Marke bleibt, wie sie ist — wer den Shop
+     bewusst nur auf die Startseite legt, bekommt keine Seite aufgedraengt. */
+  const eigen = {
+    pages: [
+      { slug: "", navLabel: "Home", sections: ["about", "gallery", "shop"] },
+      { slug: "booking", navLabel: "Booking", sections: ["booking"] },
     ],
   };
-  shopAufStartseite(gemischt);
-  if (gemischt.pages.length !== 2) meckern("eine Seite mit weiteren Abschnitten wurde aufgeloest");
-  if (!gemischt.pages[1].sections.includes("contact"))
-    meckern("der uebrige Abschnitt der alten Seite ist verloren");
+  shopSeiteUndEinladung(eigen, werk);
+  if (eigen.pages.length !== 2) meckern("eine eigene Aufteilung bekam eine Shop-Seite aufgedraengt");
 }
