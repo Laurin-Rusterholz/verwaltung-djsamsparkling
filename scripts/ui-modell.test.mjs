@@ -93,14 +93,23 @@ pruefe("greift und nimmt die Seiten aus dem Werks-Stand", () => {
   );
 });
 
-pruefe("Booking und Shop sind eigene Seiten, nicht Startseiten-Abschnitte", () => {
+/* Booking hat eine eigene Seite. Der Shop hatte bis zum 12.08.2026 auch eine —
+   er steht seither auf der Startseite, direkt unter der Galerie. Anlass: ein
+   veroeffentlichter Artikel war "nicht zu sehen", weil er nur ueber das Menue
+   erreichbar war. */
+pruefe("Booking hat eine eigene Seite, der Shop steht unter der Galerie", () => {
   const start = umgestellt.pages.find((p) => p.slug === "");
   assert.ok(!start.sections.includes("booking"), "booking steht weiter auf der Startseite");
-  assert.ok(!start.sections.includes("shop"), "shop steht weiter auf der Startseite");
+  assert.ok(start.sections.includes("shop"), "der Shop steht nicht auf der Startseite");
+  assert.equal(
+    start.sections.indexOf("shop"),
+    start.sections.indexOf("gallery") + 1,
+    `der Shop steht nicht direkt unter der Galerie: ${start.sections.join(", ")}`
+  );
   const m = abschnittsModell(umgestellt);
   const finde = (k) => m.aufDerWebsite.find((e) => e.key === k);
   assert.equal(finde("booking").seiteSlug, "booking");
-  assert.equal(finde("shop").seiteSlug, "shop");
+  assert.equal(finde("shop").seiteSlug, "");
 });
 
 pruefe("danach ist es kein Einseiter mehr und nichts steht ohne Seite da", () => {
@@ -120,10 +129,10 @@ pruefe("Abschnitts-Inhalte bleiben unberührt", () => {
 
 console.log("\nWieder-Einschalten landet auf der richtigen Seite:");
 
-pruefe("Shop kommt auf /shop/, nicht auf die Startseite", () => {
+pruefe("Shop kommt auf die Startseite, nicht auf eine eigene Seite", () => {
   const c = JSON.parse(JSON.stringify(umgestellt));
   c.pages = c.pages.map((p) => ({ ...p, sections: p.sections.filter((k) => k !== "shop") }));
-  assert.equal(zielSeiteFuer(c, "shop").slug, "shop");
+  assert.equal(zielSeiteFuer(c, "shop").slug, "");
 });
 
 pruefe("Booking kommt auf /booking/", () => {
@@ -143,12 +152,20 @@ console.log("\nWerks-Stand selbst:");
 pruefe("ist das Mehrseiten-Modell", () => {
   const m = abschnittsModell(werksstand);
   assert.equal(m.einseiter, false);
-  // Eigene Seiten fuer Booking und Shop — plus die Startseite. Die Video-Seite
-  // ist am 11.08.2026 zurueckgenommen worden und darf nicht wiederkommen.
+  /* Eine eigene Seite fuer Booking — plus die Startseite. Die Video-Seite ist am
+     11.08.2026 zurueckgenommen worden und darf nicht wiederkommen; die
+     Shop-Seite ist am 12.08.2026 aufgeloest worden, ihr Abschnitt steht auf der
+     Startseite. Verlangt wird darum, dass der Shop-Abschnitt irgendwo steht —
+     heimatlos darf er nicht sein. */
   const slugs = werksstand.pages.map((p) => p.slug);
   assert.ok(slugs.includes(""), "Startseite fehlt");
-  for (const eigen of ["booking", "shop"])
+  for (const eigen of ["booking"])
     assert.ok(slugs.includes(eigen), `Seite /${eigen}/ fehlt: ${slugs.join(", ")}`);
+  assert.ok(!slugs.includes("shop"), "Die Shop-Seite ist wieder da: " + slugs.join(", "));
+  assert.ok(
+    werksstand.pages.some((p) => (p.sections || []).includes("shop")),
+    "Der Shop-Abschnitt steht auf keiner Seite"
+  );
   assert.ok(!slugs.includes("videos"), "Die Video-Seite ist wieder da: " + slugs.join(", "));
   assert.equal(werksstand.sections.videos, undefined, "Der Video-Abschnitt ist wieder da");
 });

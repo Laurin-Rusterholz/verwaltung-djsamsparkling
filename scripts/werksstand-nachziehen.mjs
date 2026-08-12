@@ -238,11 +238,18 @@ for (const [sprache, wort] of [["de", "Kaufen"], ["fr", "Acheter"]]) {
   if (hole(neu, ["i18n", sprache, "sections", "shop", "buyLabel"]) !== wort)
     fehler.push(`Shop-Uebersetzung fehlt: i18n.${sprache}.sections.shop.buyLabel`);
 }
-// Die eigenen Seiten muessen wirklich da sein, sonst bleibt es ein Einseiter.
+/* Die eigenen Seiten muessen wirklich da sein, sonst bleibt es ein Einseiter.
+
+   "shop" stand hier bis zum 12.08.2026 mit dabei. Der Shop hat seither keine
+   eigene Seite mehr — er ist ein Abschnitt der Startseite, unter der Galerie.
+   Verlangt wird darum nicht mehr die Seite, sondern dass der Abschnitt
+   irgendwo steht: heimatlos darf er nicht werden. */
 const slugs = (neu.pages || []).map((p) => p.slug);
-for (const soll of ["", "booking", "shop"])
+for (const soll of ["", "booking"])
   if (!slugs.includes(soll))
     fehler.push(`Seite "${soll || "/"}" fehlt in pages — der Werks-Stand waere wieder ein Einseiter.`);
+if (!(neu.pages || []).some((p) => (p.sections || []).includes("shop")))
+  fehler.push("Der Abschnitt \"shop\" steht auf keiner Seite — er waere nirgends zu sehen.");
 
 if (fehler.length) {
   console.error("Werks-Stand NICHT geschrieben — Sicherheitsregel verletzt:");

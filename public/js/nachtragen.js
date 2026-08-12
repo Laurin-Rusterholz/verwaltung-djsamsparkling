@@ -93,6 +93,61 @@ export function shopInfoNachtragen(content, defaults) {
 }
 
 /**
+ * Den Shop auf die Startseite holen, unter die Galerie.
+ *
+ * Anlass (12.08.2026): der Kunde hatte einen Artikel veröffentlicht und ihn auf
+ * der Startseite gesucht. Dort stand nichts — der Shop hatte eine eigene Seite
+ * /shop/, erreichbar nur über das Menü. Der Abschnitt wandert deshalb in die
+ * Startseite, direkt hinter die Galerie; die eigene Seite fällt weg, wenn sonst
+ * nichts darauf steht.
+ *
+ * Einmalig, mit Marke: wer den Shop danach wieder auf eine eigene Seite legt,
+ * behält das letzte Wort. Der Website-Generator macht denselben Schritt, solange
+ * die Marke fehlt — so stimmt beides überein, ohne dass jemand etwas tun muss.
+ *
+ * Die Übersetzungen der Seitennamen hängen am PLATZ in der Liste. Fällt eine
+ * Seite weg, muss ihr Eintrag mitfallen, sonst heisst Booking auf einmal
+ * „Boutique“.
+ */
+export function shopAufStartseite(content) {
+  const seiten = content?.pages;
+  if (!Array.isArray(seiten) || !seiten.length) return [];
+  const start = seiten[0];
+  const traeger = seiten.findIndex((p) => Array.isArray(p?.sections) && p.sections.includes("shop"));
+  if (!start || traeger <= 0) return [];
+
+  const alt = seiten[traeger];
+  alt.sections = alt.sections.filter((k) => k !== "shop");
+  let entfernt = -1;
+  if (!alt.sections.length) {
+    seiten.splice(traeger, 1);
+    entfernt = traeger;
+  }
+
+  const ziel = (Array.isArray(start.sections) ? start.sections : []).filter((k) => k !== "shop");
+  const nachGalerie = ziel.indexOf("gallery");
+  ziel.splice(nachGalerie < 0 ? ziel.length : nachGalerie + 1, 0, "shop");
+  start.sections = ziel;
+
+  if (entfernt >= 0) {
+    for (const wurzel of ["i18n", "i18nHash"]) {
+      for (const tabelle of Object.values(content?.[wurzel] || {})) {
+        const alteTabelle = tabelle?.pages;
+        if (!alteTabelle || typeof alteTabelle !== "object") continue;
+        const neueTabelle = {};
+        for (const [platz, wert] of Object.entries(alteTabelle)) {
+          const i = Number(platz);
+          if (!Number.isInteger(i) || i === entfernt) continue;
+          neueTabelle[String(i > entfernt ? i - 1 : i)] = wert;
+        }
+        tabelle.pages = neueTabelle;
+      }
+    }
+  }
+  return ["Shop steht jetzt auf der Startseite, unter der Galerie"];
+}
+
+/**
  * Das Telefonfeld löschen — überall, bei jedem Laden.
  *
  * Bis zum 12.08.2026 wurde hier nur die eine bekannte Nummer geleert. Das war
@@ -199,6 +254,9 @@ export function nachtragenBeimLaden(content, defaults) {
 
   const info = einmal("shopInfo", () => shopInfoNachtragen(content, defaults));
   if (info.length) meldungen.push(`Shop-Infostreifen: ${info.join(", ")}`);
+
+  const seite = einmal("shopAufStart", () => shopAufStartseite(content));
+  if (seite.length) meldungen.push(seite.join(", "));
 
   /* Ohne Marke und ohne Meldung, wie beim Fotografen: das Feld gibt es im
      Modell nicht mehr, und ein Wert aus einem alten Stand waere ein Rest. */

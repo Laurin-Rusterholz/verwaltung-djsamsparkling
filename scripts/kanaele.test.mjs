@@ -21,6 +21,7 @@ import {
   referenzenNachtragen,
   wareNachtragen,
   shopInfoNachtragen,
+  shopAufStartseite,
   telefonLoeschen,
   nachtragenBeimLaden,
 } from "../public/js/nachtragen.js";
@@ -471,3 +472,47 @@ console.log(
         "referenzen:         die Liste der Verwaltung mit IVY, hoechstens vier gross."
 );
 process.exit(fehler ? 1 : 0);
+
+{
+  /* Der Shop wandert einmalig auf die Startseite, unter die Galerie.
+
+     Anlass (12.08.2026): ein veroeffentlichter Artikel war "nicht zu sehen" — er
+     stand auf der eigenen Seite /shop/, gesucht wurde er auf der Startseite.
+     Derselbe Schritt steht im Website-Generator; die Marke haelt beide davon ab,
+     es zweimal oder gegen eine spaetere Entscheidung zu tun. */
+  const inhalt = {
+    pages: [
+      { slug: "", navLabel: "Home", sections: ["about", "gallery", "contact"] },
+      { slug: "booking", navLabel: "Booking", sections: ["booking", "contact"] },
+      { slug: "shop", navLabel: "Shop", sections: ["shop"] },
+    ],
+    i18n: { de: { pages: { 0: { navLabel: "Start" }, 1: { navLabel: "Booking" }, 2: { navLabel: "Shop" } } } },
+  };
+  const gesagt = shopAufStartseite(inhalt);
+  if (!gesagt.length) meckern("der Umzug wurde nicht gemeldet");
+  const start = inhalt.pages[0].sections;
+  if (start.join(",") !== "about,gallery,shop,contact")
+    meckern(`Startseite: ${start.join(", ")} — der Shop steht nicht direkt unter der Galerie`);
+  if (inhalt.pages.length !== 2) meckern(`${inhalt.pages.length} Seiten statt zwei`);
+  if (inhalt.pages.some((p) => p.slug === "shop")) meckern("die Seite /shop/ steht noch da");
+  const namen = inhalt.i18n.de.pages;
+  if (Object.keys(namen).length !== 2) meckern("die Seitennamen wurden nicht mitgezogen");
+  if (namen["1"]?.navLabel !== "Booking")
+    meckern(`Seite 1 heisst "${namen["1"]?.navLabel}" statt "Booking"`);
+
+  // Steht der Shop schon auf der Startseite, passiert nichts mehr.
+  const nochmal = shopAufStartseite(inhalt);
+  if (nochmal.length) meckern("der Umzug lief ein zweites Mal");
+
+  // Und eine eigene Seite, die noch anderes traegt, bleibt stehen.
+  const gemischt = {
+    pages: [
+      { slug: "", navLabel: "Home", sections: ["about", "gallery"] },
+      { slug: "laden", navLabel: "Laden", sections: ["shop", "contact"] },
+    ],
+  };
+  shopAufStartseite(gemischt);
+  if (gemischt.pages.length !== 2) meckern("eine Seite mit weiteren Abschnitten wurde aufgeloest");
+  if (!gemischt.pages[1].sections.includes("contact"))
+    meckern("der uebrige Abschnitt der alten Seite ist verloren");
+}
