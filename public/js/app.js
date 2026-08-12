@@ -401,7 +401,7 @@ function renderPublish() {
         : el(
             "p",
             { class: "warn-box" },
-            "Kein Build-Hook hinterlegt: Publizieren speichert nur. Unter Einstellungen die Netlify-Build-Hook-URL eintragen."
+            "Kein Build-Hook hinterlegt: Publizieren speichert nur — die Website zieht den Stand dann von selbst nach, in der Regel innerhalb von fünf bis zehn Minuten. Sofort wird es mit der Netlify-Build-Hook-URL unter Einstellungen."
           ),
     ]),
     el("div", { class: "group" }, [el("h3", { class: "group-title" }, "Verlauf"), versionHost]),
@@ -620,11 +620,16 @@ async function doPublish() {
   }
   try {
     const res = await publish();
-    if (res.built) toast("Publiziert — Netlify baut die Website neu (1–2 Minuten)");
+    /* Zeitangaben so, wie es wirklich laeuft. Der Build-Hook startet den
+       Netlify-Build sofort; fertig ist er nach rund einer Minute. Ohne Hook
+       greift der Zeitplan im Website-Repo — seit 12.08.2026 alle fuenf Minuten
+       statt stuendlich. Eine Website aus fertigen Dateien wird nie schneller
+       als ihr Build; alles Kuerzere waere hier eine Behauptung. */
+    if (res.built) toast("Publiziert — die Website baut neu und ist in rund einer Minute aktuell");
     else if (/Build-Hook/.test(res.reason || ""))
       toast(
-        "Publiziert — die Website übernimmt den Stand automatisch (spätestens in einer Stunde). " +
-          "Soll es sofort sein: Build-Hook unter Einstellungen hinterlegen."
+        "Publiziert — die Website übernimmt den Stand automatisch, in der Regel in fünf bis zehn Minuten. " +
+          "Damit es sofort losgeht: Build-Hook unter Einstellungen hinterlegen."
       );
     else toast("Gespeichert, aber kein Build ausgelöst: " + res.reason, "err");
   } catch (e) {
