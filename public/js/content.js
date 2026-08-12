@@ -921,13 +921,21 @@ export function renderRelease() {
     const [j, m, t] = datum.split("-");
     wann = `${t}.${m}.${j}` + (zeit ? `, ${zeit} Uhr` : "");
   }
+  /* Ist der Zeitpunkt herum, sperrt hier nichts mehr — auch wenn der Schalter
+     noch an steht. Der Website-Generator baut ab diesem Moment keinen Vorhang
+     mehr (seit 12.08.2026, 18:00). Diese Ansage sagt das offen, sonst liest man
+     „gesperrt“ und sieht eine offene Website. */
+  const zielMs = datum ? Date.parse(`${datum}T${zeit || "00:00"}:00`) : 0;
+  const vorbei = !!zielMs && zielMs < Date.now();
   return view([
     head("Website-Release", "Bis zum Start zeigt die öffentliche Website einen Countdown."),
     group(null, [
       el("p", { class: "field-hint" }, [
-        an && datum
-          ? `Die Website ist gesperrt und öffnet sich am ${wann} (Zeitzone Europe/Zurich) von selbst. `
-          : "Die Sperre ist aus — die Website ist öffentlich erreichbar. ",
+        !an || !datum
+          ? "Die Sperre ist aus — die Website ist öffentlich erreichbar. "
+          : vorbei
+          ? `Der Zeitpunkt (${wann}) ist vorbei — die Website ist öffentlich erreichbar. Es wird kein Countdown mehr gebaut. Für einen nächsten Release genügt ein neues Datum. `
+          : `Die Website ist gesperrt und öffnet sich am ${wann} (Zeitzone Europe/Zurich) von selbst. `,
         "Umgeschaltet wird im Browser: eine Seite, die über den Zeitpunkt hinaus offen ",
         "bleibt, wechselt ohne Neuladen. Ein neuer Deploy ist dafür nicht nötig.",
       ]),
