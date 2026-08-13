@@ -40,6 +40,7 @@ import {
 } from "./content.js";
 import { renderMedia, mediaList, usageCount, notifyMediaChanged, notifyUploadsChanged } from "./media.js";
 import { renderInbox, openCount, inquiryList } from "./inbox.js";
+import { renderStatistik } from "./statistik.js";
 import { renderI18n, translationSummary, LANG_LABEL } from "./i18n.js";
 import { renderPreview } from "./wish.js";
 import { checkKey } from "./ai.js";
@@ -77,6 +78,7 @@ const ICON = {
   media: svg('<rect x="7" y="3" width="14" height="14" rx="2"/><path d="M17 17v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h2"/>'),
   inbox: svg('<path d="M4.5 5h15l1.5 8v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4z"/><path d="M3 13h5l1.5 3h5L16 13h5"/>'),
   upload: svg('<path d="M12 16V5"/><path d="m7.5 9.5 4.5-4.5 4.5 4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>'),
+  chart: svg('<path d="M4 20V4"/><path d="M4 20h16"/><rect x="7" y="12" width="3" height="5"/><rect x="12" y="8" width="3" height="9"/><rect x="17" y="5" width="3" height="12"/>'),
   gear: svg('<circle cx="12" cy="12" r="3.1"/><path d="M12 2.5v3M12 18.5v3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M2.5 12h3M18.5 12h3M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1"/>'),
 };
 
@@ -143,6 +145,10 @@ const NAV = [
     items: [
       { id: "media", label: "Medien", icon: ICON.media, render: renderMedia },
       { id: "inbox", label: "Anfragen", icon: ICON.inbox, render: renderInbox, badge: () => openCount() },
+      /* Zahlen zur oeffentlichen Website. Sie kommen nicht aus dem Inhalt,
+         sondern aus dem Zaehl-Knoten der Datenbank — darum steht die Ansicht
+         hier unter "Verwaltung" und nicht bei den Abschnitten. */
+      { id: "statistik", label: "Statistik", icon: ICON.chart, render: renderStatistik },
       { id: "publish", label: "Publizieren", icon: ICON.upload, render: renderPublish },
       { id: "settings", label: "Einstellungen", icon: ICON.gear, render: renderSettings },
     ],

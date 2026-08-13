@@ -996,3 +996,37 @@ select{
   .topbar-actions .btn{letter-spacing:.07em;padding-inline:7px;}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
+
+/* ---------- STATISTIK ----------
+   Zahlen zur oeffentlichen Website (siehe js/statistik.js). Balken und Anteile
+   sind reine <div>s — kein Diagramm-Werkzeug, keine fremde Datei, damit die
+   Verwaltung ohne Nachladen auskommt. */
+.stat-balken{
+  display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;
+  align-items:end;height:190px;padding:6px 2px 0;
+}
+.stat-balken-tag{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:5px;min-width:0;}
+.stat-balken-zahl{font-size:.66rem;color:var(--dim);white-space:nowrap;}
+.stat-balken-stab{
+  width:100%;max-width:34px;background:var(--accent);border-radius:4px 4px 0 0;
+  min-height:3px;transition:height .25s ease;
+}
+/* Ein Tag ohne Aufrufe bleibt als Strich sichtbar — sonst sieht die Reihe
+   lueckenhaft aus und man haelt es fuer einen Fehler. */
+.stat-balken-stab.leer{background:var(--line);}
+.stat-balken-tagname{font-size:.6rem;color:var(--dim);white-space:nowrap;}
+
+.stat-liste{list-style:none;display:flex;flex-direction:column;gap:9px;}
+.stat-liste li{display:grid;grid-template-columns:minmax(90px,1fr) minmax(60px,2fr) auto;gap:12px;align-items:center;}
+.stat-liste-name{font-size:.9rem;}
+.stat-liste-bar{background:var(--line);border-radius:999px;height:8px;overflow:hidden;}
+.stat-liste-bar i{display:block;height:100%;background:var(--accent);border-radius:999px;}
+.stat-liste-zahl{font-size:.8rem;color:var(--dim);white-space:nowrap;}
+
+@media (max-width:640px){
+  .stat-balken{height:150px;gap:3px;}
+  .stat-balken-zahl{display:none;}
+  .stat-balken-tagname{font-size:.5rem;transform:rotate(-45deg);transform-origin:center;}
+  .stat-liste li{grid-template-columns:minmax(70px,1fr) auto;}
+  .stat-liste-bar{display:none;}
+}
