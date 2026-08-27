@@ -151,8 +151,13 @@ function checklist() {
     "Meta-Description hat eine gute Länge",
     "seo"
   );
+  /* Genau die Rechnung der Website: ein Termin zaehlt nur mit Namen (ohne
+     "Event / Club" zeigt die Seite ihn nicht an), und der Tageswechsel gilt in
+     Europe/Zurich. Sonst haette die Checkliste einen Haken gesetzt fuer etwas,
+     das auf der Website gar nicht steht. */
+  const heuteCH = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Zurich" }).format(new Date());
   const shows = (c.sections.shows?.items || []).filter(
-    (i) => !i.date || i.date >= new Date().toISOString().slice(0, 10)
+    (i) => String(i?.name || "").trim() && (!i.date || i.date >= heuteCH)
   );
   add(shows.length > 0, "Mindestens ein kommender Termin eingetragen", "shows");
   const gal = c.sections.gallery?.items || [];
@@ -199,9 +204,9 @@ function checklist() {
 
 function renderDashboard() {
   const c = S.content;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Zurich" }).format(new Date());
   const shows = (c.sections.shows?.items || [])
-    .filter((i) => i.date && i.date >= today)
+    .filter((i) => String(i?.name || "").trim() && i.date && i.date >= today)
     .sort((a, b) => a.date.localeCompare(b.date));
   const next = shows[0];
   const open = openCount();
@@ -600,9 +605,15 @@ async function doPublish() {
     const res = await publish();
     if (res.built) toast("Publiziert — Netlify baut die Website neu (1–2 Minuten)");
     else if (/Build-Hook/.test(res.reason || ""))
+      /* Kein Versprechen mehr auf eine Stunde: ohne Build-Hook haengt die
+         Website am Zeitplan im Repo, und GitHub laesst geplante Laeufe unter
+         Last aus — zwischen zwei Laeufen lagen schon elf Stunden. Gespeichert
+         ist der Stand sofort, live wird er dann eben spaeter. */
       toast(
-        "Publiziert — die Website übernimmt den Stand automatisch (spätestens in einer Stunde). " +
-          "Soll es sofort sein: Build-Hook unter Einstellungen hinterlegen."
+        "Gespeichert — aber die Website baut noch nicht: es ist kein Build-Hook hinterlegt. " +
+          "Sie zieht den Stand erst beim nächsten geplanten Lauf nach, und der kann Stunden auf sich " +
+          "warten lassen. Sofort live: Build-Hook unter Einstellungen eintragen.",
+        "err"
       );
     else toast("Gespeichert, aber kein Build ausgelöst: " + res.reason, "err");
   } catch (e) {

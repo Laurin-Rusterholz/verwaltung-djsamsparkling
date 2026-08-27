@@ -445,9 +445,14 @@ function showsCalendar() {
 }
 
 export function renderShows() {
-  const today = new Date().toISOString().slice(0, 10);
+  /* Derselbe Tageswechsel wie auf der Website: Europe/Zurich, nicht UTC.
+     Sonst gilt ein Termin hier zwei Stunden laenger als kommend als dort. */
+  const today = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Zurich" }).format(new Date());
   const items = getPath(S.content, "sections.shows.items") || [];
-  const upcoming = items.filter((i) => !i.date || i.date >= today).length;
+  const echt = items.filter((i) => String(i?.name || "").trim());
+  const upcoming = echt.filter((i) => !i.date || i.date >= today).length;
+  const vorbei = echt.length - upcoming;
+  const ohneName = items.length - echt.length;
   const cal = showsCalendar();
 
   return view([
@@ -455,7 +460,9 @@ export function renderShows() {
       "Shows",
       `Auftritts-Termine. ${upcoming} kommende${upcoming === 1 ? "r" : ""} Termin${
         upcoming === 1 ? "" : "e"
-      } — ohne hinterlegten Termin verschwindet der komplette Shows-Abschnitt automatisch von der Website.`
+      }${vorbei ? `, ${vorbei} vorbei` : ""}${
+        ohneName ? `, ${ohneName} ohne Namen` : ""
+      } — die Website zeigt unter „Shows“ nur kommende Termine. Was vorbei ist, wandert von selbst zu den Referenzen; ohne einen kommenden Termin verschwindet der Shows-Abschnitt samt Menüpunkt von der Website.`
     ),
     sectionBasics("shows"),
     group("Übersicht", [cal], {
@@ -474,7 +481,18 @@ export function renderShows() {
           ticketLabel: "Tickets",
           status: "confirmed",
         },
-        titleOf: (i) => [i.date, i.name].filter(Boolean).join("  ·  ") || "(neuer Termin)",
+        /* Die Kartenbeschriftung sagt auch, was die Website daraus macht:
+           ohne "Event / Club" wird ein Termin dort gar nicht angezeigt, und
+           ein vergangener steht nur noch bei den Referenzen. Beides war
+           vorher unsichtbar — der Termin stand in der Verwaltung, auf der
+           Seite fehlte er. */
+        titleOf: (i) => {
+          const name = String(i?.name || "").trim();
+          const teile = [i.date, name].filter(Boolean).join("  ·  ") || "(neuer Termin)";
+          if (!name) return `${teile}  ·  ohne „Event / Club“ — nicht auf der Website`;
+          if (i.date && i.date < today) return `${teile}  ·  vorbei — steht bei den Referenzen`;
+          return teile;
+        },
         emptyText: "Noch keine Termine — der Shows-Abschnitt und sein Menüpunkt bleiben dann vollständig verborgen.",
         onChange: () => cal._redraw(),
         fields: (base) => [
@@ -496,11 +514,11 @@ export function renderShows() {
           textField(`${base}.ticketLabel`, "Button-Text", { placeholder: "Tickets" }),
         ],
       }),
-    ]),
-    group("Darstellung auf der Website", [
-      textField("sections.shows.pastLabel", "Beschriftung „vergangene Shows“"),
     ], {
-      hint: "Der Abschnitt erscheint erst, sobald oben mindestens ein echter Termin angelegt ist. Der Kalender im Booking-Formular bleibt für Wunschanfragen trotzdem verfügbar.",
+      hint:
+        "„Event / Club“ ist Pflicht: ohne Namen zeigt die Website den Termin nicht an. " +
+        "Ist der Tag vorbei, verschwindet der Termin unter „Shows“ und erscheint stattdessen " +
+        "bei den Referenzen — hier in der Verwaltung bleibt er stehen.",
     }),
   ]);
 }
