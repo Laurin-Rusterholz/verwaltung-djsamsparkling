@@ -32,6 +32,9 @@ export const S = {
   nachgetragen: [],
   /* Ob das Nachgetragene von selbst gespeichert werden konnte. */
   nachgetragenGespeichert: false,
+  /* Darf die WEBSITE den Inhalt lesen?  null = noch nicht geprüft,
+     {ok:true} = ja, {ok:false, status:401} = nein. Siehe websiteZugriff(). */
+  websiteLesbar: null,
 };
 
 let db = null;
@@ -222,6 +225,9 @@ export async function loadAll() {
     emit("inquiries");
   });
 
+  // Nebenher: darf die Website den Inhalt überhaupt lesen? (siehe websiteZugriff)
+  websiteZugriff();
+
   emit("loaded");
 }
 
@@ -368,6 +374,40 @@ function normalize(c) {
     if (!c.layout.includes(k)) c.layout.push(k);
   });
   return c;
+}
+
+/* ------------------------------------------------- kann die Website lesen? */
+
+/**
+ * Der Website-Build liest den Inhalt OHNE Anmeldung über die REST-Adresse der
+ * Realtime Database. Genau dieser Weg war vom 13.08. bis zum 01.09.2026 zu:
+ * die Regeln in der Firebase Console erlaubten "samsparking/content" nicht
+ * mehr öffentlich zu lesen, der Build bekam HTTP 401 und baute jedes Mal aus
+ * seinem letzten Schnappschuss weiter.
+ *
+ * In der Verwaltung war davon nichts zu sehen — sie liest angemeldet und
+ * schreibt auch weiterhin brav in die Datenbank. Speichern und Publizieren
+ * meldeten Erfolg, die Website blieb drei Wochen auf dem Stand vom 13. August.
+ *
+ * Darum prüft die Verwaltung denselben Weg, den die Website geht: einmal ohne
+ * Anmeldung, mit `shallow=true` (die Antwort ist dann nur eine Liste der
+ * obersten Schlüssel, nicht der ganze Inhalt).
+ *
+ * Gemeldet wird nur ein EINDEUTIGES Nein — eine Antwort des Servers, die nicht
+ * "ok" ist. Ein abgebrochener Aufruf (kein Netz, Browser-Erweiterung) heisst
+ * "unbekannt" und wird verschwiegen: ein falscher Alarm wäre schlimmer als
+ * keiner.
+ */
+export async function websiteZugriff() {
+  try {
+    const url = `${RTDB_URL}/${PATHS.content}.json?shallow=true`;
+    const res = await fetch(url, { cache: "no-store" });
+    S.websiteLesbar = res.ok ? { ok: true } : { ok: false, status: res.status };
+  } catch (e) {
+    S.websiteLesbar = null; // unbekannt — nicht als Fehler zeigen
+  }
+  emit("websiteLesbar");
+  return S.websiteLesbar;
 }
 
 /* --------------------------------------------------------------- speichern */
