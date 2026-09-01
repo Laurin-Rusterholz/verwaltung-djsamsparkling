@@ -19,6 +19,7 @@ import {
   restoreVersion,
   resetToDefaults,
   onChange,
+  websiteZugriff,
 } from "./store.js";
 import {
   renderDesign,
@@ -145,6 +146,13 @@ function checklist() {
   const items = [];
   const add = (ok, text, target) => items.push({ ok, text, target });
 
+  add(
+    S.websiteLesbar?.ok !== false,
+    S.websiteLesbar?.ok === false
+      ? `Die Website darf den Inhalt lesen (zurzeit NEIN — HTTP ${S.websiteLesbar.status})`
+      : "Die Website darf den Inhalt lesen",
+    "publish"
+  );
   add(!!S.config.buildHook, "Netlify-Build-Hook hinterlegt (sonst wirkt Publizieren nicht)", "settings");
   add(
     (c.site.description || "").length >= 120 && (c.site.description || "").length <= 170,
@@ -202,6 +210,45 @@ function checklist() {
   ]);
 }
 
+/**
+ * Warnung, wenn die WEBSITE den Inhalt nicht mehr lesen darf.
+ *
+ * Der Website-Build holt den Stand ohne Anmeldung über die REST-Adresse der
+ * Datenbank. Ist dieser Weg zu, speichert und publiziert die Verwaltung
+ * weiterhin fehlerfrei — die Website baut aber stumm aus ihrem letzten Abzug
+ * weiter. Genau so stand sie vom 13.08. bis zum 01.09.2026 drei Wochen still,
+ * ohne dass irgendwo ein Fehler zu sehen war.
+ *
+ * Gibt null zurück, solange die Prüfung läuft oder gut ausgeht.
+ */
+function websiteLesbarWarnung() {
+  if (S.websiteLesbar?.ok !== false) return null;
+  const status = S.websiteLesbar.status;
+  return el("div", { class: "warn-box" }, [
+    el("strong", {}, `Die Website kann den Inhalt nicht lesen (HTTP ${status}).`),
+    el(
+      "p",
+      {},
+      "Speichern und Publizieren gehen weiterhin durch — die Website baut aber aus ihrem " +
+        "letzten Abzug weiter, und nichts davon wird sichtbar. Das muss einmal in Firebase " +
+        "gerichtet werden:"
+    ),
+    el("p", {}, [
+      "Firebase Console → Realtime Database → Regeln: unter ",
+      el("code", {}, "samsparking"),
+      " brauchen ",
+      el("code", {}, "content"),
+      " und ",
+      el("code", {}, "media"),
+      " wieder ",
+      el("code", {}, '".read": true'),
+      ". Die fertige Vorlage steht im Repo der Verwaltung unter ",
+      el("code", {}, "firebase/database.rules.json"),
+      " — sie wird nirgends automatisch ausgerollt.",
+    ]),
+  ]);
+}
+
 function renderDashboard() {
   const c = S.content;
   const today = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Zurich" }).format(new Date());
@@ -219,6 +266,7 @@ function renderDashboard() {
         el("p", { class: "muted" }, "Alles über Sam Sparking an einem Ort."),
       ]),
     ]),
+    websiteLesbarWarnung(),
     el("div", { class: "stats" }, [
       statCard(
         "Stand",
@@ -364,6 +412,7 @@ function renderPublish() {
         ),
       ]),
     ]),
+    websiteLesbarWarnung(),
     el("div", { class: "group" }, [
       el("div", { class: "quick" }, [
         el("button", { class: "btn solid", onclick: doPublish }, "Jetzt publizieren"),
@@ -602,7 +651,20 @@ async function doPublish() {
     btn.textContent = "publiziere …";
   }
   try {
+    /* Vor der Erfolgsmeldung nachsehen, ob die Website den Inhalt ueberhaupt
+       lesen darf. Ist der Weg zu, ist "Publiziert" schlicht falsch: gespeichert
+       ist der Stand, sichtbar wird er nicht. */
     const res = await publish();
+    await websiteZugriff();
+    if (S.websiteLesbar?.ok === false) {
+      toast(
+        `Gespeichert — aber die Website kann den Inhalt nicht lesen (HTTP ${S.websiteLesbar.status}). ` +
+          "Sie baut aus ihrem letzten Abzug weiter, die Änderung wird nicht sichtbar. " +
+          "Was zu tun ist, steht oben auf dieser Seite.",
+        "err"
+      );
+      return;
+    }
     if (res.built) toast("Publiziert — Netlify baut die Website neu (1–2 Minuten)");
     else if (/Build-Hook/.test(res.reason || ""))
       /* Kein Versprechen mehr auf eine Stunde: ohne Build-Hook haengt die
@@ -926,6 +988,7 @@ function bindStoreEvents() {
       else updateTopbar();
     }
     if (what === "loaded" && S.ready && $("#main")) renderShell();
+    if (what === "websiteLesbar" && (currentId === "dashboard" || currentId === "publish")) render();
   });
 
   // Tastatur: Strg/Cmd+S speichert
