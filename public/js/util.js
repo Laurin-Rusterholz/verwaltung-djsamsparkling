@@ -66,13 +66,23 @@ export function withDefaults(target, defaults) {
  * damit bleiben keine leeren Felder im Datensatz haengen. Arrays behalten
  * ihre Laenge (dort wuerde null Loecher reissen → leerer String bleibt).
  */
-export function pruneForRtdb(value) {
-  if (Array.isArray(value)) return value.map((v) => (Array.isArray(v) || (v && typeof v === "object") ? pruneForRtdb(v) : v === undefined ? "" : v));
+export function pruneForRtdb(value, imArray = false) {
+  if (Array.isArray(value))
+    return value.map((v) =>
+      Array.isArray(v) || (v && typeof v === "object") ? pruneForRtdb(v, true) : v === undefined ? "" : v
+    );
   if (value && typeof value === "object") {
     const out = {};
     for (const [k, v] of Object.entries(value)) {
-      const p = Array.isArray(v) || (v && typeof v === "object") ? pruneForRtdb(v) : v;
-      out[k] = p === "" || p === undefined ? null : p;
+      const p = Array.isArray(v) || (v && typeof v === "object") ? pruneForRtdb(v, false) : v;
+      /* INNERHALB einer Liste bleibt ein leeres Feld ein leeres Feld. Sonst
+         wird es zu null, die Datenbank speichert es nicht — und ein Eintrag,
+         bei dem nur leere Felder ausgefuellt sind, faellt ganz weg. Aus der
+         Liste wird dann ein Objekt mit Loechern, und ein Termin ist verloren.
+         Ausserhalb von Listen bleibt es bei null: dort raeumt das auf. */
+      if (p === undefined) out[k] = imArray ? "" : null;
+      else if (p === "") out[k] = imArray ? "" : null;
+      else out[k] = p;
     }
     return out;
   }
