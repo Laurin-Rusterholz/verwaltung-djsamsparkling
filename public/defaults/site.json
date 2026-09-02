@@ -1290,6 +1290,14 @@
     "shop",
     "contact"
   ],
+  "migrationen": {
+    "kanaele": true,
+    "referenzen": true,
+    "shopInfo": true,
+    "telefon": true,
+    "ware": true,
+    "texteAusVorlage": true
+  },
   "pages": [
     {
       "slug": "",

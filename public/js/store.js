@@ -259,7 +259,7 @@ function detachListeners() {
  * Objekt ({"0":…,"2":…}) und lässt leere Arrays ganz weg. Beim Laden bauen wir
  * daraus wieder echte Arrays.
  */
-function normalize(c) {
+export function normalize(c) {
   const arrays = [
     "site.keywords",
     "hero.stats",
@@ -411,6 +411,18 @@ export async function saveConfig(patch) {
  * CORS-Header, die Antwort ist also nicht lesbar. Kommt der Aufruf durch, hat
  * Netlify den Build angenommen; sichtbar wird das im Netlify-Deploy-Log.
  */
+/**
+ * Sieht das nach einem Netlify-Build-Hook aus?
+ *
+ * Eigene Funktion, weil sie die einzige Stelle ist, an der sich vor dem
+ * Abschicken noch etwas pruefen laesst: der Aufruf selbst geht per no-cors
+ * hinaus, seine Antwort ist nicht lesbar. Eine vertippte oder fremde Adresse
+ * faellt sonst nirgends auf — "Publiziert" stuende da, und gebaut wuerde nie.
+ */
+export function istBuildHook(url) {
+  return /^https:\/\/api\.netlify\.com\/build_hooks\/[A-Za-z0-9_-]+/.test(String(url || "").trim());
+}
+
 export async function publish() {
   if (DEMO) {
     demoBlock("Publizieren");
@@ -435,7 +447,7 @@ export async function publish() {
     await saveConfig({ lastPublish: updatedAt, lastPublishHook: false });
     return { built: false, reason: "kein Build-Hook hinterlegt" };
   }
-  if (!/^https:\/\/api\.netlify\.com\/build_hooks\//.test(hook)) {
+  if (!istBuildHook(hook)) {
     await saveConfig({ lastPublish: updatedAt, lastPublishHook: false });
     return { built: false, reason: "Build-Hook sieht nicht wie eine Netlify-URL aus" };
   }
@@ -499,11 +511,15 @@ export async function deleteInquiry(id) {
 
 /* -------------------------------------------------------- warnung beim weg */
 
-window.addEventListener("beforeunload", (e) => {
-  if (S.dirty && !DEMO) {
-    e.preventDefault();
-    e.returnValue = "";
-  }
-});
+/* Nur im Browser: die Datei wird auch von den Tests geladen (node --test),
+   dort gibt es kein window. */
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeunload", (e) => {
+    if (S.dirty && !DEMO) {
+      e.preventDefault();
+      e.returnValue = "";
+    }
+  });
+}
 
 export { toast };
