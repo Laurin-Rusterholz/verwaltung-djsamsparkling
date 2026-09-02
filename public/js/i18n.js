@@ -51,8 +51,14 @@ const looksTechnical = (v) =>
 /* Und `sections.references.items.*`: Clubs, Festivals und Orte heissen in jeder
    Sprache gleich. Uebersetzt man sie, haengt die Tabelle am PLATZ in der Liste —
    kommt vorne ein Eintrag dazu, traegt ploetzlich der falsche Club den Namen. */
+/* `sections.shows.items.*` seit dem 02.09.2026 ebenso: ein Termin ist ein
+   Datensatz, kein Text. Ort und Knopf-Aufschrift hingen ueber die Position am
+   Eintrag — wer einen Termin loeschte oder mit ↑ ↓ verschob, verschob die
+   Zuordnung gleich mit, und ein NEU angelegter Termin erbte auf /de/ und /fr/
+   den Ort seines Vorgaengers. Muss mit NO_TRANSLATE_PATH in
+   s-mi/scripts/build.mjs uebereinstimmen. */
 const NO_TRANSLATE_PATH =
-  /^layout\.|^pages\.\d+\.sections\.|^pages\.\d+\.hero$|^sections\.contact\.socials\.|^sections\.references\.items\.|^imprint\./;
+  /^layout\.|^pages\.\d+\.sections\.|^pages\.\d+\.hero$|^sections\.contact\.socials\.|^sections\.references\.items\.|^sections\.shows\.items\.|^imprint\./;
 
 export function collectStrings(node, prefix = "", out = []) {
   if (prefix && NO_TRANSLATE_PATH.test(prefix)) return out;

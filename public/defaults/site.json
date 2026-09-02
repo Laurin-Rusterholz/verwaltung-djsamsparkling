@@ -1068,7 +1068,8 @@
     "referenzen": true,
     "shopInfo": true,
     "telefon": true,
-    "ware": true
+    "ware": true,
+    "texteAusVorlage": true
   },
   "pages": [
     {
