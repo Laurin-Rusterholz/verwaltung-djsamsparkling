@@ -559,7 +559,9 @@ export function renderReferences() {
       hint:
         "Alle Referenzen erscheinen auf der Website im selben Stil, fortlaufend in " +
         "genau dieser Reihenfolge — mit ↑ ↓ verschiebst du einen Eintrag. Was oben " +
-        "steht, steht auch auf der Website oben.",
+        "steht, steht auch auf der Website oben. Steht ein Auftritt auf derselben " +
+        "Seite schon als Termin im Rückblick, lässt die Website ihn hier weg — " +
+        "damit er nicht zweimal dasteht. Der Eintrag bleibt hier erhalten.",
     }),
     /* Das Häkchen „Gross zeigen" ist am 11.08.2026 weggefallen. Es hat eine
        zweite Rangfolge neben dieser Liste aufgemacht: wer hier etwas nach oben
