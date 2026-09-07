@@ -571,9 +571,11 @@ export function renderReferences() {
       }),
     ], {
       hint:
-        "Zwei Stufen: die hervorgehobenen ganz oben als grosse Zeilen, alles " +
-        "Weitere darunter kleiner und nach Bündeln sortiert. So bleibt die " +
-        "Liste vollständig, ohne den Abschnitt zu erschlagen.",
+        "Alle Referenzen erscheinen auf der Website im selben Stil, fortlaufend in " +
+        "genau dieser Reihenfolge — mit ↑ ↓ verschiebst du einen Eintrag. Was oben " +
+        "steht, steht auch auf der Website oben. Steht ein Auftritt auf derselben " +
+        "Seite schon als Termin im Rückblick, lässt die Website ihn hier weg — " +
+        "damit er nicht zweimal dasteht. Der Eintrag bleibt hier erhalten.",
     }),
     group("Abschlusszeile", [
       textField("sections.references.note", "Text"),
