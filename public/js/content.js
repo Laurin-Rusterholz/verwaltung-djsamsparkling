@@ -462,7 +462,7 @@ export function renderShows() {
         upcoming === 1 ? "" : "e"
       }${vorbei ? `, ${vorbei} vorbei` : ""}${
         ohneName ? `, ${ohneName} ohne Namen` : ""
-      } — die Website zeigt unter „Shows“ nur kommende Termine. Was vorbei ist, wandert von selbst zu den Referenzen; ohne einen kommenden Termin verschwindet der Shows-Abschnitt samt Menüpunkt von der Website.`
+      } — die Website zeigt kommende Termine oben, vergangene darunter im Rückblick. Beide bleiben sichtbar; der Abschnitt verschwindet erst, wenn gar kein Termin mehr eingetragen ist.`
     ),
     sectionBasics("shows"),
     group("Übersicht", [cal], {
@@ -490,10 +490,13 @@ export function renderShows() {
           const name = String(i?.name || "").trim();
           const teile = [i.date, name].filter(Boolean).join("  ·  ") || "(neuer Termin)";
           if (!name) return `${teile}  ·  ohne „Event / Club“ — nicht auf der Website`;
-          if (i.date && i.date < today) return `${teile}  ·  vorbei — steht bei den Referenzen`;
+          if (i.date && i.date < today) return `${teile}  ·  vorbei — steht im Rückblick`;
           return teile;
         },
-        emptyText: "Noch keine Termine — der Shows-Abschnitt und sein Menüpunkt bleiben dann vollständig verborgen.",
+        emptyText: "Noch keine Termine — erst dann bleiben der Shows-Abschnitt und sein Menüpunkt auf der Website verborgen.",
+        hint:
+          "Die Reihenfolge hier spielt keine Rolle: auf der Website stehen die " +
+          "kommenden Termine immer chronologisch, bei gleichem Datum nach Uhrzeit.",
         onChange: () => cal._redraw(),
         fields: (base) => [
           textField(`${base}.date`, "Datum", { type: "date" }),
@@ -517,8 +520,20 @@ export function renderShows() {
     ], {
       hint:
         "„Event / Club“ ist Pflicht: ohne Namen zeigt die Website den Termin nicht an. " +
-        "Ist der Tag vorbei, verschwindet der Termin unter „Shows“ und erscheint stattdessen " +
-        "bei den Referenzen — hier in der Verwaltung bleibt er stehen.",
+        "Ist der Tag vorbei, rutscht der Termin auf der Website von der oberen Liste in " +
+        "den Rückblick darunter — sichtbar bleibt er.",
+    }),
+    group("Rückblick auf der Website", [
+      textField("sections.shows.pastLabel", "Überschrift über den vergangenen Terminen", {
+        placeholder: "Vergangene Shows",
+      }),
+    ], {
+      hint:
+        "Vergangene Termine stehen auf der Website unter den kommenden, mit dieser " +
+        "Überschrift und dem jüngsten zuerst — offen sichtbar, ohne Aufklappen, und ohne " +
+        "Ticket-Knopf. Leer lassen: dann steht dort „Vergangene Shows“ (bzw. „Past shows“, " +
+        "„Concerts passés“). Der Abschnitt bleibt auf der Website, solange überhaupt ein " +
+        "Termin eingetragen ist — auch wenn alle vorbei sind.",
     }),
   ]);
 }
