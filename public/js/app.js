@@ -14,6 +14,7 @@ import {
   loadAll,
   saveContent,
   saveConfig,
+  istBuildHook,
   publish,
   listVersions,
   restoreVersion,
@@ -588,12 +589,27 @@ function renderSettings() {
         {
           class: "btn solid",
           onclick: async () => {
+            /* Die Adresse hier pruefen, nicht erst beim Publizieren. Der
+               Build-Hook geht spaeter per no-cors hinaus — seine Antwort ist
+               nicht lesbar, eine vertippte oder fremde Adresse faellt also
+               nirgends mehr auf. Hier ist die letzte Stelle, an der sich das
+               sagen laesst. */
+            const hook = hookInput.value.trim();
+            if (hook && !istBuildHook(hook)) {
+              toast(
+                "Das sieht nicht nach einem Netlify-Build-Hook aus. Erwartet wird " +
+                  "https://api.netlify.com/build_hooks/… — in Netlify unter " +
+                  "Site configuration → Build & deploy → Build hooks.",
+                "err"
+              );
+              return;
+            }
             try {
               await saveConfig({
-                buildHook: hookInput.value.trim(),
+                buildHook: hook,
                 siteUrl: siteInput.value.trim() || DEFAULT_SITE_URL,
               });
-              toast("Einstellungen gespeichert");
+              toast(hook ? "Einstellungen gespeichert" : "Einstellungen gespeichert — ohne Build-Hook");
               render();
             } catch (e) {
               toast("Nicht gespeichert: " + e.message, "err");

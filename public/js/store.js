@@ -433,12 +433,21 @@ export async function saveContent() {
 }
 
 export async function saveConfig(patch) {
-  Object.assign(S.config, patch);
   if (DEMO) {
+    Object.assign(S.config, patch);
     emit("config");
     return;
   }
+  /* ERST schreiben, DANN merken.
+     Bis zum 13.09.2026 stand die Zuweisung oben — der Zustand im Browser trug
+     den neuen Wert also auch dann, wenn der Schreibgang scheiterte (etwa bei
+     abgelaufener Sitzung: permission_denied). Die Oberflaeche meldete
+     "Nicht gespeichert", die Pruefliste daneben aber "Build-Hook hinterlegt",
+     und das naechste Publizieren stiess einen Hook an, den die Datenbank gar
+     nicht kannte. Nach dem naechsten Laden war er wieder weg — ohne dass
+     irgendetwas davon erzaehlt haette. */
   await db.ref(PATHS.config).update(pruneForRtdb(patch));
+  Object.assign(S.config, patch);
   emit("config");
 }
 
