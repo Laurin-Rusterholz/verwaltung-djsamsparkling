@@ -9,6 +9,9 @@ import {
   abschnittsModell,
   aufMehrseitigStellen,
   zielSeiteFuer,
+  fehlendeStartseitenAuftritte,
+  aufStartseiteHolen,
+  nichtBaubarAufSeiten,
 } from "./abschnitte.js";
 import {
   textField,
@@ -1350,6 +1353,59 @@ export function renderLayout() {
             "Auf das Mehrseiten-Modell umstellen"
           ),
         ])
+      );
+    }
+
+    /* Die Startseite ohne Auftritte — Kundenbefund vom 13.09.2026. Gemeldet
+       wird hier, korrigiert auch: ein Klick trägt Shows und Referenzen auf der
+       Startseite nach. Geschrieben wird erst beim Speichern, und der Generator
+       erzwingt nichts — sonst wäre die Zuordnung hier eine Attrappe. */
+    const fehlendeAuftritte = fehlendeStartseitenAuftritte(S.content);
+    if (fehlendeAuftritte.length) {
+      const namen = fehlendeAuftritte
+        .map((k) => (S.content.sections[k] && S.content.sections[k].navLabel) || k)
+        .join(" und ");
+      hinweis.appendChild(
+        el("div", { class: "warn-box" }, [
+          el("strong", {}, "Die Startseite zeigt " + namen + " nicht. "),
+          el("span", {}, [
+            "Die Einträge sind vollständig da — sie stehen nur auf einer anderen Seite. ",
+            "Auf der Startseite geht es dadurch direkt weiter zum nächsten Abschnitt.",
+          ]),
+          el(
+            "button",
+            {
+              class: "btn sm",
+              onclick: () => {
+                const geholt = aufStartseiteHolen(S.content);
+                if (!geholt.length) {
+                  toast("Es gab nichts nachzutragen.", "err");
+                  return;
+                }
+                markDirty();
+                toast("Auf der Startseite nachgetragen — noch nicht gespeichert.");
+                render();
+              },
+            },
+            "Auf die Startseite holen"
+          ),
+        ])
+      );
+    }
+
+    /* Ein Abschnitt auf einer Seite, den der Generator nicht baut: in der
+       Liste sieht die Seite voller aus, als sie gebaut wird. Genau das
+       verdeckte den Befund — auf der Startseite stand „sound". */
+    const tot = nichtBaubarAufSeiten(S.content);
+    if (tot.length) {
+      hinweis.appendChild(
+        el(
+          "p",
+          { class: "warn-box" },
+          "Auf einer Seite eingeplant, aber nicht mehr Teil der Website: " +
+            tot.map((t) => t.key + " (" + t.seite + ")").join(", ") +
+            " — diese Abschnitte werden nicht gebaut und zählen auf der Seite nicht mit."
+        )
       );
     }
 
