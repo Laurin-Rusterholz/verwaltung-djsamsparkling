@@ -112,6 +112,106 @@ export function aufMehrseitigStellen(content, defaults) {
   return true;
 }
 
+/* ==========================================================================
+   Die Startseite und ihre Auftritte
+
+   BEFUND (Kunde, 13.09.2026): Auf der Website ging es von „Über mich" direkt
+   zum Shop — Shows und Referenzen fehlten. Nichts war gelöscht: beide standen
+   mit allen Einträgen auf /shows/, und auf der Startseite standen sie nicht
+   mehr. Bis zum 02.09.2026 hatte der Generator die Seitenaufteilung bei JEDEM
+   Bauen aus seiner eingecheckten Vorlage überschrieben und damit die Startseite
+   immer wieder mit Shows und Referenzen bestückt; seit s-mi #29 gilt — richtig
+   so — was hier in der Verwaltung steht. Damit wurde sichtbar, was hier
+   gespeichert war.
+
+   Diese Verwaltung ist die massgebliche Quelle. Deshalb wird die Lage hier
+   gemeldet und hier korrigiert: ein Klick trägt die Abschnitte auf der
+   Startseite nach, gespeichert und publiziert wie jede andere Änderung. Der
+   Generator erzwingt nichts — sonst wäre der Schalter wieder eine Attrappe.
+   ========================================================================== */
+
+/** Was auf der Startseite stehen soll, solange nichts anderes entschieden ist. */
+export const STARTSEITEN_AUFTRITTE = ["shows", "references"];
+
+/** Die Startseite ist die Seite ohne Adresszusatz. */
+export function startseiteVon(content) {
+  return (content.pages || []).find((p) => String(p?.slug || "") === "") || null;
+}
+
+const hatInhalt = (content, key) => {
+  const sec = (content.sections || {})[key];
+  if (!sec) return false;
+  if (!Array.isArray(sec.items)) return true;   // Abschnitte ohne Liste zählen als vorhanden
+  return sec.items.some((i) => String((i && i.name) || "").trim());
+};
+
+/**
+ * Welche Auftritts-Abschnitte auf der Startseite fehlen — baubar, eingeschaltet
+ * und mit Inhalt, aber nicht auf der Startseite. Dass sie zusätzlich auf einer
+ * eigenen Seite stehen, ist kein Grund: auf der Startseite sollen sie ebenfalls
+ * erscheinen.
+ */
+export function fehlendeStartseitenAuftritte(content) {
+  const start = startseiteVon(content);
+  if (!start) return [];
+  const drauf = new Set(start.sections || []);
+  const sections = content.sections || {};
+  return STARTSEITEN_AUFTRITTE.filter(
+    (key) =>
+      BAUBAR.includes(key) &&
+      sections[key] &&
+      sections[key].enabled !== false &&
+      hatInhalt(content, key) &&
+      !drauf.has(key)
+  );
+}
+
+/**
+ * Abschnitte, die auf einer Seite stehen, die der Generator aber nicht baut.
+ * Genau das verdeckte den Befund: auf der Startseite stand „sound" — in der
+ * Liste sah sie nach drei Abschnitten aus, gebaut wurden zwei.
+ */
+export function nichtBaubarAufSeiten(content) {
+  const aus = [];
+  for (const p of content.pages || []) {
+    for (const key of p.sections || []) {
+      if (!BAUBAR.includes(key)) aus.push({ key, seite: seitenName(p), seiteSlug: p.slug });
+    }
+  }
+  return aus;
+}
+
+/**
+ * Die Abschnitte auf der Startseite nachtragen — ERGÄNZEN, NIE ERSETZEN.
+ * Eingefügt wird direkt hinter „about" (dort standen sie bis zum 02.09.2026);
+ * gibt es kein „about", kommen sie ans Ende. Andere Seiten, die Reihenfolge der
+ * übrigen Abschnitte und jeder Inhalt bleiben unangetastet.
+ * Rückgabe: die tatsächlich nachgetragenen Schlüssel.
+ */
+export function aufStartseiteHolen(content, keys = null) {
+  const start = startseiteVon(content);
+  if (!start) return [];
+  const fehlend = (keys || fehlendeStartseitenAuftritte(content)).filter(
+    (k) => !(start.sections || []).includes(k)
+  );
+  if (!fehlend.length) return [];
+  if (!Array.isArray(start.sections)) start.sections = [];
+  /* Eingefügt wird hinter „about" — und hinter dem, was von den Auftritten
+     schon dasteht. Sonst rutschte ein nachgetragenes „references" vor ein
+     bereits vorhandenes „shows". */
+  const inOrdnung = STARTSEITEN_AUFTRITTE.filter((k) => fehlend.includes(k));
+  for (const key of inOrdnung) {
+    const anker = ["about"].concat(STARTSEITEN_AUFTRITTE.slice(0, STARTSEITEN_AUFTRITTE.indexOf(key)));
+    const letzter = anker.reduce((max, a) => Math.max(max, start.sections.indexOf(a)), -1);
+    start.sections.splice(letzter >= 0 ? letzter + 1 : start.sections.length, 0, key);
+  }
+  /* Im Layout muss jeder Abschnitt vorkommen, sonst zählt die Verwaltung ihn
+     nicht mit. Angehängt wird nur, was fehlt — die Reihenfolge bleibt sonst. */
+  if (!Array.isArray(content.layout)) content.layout = [];
+  for (const k of inOrdnung) if (!content.layout.includes(k)) content.layout.push(k);
+  return inOrdnung;
+}
+
 /**
  * Wohin ein wieder eingeschalteter Abschnitt gehört: auf SEINE Seite, wenn er
  * eine hat (Booking auf /booking/, Shop auf /shop/), sonst auf die Startseite.

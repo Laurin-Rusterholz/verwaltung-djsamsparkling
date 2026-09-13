@@ -17,6 +17,10 @@ import {
   BAUBAR,
   abschnittsModell,
   aufMehrseitigStellen,
+  aufStartseiteHolen,
+  fehlendeStartseitenAuftritte,
+  nichtBaubarAufSeiten,
+  startseiteVon,
   zielSeiteFuer,
 } from "../public/js/abschnitte.js";
 
@@ -199,6 +203,101 @@ pruefe("Werks-Stand traegt die veroeffentlichte Ware, aber keine Zahlungsadresse
 pruefe("BAUBAR deckt sich mit den Abschnitten des Werks-Stands", () => {
   const drauf = new Set(werksstand.pages.flatMap((p) => p.sections || []));
   for (const k of drauf) assert.ok(BAUBAR.includes(k), `${k} steht auf einer Seite, ist aber nicht baubar`);
+});
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Die Startseite ohne Auftritte — Kundenbefund vom 13.09.2026
+
+   Auf der Website ging es von „Über mich" direkt zum Shop. Nichts war
+   gelöscht: Shows und Referenzen standen vollständig auf /shows/ und auf der
+   Startseite gar nicht. Genau dieser Stand steht unten — nachgebaut aus dem
+   veröffentlichten Inhalt (s-mi content/site.json, main), aber mit
+   Beispielnamen statt echter Kundendaten.
+   ══════════════════════════════════════════════════════════════════════════ */
+const STAND_13_09 = () => ({
+  layout: ["about", "sound", "shows", "references", "gallery", "booking", "contact", "shop"],
+  pages: [
+    { slug: "", navLabel: "Home", sections: ["about", "sound", "shop"] },
+    { slug: "shows", navLabel: "Shows", sections: ["shows", "references"] },
+    { slug: "gallery", navLabel: "Gallery", sections: ["gallery"] },
+    { slug: "booking", navLabel: "Booking", sections: ["booking", "contact"] },
+    { slug: "shop", navLabel: "Shop", sections: ["shop"] },
+  ],
+  sections: {
+    about: { navLabel: "About" },
+    sound: { navLabel: "Sound" },
+    shows: { navLabel: "Shows", items: [{ name: "Beispielclub", city: "Beispielstadt" }] },
+    references: { navLabel: "Referenzen", items: [{ name: "Beispielhalle", city: "Beispielstadt" }] },
+    gallery: { navLabel: "Galerie" },
+    booking: { navLabel: "Booking" },
+    contact: { navLabel: "Kontakt" },
+    shop: { navLabel: "Shop" },
+  },
+});
+
+pruefe("der Befund wird erkannt: Startseite ohne Shows und Referenzen", () => {
+  assert.deepEqual(fehlendeStartseitenAuftritte(STAND_13_09()), ["shows", "references"]);
+});
+
+pruefe("ein nicht baubarer Abschnitt auf der Startseite wird benannt", () => {
+  const tot = nichtBaubarAufSeiten(STAND_13_09());
+  assert.deepEqual(tot.map((t) => t.key), ["sound"]);
+  assert.equal(tot[0].seite, "Home");   // seitenName nimmt die Beschriftung der Seite
+});
+
+pruefe("nachtragen setzt beide hinter „Über mich“ — und sonst nichts", () => {
+  const c = STAND_13_09();
+  const geholt = aufStartseiteHolen(c);
+  assert.deepEqual(geholt, ["shows", "references"]);
+  assert.deepEqual(startseiteVon(c).sections, ["about", "shows", "references", "sound", "shop"]);
+  // Die eigene Seite bleibt, wie sie war — dort stehen sie weiterhin.
+  assert.deepEqual(c.pages[1].sections, ["shows", "references"]);
+  assert.deepEqual(c.pages[3].sections, ["booking", "contact"]);
+  // Inhalte werden nicht angefasst.
+  assert.equal(c.sections.shows.items.length, 1);
+  assert.equal(c.sections.references.items[0].name, "Beispielhalle");
+  assert.deepEqual(fehlendeStartseitenAuftritte(c), []);
+});
+
+pruefe("zweimal nachtragen ändert nichts mehr", () => {
+  const c = STAND_13_09();
+  aufStartseiteHolen(c);
+  const vorher = JSON.stringify(c);
+  assert.deepEqual(aufStartseiteHolen(c), []);
+  assert.equal(JSON.stringify(c), vorher, "der zweite Klick hat etwas verändert");
+});
+
+pruefe("wer den Abschnitt bewusst ausschaltet, behält das letzte Wort", () => {
+  const c = STAND_13_09();
+  c.sections.shows.enabled = false;
+  assert.deepEqual(fehlendeStartseitenAuftritte(c), ["references"]);
+  assert.deepEqual(aufStartseiteHolen(c), ["references"]);
+  assert.ok(!startseiteVon(c).sections.includes("shows"), "ein ausgeschalteter Abschnitt wurde nachgetragen");
+});
+
+pruefe("ein leerer Abschnitt wird nicht nachgetragen", () => {
+  const c = STAND_13_09();
+  c.sections.references.items = [];
+  assert.deepEqual(fehlendeStartseitenAuftritte(c), ["shows"]);
+});
+
+pruefe("steht schon eines davon auf der Startseite, kommt nur das andere dazu", () => {
+  const c = STAND_13_09();
+  c.pages[0].sections = ["about", "shows", "shop"];
+  assert.deepEqual(fehlendeStartseitenAuftritte(c), ["references"]);
+  aufStartseiteHolen(c);
+  assert.deepEqual(startseiteVon(c).sections, ["about", "shows", "references", "shop"]);
+});
+
+pruefe("ohne Startseite passiert nichts", () => {
+  const c = STAND_13_09();
+  c.pages = c.pages.filter((p) => p.slug);
+  assert.deepEqual(fehlendeStartseitenAuftritte(c), []);
+  assert.deepEqual(aufStartseiteHolen(c), []);
+});
+
+pruefe("der Werks-Stand hat die Auftritte schon auf der Startseite", () => {
+  assert.deepEqual(fehlendeStartseitenAuftritte(JSON.parse(JSON.stringify(werksstand))), []);
 });
 
 console.log(
