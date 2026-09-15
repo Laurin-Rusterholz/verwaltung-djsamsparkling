@@ -13,24 +13,30 @@ gehören, nicht zum öffentlichen Auftritt.
 
 ---
 
-## Vor dem Einbau: zwei Angaben bitte bestätigen
+## Was drinsteht — und was bewusst nicht
 
-Beide Werte stammen aus dem bestehenden Projekt — geraten wurde nichts. An zwei
-Stellen sagt das Projekt allerdings Verschiedenes:
+Die Signatur nennt: **Sam Sparking**, **Hardstyle DJ & Producer**,
+`info@samsparking.ch`, `samsparking.ch` und die vier Kanäle (Instagram,
+Mixcloud, TikTok, Spotify). Alles davon steht so im Projekt; erfunden ist
+nichts.
 
-1. **Ort.** Im Impressum steht „Herisau, Schweiz", im Kontaktblock der Website
-   „St. Gallen, Switzerland". In der Signatur steht **Herisau, Schweiz**
-   (Impressum). Soll dort St. Gallen stehen, eine Zeile in beiden Dateien
-   ändern.
-2. **Adresse der Website.** In der Signatur steht die im Projekt hinterlegte
-   Adresse `djsamsparkling.netlify.app`. Sobald die eigene Domain live ist
-   (z. B. `samsparking.ch`), an beiden Stellen ersetzen — im `href` **und** im
-   sichtbaren Text.
+Drei Dinge fehlen mit Absicht:
 
-Eine **Telefonnummer** steht bewusst nicht drin: im Projekt ist keine
-hinterlegt. Soll eine hinein, sag welche — erfunden wird hier nichts.
+* **Ein Ortszusatz.** Das Projekt sagt an zwei Stellen Verschiedenes: im
+  Impressum „Herisau, Schweiz", im Kontaktblock der Website „St. Gallen,
+  Switzerland". Statt eine der beiden Angaben zur Wahrheit zu erklären, steht
+  in der Signatur keine. Soll ein Ort hinein, sag welcher — dann kommt er in
+  beide Dateien.
+* **Eine Telefonnummer.** Im Projekt ist keine hinterlegt.
+* **Ein Logo.** Siehe unten.
 
-Ein **Logo** ist bewusst nicht eingebaut. Klassisches Outlook blockiert
+Die Website-Adresse ist `https://samsparking.ch` — die eigene Domain ist seit
+dem 15.09.2026 live und zeigt die Seite. Die frühere Netlify-Adresse steht
+nirgends mehr.
+
+### Logo
+
+Ein Logo ist bewusst nicht eingebaut. Klassisches Outlook blockiert
 entfernte Bilder oft, bis der Empfänger sie erlaubt; bis dahin steht dort ein
 leerer Rahmen. Wenn ein Logo hinein soll, braucht es eine dauerhaft erreichbare
 Adresse und feste Masse:
