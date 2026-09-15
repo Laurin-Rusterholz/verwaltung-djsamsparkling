@@ -34,14 +34,23 @@ const STAND = () => ({
   hero: { tagline: "Turning energy into euphoria.", kicker: "Schon deutsch" },
   sections: {
     about: { title: "About", photo: { src: "https://beispiel.invalid/a.jpg" } },
-    shows: { items: [{ name: "Beispielclub", city: "Beispielstadt", date: "2026-09-05" }] },
+    shows: {
+      items: [
+        // vorbei: darf die gepflegte Referenz NICHT mehr aus der Liste nehmen
+        { name: "Beispielclub", city: "Beispielstadt", date: "2020-09-05" },
+        // kommend: steht schon als Termin auf der Seite
+        { name: "Kommender Club", city: "Beispielstadt", date: "2999-01-01" },
+      ],
+    },
     references: {
       items: [
         { name: "Erste Referenz", city: "Beispielstadt" },
-        { name: "Beispielclub", city: "Beispielstadt" },   // steht auch als Termin
+        { name: "Beispielclub", city: "Beispielstadt" },      // vergangener Termin — bleibt
         { name: "Zweite Referenz", city: "Beispielstadt" },
         { name: "Dritte Referenz", city: "Beispielstadt" },
+        { name: "Kommender Club", city: "Beispielstadt" },    // kommender Termin — nicht doppelt
         { name: "Vierte Referenz", city: "Beispielstadt" },
+        { name: "Erste Referenz", city: "Beispielstadt" },    // echte Dublette — einmal
         { name: "Fuenfte Referenz", city: "Beispielstadt" },
       ],
     },
@@ -109,14 +118,28 @@ test("Bilder ohne Datei werden benannt", () => {
 
 test("die Handy-Vorschau nennt genau die vier, die das Handy zeigt", () => {
   const h = handyVorschau(STAND());
+  /* KUNDENBEFUND 15.09.2026: „Beispielclub" ist eine gepflegte Referenz an
+     zweiter Stelle. Dass derselbe Abend im Rueckblick steht, darf ihn nicht aus
+     der Liste nehmen — sonst rutscht ein anderer Club auf seinen Platz, und
+     genau das verletzt „die wichtige Referenz muss unter den ersten vier
+     stehen". */
   assert.deepEqual(h.vorschau.map((r) => r.name), [
-    "Erste Referenz", "Zweite Referenz", "Dritte Referenz", "Vierte Referenz",
+    "Erste Referenz", "Beispielclub", "Zweite Referenz", "Dritte Referenz",
   ]);
-  assert.deepEqual(h.rest.map((r) => r.name), ["Fuenfte Referenz"]);
-  /* „Beispielclub" steht auf derselben Seite schon als Termin — die Website
-     lässt ihn bei den Referenzen weg und verschiebt damit die Vorschau. Genau
-     das muss hier sichtbar sein, sonst ordnet man blind. */
-  assert.deepEqual(h.weggelassen.map((r) => r.name), ["Beispielclub"]);
+  assert.deepEqual(h.rest.map((r) => r.name), ["Vierte Referenz", "Fuenfte Referenz"]);
+  /* Weggelassen wird nur, was schon als KOMMENDER Termin auf der Seite steht —
+     der kuendigte sich sonst zweimal an. */
+  assert.deepEqual(h.weggelassen.map((r) => r.name), ["Kommender Club"]);
+});
+
+test("eine echte Dublette in der Liste erscheint einmal", () => {
+  const h = handyVorschau(STAND(), { grenze: 10 });
+  const namen = h.vorschau.map((r) => r.name);
+  assert.equal(namen.filter((n) => n === "Erste Referenz").length, 1, "dieselbe Referenz steht zweimal da");
+  // Der erste Platz gilt — die Reihenfolge der Verwaltung bleibt.
+  assert.deepEqual(namen, [
+    "Erste Referenz", "Beispielclub", "Zweite Referenz", "Dritte Referenz", "Vierte Referenz", "Fuenfte Referenz",
+  ]);
 });
 
 test("ohne Shows auf derselben Seite wird nichts weggelassen", () => {

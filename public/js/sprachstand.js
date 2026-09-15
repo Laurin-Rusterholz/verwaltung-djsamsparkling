@@ -132,16 +132,39 @@ export function handyVorschau(content, { grenze = HANDY_VORSCHAU } = {}) {
     (text(name).trim().toLowerCase().replace(/[\s-]+/g, " ") + "|" +
       text(city).trim().toLowerCase().replace(/[\s-]+/g, " ")).trim();
   /* Auf einer Seite, die auch die Shows trägt, lässt die Website einen
-     Auftritt weg, der dort schon als Termin steht. */
+     KOMMENDEN Termin nicht zusätzlich als Referenz drucken — sonst kündigt die
+     Seite denselben Abend zweimal an.
+
+     VERGANGENE Termine zählen seit dem 15.09.2026 nicht mehr: bis dahin nahm
+     der Rückblick „Nox Club" aus der Referenzliste heraus, obwohl der Eintrag
+     dort ausdrücklich gepflegt ist — und damit rutschte auf dem Handy ein
+     anderer Club auf den dritten Platz. Der Rückblick ist eine Zeitangabe, die
+     Referenzliste eine Auswahl. */
   const seiteMitBeidem = (content?.pages || []).some(
     (p) => (p?.sections || []).includes("shows") && (p?.sections || []).includes("references")
   );
+  const heute = new Date().toISOString().slice(0, 10);
+  const vorbei = (s) => {
+    const d = text(s?.date).slice(0, 10);
+    return /^\d{4}-\d{2}-\d{2}$/.test(d) && d < heute;
+  };
   const shows = new Set(
     seiteMitBeidem
-      ? ((content?.sections?.shows?.items) || []).map((s) => schluessel(s?.name, s?.city))
+      ? ((content?.sections?.shows?.items) || [])
+          .filter((s) => text(s?.name).trim() && !vorbei(s))
+          .map((s) => schluessel(s?.name, s?.city))
       : []
   );
-  const sichtbar = liste.filter((r) => !shows.has(schluessel(r.name, r.city)));
+  /* Eine echte Dublette IN dieser Liste erscheint auf der Website einmal —
+     der erste Platz gilt. Gelöscht wird hier nichts. */
+  const gesehen = new Set();
+  const sichtbar = liste.filter((r) => {
+    if (shows.has(schluessel(r.name, r.city))) return false;
+    const key = schluessel(r.name, r.city);
+    if (gesehen.has(key)) return false;
+    gesehen.add(key);
+    return true;
+  });
   return {
     vorschau: sichtbar.slice(0, grenze),
     rest: sichtbar.slice(grenze),
