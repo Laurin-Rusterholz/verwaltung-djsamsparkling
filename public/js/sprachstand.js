@@ -119,9 +119,13 @@ export function bilderOhneDatei(content) {
  * Welche Referenzen auf dem HANDY zuerst stehen.
  *
  * Die Website zeigt dort die obersten vier, der Rest kommt über einen Knopf
- * (Kundenwunsch 12.08.2026). Wer hier ordnet, soll sehen, welche vier das sind
- * — und dass ein Auftritt, der auch als Termin gepflegt ist, auf einer Seite
- * mit Shows nur einmal erscheint und die Vorschau damit verschiebt.
+ * (Kundenwunsch 12.08.2026). Wer hier ordnet, soll sehen, welche vier das sind.
+ *
+ * Gegen die Termine wird dabei NICHTS gefiltert (Kundenentscheid 15.09.2026):
+ * die Referenzliste ist eine gepflegte Auswahl, und auch ein erneuter kommender
+ * Auftritt im selben Club darf die Referenz nicht entfernen. Die Vorschau zeigt
+ * deshalb genau das, was auf der Website steht — bis auf echte Dubletten IN
+ * dieser Liste, die dort einmal erscheinen.
  */
 export const HANDY_VORSCHAU = 4;
 
@@ -131,44 +135,29 @@ export function handyVorschau(content, { grenze = HANDY_VORSCHAU } = {}) {
   const schluessel = (name, city) =>
     (text(name).trim().toLowerCase().replace(/[\s-]+/g, " ") + "|" +
       text(city).trim().toLowerCase().replace(/[\s-]+/g, " ")).trim();
-  /* Auf einer Seite, die auch die Shows trägt, lässt die Website einen
-     KOMMENDEN Termin nicht zusätzlich als Referenz drucken — sonst kündigt die
-     Seite denselben Abend zweimal an.
-
-     VERGANGENE Termine zählen seit dem 15.09.2026 nicht mehr: bis dahin nahm
-     der Rückblick „Nox Club" aus der Referenzliste heraus, obwohl der Eintrag
-     dort ausdrücklich gepflegt ist — und damit rutschte auf dem Handy ein
-     anderer Club auf den dritten Platz. Der Rückblick ist eine Zeitangabe, die
-     Referenzliste eine Auswahl. */
-  const seiteMitBeidem = (content?.pages || []).some(
-    (p) => (p?.sections || []).includes("shows") && (p?.sections || []).includes("references")
-  );
-  const heute = new Date().toISOString().slice(0, 10);
-  const vorbei = (s) => {
-    const d = text(s?.date).slice(0, 10);
-    return /^\d{4}-\d{2}-\d{2}$/.test(d) && d < heute;
-  };
-  const shows = new Set(
-    seiteMitBeidem
-      ? ((content?.sections?.shows?.items) || [])
-          .filter((s) => text(s?.name).trim() && !vorbei(s))
-          .map((s) => schluessel(s?.name, s?.city))
-      : []
-  );
   /* Eine echte Dublette IN dieser Liste erscheint auf der Website einmal —
-     der erste Platz gilt. Gelöscht wird hier nichts. */
+     der erste Platz gilt. Gelöscht wird hier nichts.
+
+     Was hier NICHT mehr steht: bis zum 15.09.2026 nahm diese Vorschau jeden
+     Auftritt heraus, der auf derselben Seite auch als Termin gepflegt ist.
+     Genau dadurch fiel „Nox Club" weg, obwohl er in der Liste an dritter
+     Stelle steht — und auf dem Handy rutschte ein anderer Club auf seinen
+     Platz. Die Website filtert ebenfalls nicht mehr. */
   const gesehen = new Set();
+  const dubletten = [];
   const sichtbar = liste.filter((r) => {
-    if (shows.has(schluessel(r.name, r.city))) return false;
     const key = schluessel(r.name, r.city);
-    if (gesehen.has(key)) return false;
+    if (gesehen.has(key)) {
+      dubletten.push(r);
+      return false;
+    }
     gesehen.add(key);
     return true;
   });
   return {
     vorschau: sichtbar.slice(0, grenze),
     rest: sichtbar.slice(grenze),
-    weggelassen: liste.filter((r) => shows.has(schluessel(r.name, r.city))),
+    dubletten,
     grenze,
   };
 }
