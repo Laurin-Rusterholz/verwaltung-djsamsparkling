@@ -136,3 +136,64 @@ test("gemerkt wird erst, was wirklich gespeichert ist", async () => {
       "bei einem Fehlschlag stuende dann ein Hook in der Pruefliste, den es nicht gibt"
   );
 });
+
+/* ══════════════════════════════════════════════════════════════════════════
+   „Publiziert" war eine Behauptung — jetzt wird nachgesehen
+
+   Der Build-Hook geht per no-cors hinaus; seine Antwort ist im Browser nicht
+   lesbar. Angestossen heisst nicht gebaut, und gebaut heisst nicht MIT DIESEM
+   Inhalt. Die Website legt seit 15.09.2026 /stand.json ab (Zeitstempel des
+   Inhalts, aus dem gebaut wurde); pruefeLive() liest sie und vergleicht.
+   ══════════════════════════════════════════════════════════════════════════ */
+test("pruefeLive bestaetigt erst, wenn der eigene Stand oben ist", async () => {
+  const { pruefeLive, S } = await import("../public/js/store.js");
+  const echt = globalThis.fetch;
+  S.config = { siteUrl: "https://beispiel.invalid" };
+  try {
+    let n = 0;
+    globalThis.fetch = async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({ inhaltVon: ++n >= 3 ? "2026-09-15T08:30:00.000Z" : "2026-09-14T10:00:00.000Z" }),
+    });
+    const r = await pruefeLive("2026-09-15T08:30:00.000Z", { versuche: 5, abstandMs: 0, warten: async () => {} });
+    assert.equal(r.ok, true, "der eigene Stand wurde nicht als live erkannt");
+    assert.equal(n, 3, "es wurde nicht geduldig nachgesehen");
+  } finally {
+    globalThis.fetch = echt;
+  }
+});
+
+test("kommt der Stand nicht, wird nichts behauptet", async () => {
+  const { pruefeLive, S } = await import("../public/js/store.js");
+  const echt = globalThis.fetch;
+  S.config = { siteUrl: "https://beispiel.invalid" };
+  try {
+    globalThis.fetch = async () => ({ ok: true, status: 200, json: async () => ({ inhaltVon: "2026-09-14T10:00:00.000Z" }) });
+    const r = await pruefeLive("2026-09-15T08:30:00.000Z", { versuche: 2, abstandMs: 0, warten: async () => {} });
+    assert.equal(r.ok, false);
+    assert.equal(r.grund, "noch-nicht", "der offene Ausgang wird nicht als solcher benannt");
+
+    // Netzfehler heisst „unbekannt", nicht „falsch".
+    globalThis.fetch = async () => { throw new Error("Netz weg"); };
+    const r2 = await pruefeLive("2026-09-15T08:30:00.000Z", { versuche: 2, abstandMs: 0, warten: async () => {} });
+    assert.equal(r2.ok, false);
+    assert.equal(r2.grund, "noch-nicht");
+
+    // Eine Website ohne Stand-Datei: ehrlich sagen, dass sich nichts pruefen laesst.
+    globalThis.fetch = async () => ({ ok: false, status: 404, json: async () => ({}) });
+    const r3 = await pruefeLive("2026-09-15T08:30:00.000Z", { versuche: 3, abstandMs: 0, warten: async () => {} });
+    assert.equal(r3.grund, "keine-standdatei", "eine fehlende Stand-Datei wird nicht benannt");
+  } finally {
+    globalThis.fetch = echt;
+  }
+});
+
+test("die Oberflaeche behauptet kein „live“, bevor sie nachgesehen hat", async () => {
+  const app = ohneKommentare(await lies("public/js/app.js"));
+  assert.match(app, /Build angestossen/, "die Meldung verspricht weiterhin mehr, als der Aufruf weiss");
+  assert.ok(!/toast\("Publiziert —/.test(app), "es steht weiterhin „Publiziert“ da, ohne Nachweis");
+  assert.match(app, /pruefeLive\(/, "es wird gar nicht nachgesehen");
+  assert.match(app, /Live bestätigt/, "der bestaetigte Fall wird nicht benannt");
+  assert.match(app, /noch nicht oben/, "der unbestaetigte Fall wird nicht benannt");
+});

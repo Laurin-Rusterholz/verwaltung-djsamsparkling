@@ -509,6 +509,48 @@ export async function publish() {
   }
 }
 
+/**
+ * Ist der eben veroeffentlichte Stand wirklich oben?
+ *
+ * BEFUND (13.–15.09.2026): Der Build-Hook geht per no-cors hinaus; seine
+ * Antwort ist im Browser nicht lesbar. „Publiziert" war damit eine Behauptung:
+ * angestossen heisst nicht gebaut, und gebaut heisst nicht mit DIESEM Inhalt.
+ *
+ * Die Website legt seit 15.09.2026 beim Bauen `/stand.json` ab — darin steht
+ * der Zeitstempel des Inhalts, aus dem sie gebaut wurde. Hier wird sie
+ * gelesen und mit dem verglichen, was gerade gespeichert wurde. Erst wenn das
+ * uebereinstimmt, ist „live" mehr als eine Hoffnung.
+ *
+ * Bewusst geduldig und bewusst ergebnisoffen: ein Netlify-Build braucht rund
+ * eine Minute. Kommt in dieser Zeit keine Bestaetigung, wird NICHT behauptet,
+ * es sei schiefgegangen — dann ist es schlicht noch nicht bestaetigt.
+ */
+export async function pruefeLive(erwartetStand, { versuche = 12, abstandMs = 10000, warten = null } = {}) {
+  const basis = String(S.config.siteUrl || DEFAULT_SITE_URL).replace(/\/+$/, "");
+  const schlafen = warten || ((ms) => new Promise((ok) => setTimeout(ok, ms)));
+  let letzter = null;
+  for (let n = 0; n < versuche; n++) {
+    try {
+      const res = await fetch(`${basis}/stand.json?_=${Date.now()}`, { cache: "no-store" });
+      if (res.ok) {
+        const stand = await res.json();
+        letzter = stand;
+        if (stand && String(stand.inhaltVon || "") === String(erwartetStand || "")) {
+          return { ok: true, stand };
+        }
+      } else if (res.status === 404) {
+        /* Die Website ist aelter als diese Pruefung — dann laesst sich hier
+           nichts bestaetigen, und das wird auch so gesagt. */
+        return { ok: false, grund: "keine-standdatei", stand: null };
+      }
+    } catch (e) {
+      letzter = letzter || null;   // Netz, CORS, Offline: unbekannt, nicht falsch
+    }
+    if (n < versuche - 1) await schlafen(abstandMs);
+  }
+  return { ok: false, grund: "noch-nicht", stand: letzter };
+}
+
 /** Nur die letzten 20 Versionen behalten. */
 async function trimVersions() {
   const snap = await db.ref(PATHS.versions).orderByKey().get();

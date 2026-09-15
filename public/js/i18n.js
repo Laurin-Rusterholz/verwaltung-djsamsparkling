@@ -19,6 +19,7 @@
 
 import { el, getPath, setPath, toast, confirmDialog, debounce } from "./util.js";
 import { S, markDirty, saveContent } from "./store.js";
+import { sprachBefund, eigeneSpracheUebernehmen } from "./sprachstand.js";
 import { translateBatch, BATCH_SIZE } from "./ai.js";
 
 /* ------------------------------------------------------- übersetzbare Texte */
@@ -57,7 +58,7 @@ const looksTechnical = (v) =>
    Zuordnung gleich mit, und ein NEU angelegter Termin erbte auf /de/ und /fr/
    den Ort seines Vorgaengers. Muss mit NO_TRANSLATE_PATH in
    s-mi/scripts/build.mjs uebereinstimmen. */
-const NO_TRANSLATE_PATH =
+export const NO_TRANSLATE_PATH =
   /^layout\.|^pages\.\d+\.sections\.|^pages\.\d+\.hero$|^sections\.contact\.socials\.|^sections\.references\.items\.|^sections\.shows\.items\.|^imprint\./;
 
 export function collectStrings(node, prefix = "", out = []) {
@@ -326,6 +327,54 @@ function languagePicker(onChange) {
   return box;
 }
 
+/**
+ * Texte, die auf der Website noch in der alten Hauptsprache stehen.
+ *
+ * BEFUND (15.09.2026): Bis zum 07.09.2026 war Englisch die gepflegte Sprache
+ * und Deutsch die Übersetzung; seither ist Deutsch der Grundtext. Die Website
+ * setzt für die Hauptsprache nichts mehr ein — sie IST der Grundtext. Was
+ * damals nicht übertragen wurde, steht deshalb bis heute englisch auf der
+ * deutschen Seite, während die deutsche Fassung ungenutzt hier daneben liegt:
+ * „Turning energy into euphoria." statt „Aus Energie wird Euphorie.",
+ * „Home" statt „Start", der ganze Shop-Hinweis.
+ *
+ * Übernommen wird nur, was BEWIESEN ist: der Grundtext stimmt Zeichen für
+ * Zeichen mit der englischen Übersetzung überein, hat also nie gewechselt.
+ * Alles andere wird nur gezählt — es könnte eine veraltete Übersetzung sein,
+ * und der Grundtext gehört der Verwaltung. Geschrieben wird beim Speichern.
+ */
+function grundtextKasten(reload) {
+  const befund = sprachBefund(S.content);
+  if (!befund.sicher.length) return el("div", {});
+  const beispiele = befund.sicher.slice(0, 3)
+    .map((e) => `„${e.aufDerWebsite.slice(0, 34)}“ → „${e.fassung.slice(0, 34)}“`)
+    .join(" · ");
+  return el("div", { class: "warn-box" }, [
+    el("strong", {}, `${befund.sicher.length} Texte stehen auf der Website noch in der alten Hauptsprache. `),
+    el("span", {}, [
+      "Die deutsche Fassung liegt hier daneben, wird aber nicht angezeigt — seit dem Wechsel ",
+      "der Hauptsprache am 07.09.2026 ist Deutsch der Grundtext. Beispiele: ",
+    ]),
+    el("span", { class: "muted" }, beispiele),
+    befund.fraglich.length
+      ? el("p", { class: "muted", style: "margin:6px 0 0" },
+          `Weitere ${befund.fraglich.length} Stellen weichen ab, lassen sich aber nicht belegen — die bleiben unangetastet (könnte eine veraltete Übersetzung sein).`)
+      : null,
+    el("div", { class: "quick", style: "margin-top:10px" }, [
+      el("button", {
+        class: "btn sm",
+        onclick: () => {
+          const geaendert = eigeneSpracheUebernehmen(S.content);
+          if (!geaendert.length) { toast("Es gab nichts zu übernehmen.", "err"); return; }
+          markDirty();
+          toast(`${geaendert.length} Texte übernommen — noch nicht gespeichert.`);
+          reload();
+        },
+      }, "Deutsche Fassung übernehmen"),
+    ]),
+  ]);
+}
+
 export function renderI18n() {
   const langs = languages();
   let lang = langs[0] || "en";
@@ -516,6 +565,7 @@ export function renderI18n() {
         ),
       ]),
     ]),
+    grundtextKasten(() => reload()),
     masterBox(() => reload()),
     languagePicker(() => reload()),
     langs.length
