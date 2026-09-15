@@ -34,14 +34,23 @@ const STAND = () => ({
   hero: { tagline: "Turning energy into euphoria.", kicker: "Schon deutsch" },
   sections: {
     about: { title: "About", photo: { src: "https://beispiel.invalid/a.jpg" } },
-    shows: { items: [{ name: "Beispielclub", city: "Beispielstadt", date: "2026-09-05" }] },
+    shows: {
+      items: [
+        // vorbei: darf die gepflegte Referenz NICHT mehr aus der Liste nehmen
+        { name: "Beispielclub", city: "Beispielstadt", date: "2020-09-05" },
+        // kommend: steht schon als Termin auf der Seite
+        { name: "Kommender Club", city: "Beispielstadt", date: "2999-01-01" },
+      ],
+    },
     references: {
       items: [
         { name: "Erste Referenz", city: "Beispielstadt" },
-        { name: "Beispielclub", city: "Beispielstadt" },   // steht auch als Termin
+        { name: "Beispielclub", city: "Beispielstadt" },      // vergangener Termin — bleibt
         { name: "Zweite Referenz", city: "Beispielstadt" },
         { name: "Dritte Referenz", city: "Beispielstadt" },
+        { name: "Kommender Club", city: "Beispielstadt" },    // kommender Termin — bleibt ebenfalls
         { name: "Vierte Referenz", city: "Beispielstadt" },
+        { name: "Erste Referenz", city: "Beispielstadt" },    // echte Dublette — einmal
         { name: "Fuenfte Referenz", city: "Beispielstadt" },
       ],
     },
@@ -109,23 +118,58 @@ test("Bilder ohne Datei werden benannt", () => {
 
 test("die Handy-Vorschau nennt genau die vier, die das Handy zeigt", () => {
   const h = handyVorschau(STAND());
-  assert.deepEqual(h.vorschau.map((r) => r.name), [
-    "Erste Referenz", "Zweite Referenz", "Dritte Referenz", "Vierte Referenz",
-  ]);
-  assert.deepEqual(h.rest.map((r) => r.name), ["Fuenfte Referenz"]);
-  /* „Beispielclub" steht auf derselben Seite schon als Termin — die Website
-     lässt ihn bei den Referenzen weg und verschiebt damit die Vorschau. Genau
-     das muss hier sichtbar sein, sonst ordnet man blind. */
-  assert.deepEqual(h.weggelassen.map((r) => r.name), ["Beispielclub"]);
-});
-
-test("ohne Shows auf derselben Seite wird nichts weggelassen", () => {
-  const c = STAND();
-  c.pages[0].sections = ["about", "references", "shop"];   // Startseite ohne Shows
-  c.pages[1].sections = ["shows"];                          // und /shows/ ohne Referenzen
-  const h = handyVorschau(c);
-  assert.deepEqual(h.weggelassen, []);
+  /* KUNDENBEFUND 15.09.2026: „Beispielclub" ist eine gepflegte Referenz an
+     zweiter Stelle. Dass derselbe Club auch als Termin gefuehrt wird, darf ihn
+     nicht aus der Liste nehmen — sonst rutscht ein anderer Club auf seinen
+     Platz, und genau das verletzt „die wichtige Referenz muss unter den ersten
+     vier stehen". */
   assert.deepEqual(h.vorschau.map((r) => r.name), [
     "Erste Referenz", "Beispielclub", "Zweite Referenz", "Dritte Referenz",
   ]);
+  /* „Kommender Club" steht als Termin UND als Referenz — und bleibt in der
+     Liste: „auch ein erneuter kommender Auftritt darf die Referenz nicht
+     entfernen". Genannt wird nur die echte Dublette. */
+  assert.deepEqual(h.rest.map((r) => r.name), [
+    "Kommender Club", "Vierte Referenz", "Fuenfte Referenz",
+  ]);
+  assert.deepEqual(h.dubletten.map((r) => r.name), ["Erste Referenz"]);
+});
+
+test("eine echte Dublette in der Liste erscheint einmal", () => {
+  const h = handyVorschau(STAND(), { grenze: 10 });
+  const namen = h.vorschau.map((r) => r.name);
+  assert.equal(namen.filter((n) => n === "Erste Referenz").length, 1, "dieselbe Referenz steht zweimal da");
+  // Der erste Platz gilt — die Reihenfolge der Verwaltung bleibt, und
+  // ausser der Dublette faellt nichts weg.
+  assert.deepEqual(namen, [
+    "Erste Referenz", "Beispielclub", "Zweite Referenz", "Dritte Referenz",
+    "Kommender Club", "Vierte Referenz", "Fuenfte Referenz",
+  ]);
+});
+
+test("die Termine aendern an der Vorschau gar nichts mehr", () => {
+  /* Gegenprobe zur alten Regel: sie haengte davon ab, ob Shows und Referenzen
+     auf derselben Seite stehen. Jetzt nicht mehr — dieselbe Vorschau, egal wie
+     die Seiten geschnitten sind und egal, ob es ueberhaupt Termine gibt. */
+  const erwartet = ["Erste Referenz", "Beispielclub", "Zweite Referenz", "Dritte Referenz"];
+
+  const getrennt = STAND();
+  getrennt.pages[0].sections = ["about", "references", "shop"];  // Startseite ohne Shows
+  getrennt.pages[1].sections = ["shows"];                        // und /shows/ ohne Referenzen
+  assert.deepEqual(handyVorschau(getrennt).vorschau.map((r) => r.name), erwartet);
+
+  const ohneTermine = STAND();
+  ohneTermine.sections.shows.items = [];
+  assert.deepEqual(handyVorschau(ohneTermine).vorschau.map((r) => r.name), erwartet);
+
+  const nurKommende = STAND();
+  nurKommende.sections.shows.items = [
+    { name: "Beispielclub", city: "Beispielstadt", date: "2999-02-02" },
+    { name: "Erste Referenz", city: "Beispielstadt", date: "2999-03-03" },
+  ];
+  assert.deepEqual(
+    handyVorschau(nurKommende).vorschau.map((r) => r.name),
+    erwartet,
+    "ein kommender Auftritt nimmt die gepflegte Referenz aus der Vorschau"
+  );
 });
