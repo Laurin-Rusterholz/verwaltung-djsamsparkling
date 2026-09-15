@@ -13,6 +13,7 @@ import {
   aufStartseiteHolen,
   nichtBaubarAufSeiten,
 } from "./abschnitte.js";
+import { handyVorschau, bilderOhneDatei } from "./sprachstand.js";
 import {
   textField,
   textArea,
@@ -542,11 +543,40 @@ export function renderShows() {
 
 /* -------------------------------------------------- Abschnitt: Referenzen */
 
+/**
+ * Welche vier Referenzen auf dem HANDY zuerst stehen.
+ *
+ * Rückmeldung von Sämi (15.09.2026): „Die wichtige Referenz muss unter den
+ * ersten vier stehen." Auf dem Handy zeigt die Website genau vier, der Rest
+ * kommt über einen Knopf — nachgemessen an der gebauten Seite bei 390 px.
+ * Wer hier ordnet, soll sehen, welche vier das sind; sonst ordnet man blind.
+ * Dazu gehört auch der Auftritt, den die Website weglässt, weil er auf
+ * derselben Seite schon als Termin steht — er verschiebt die Vorschau.
+ */
+function handyVorschauHinweis() {
+  const h = handyVorschau(S.content);
+  if (!h.vorschau.length) return el("div", {});
+  const namen = h.vorschau.map((r) => [r.name, r.city].filter(Boolean).join(" — ")).join(" · ");
+  const teile = [
+    el("strong", {}, "Auf dem Handy stehen zuerst: "),
+    el("span", {}, namen),
+    el("span", { class: "muted" }, ` — die übrigen ${h.rest.length} kommen dort über „${h.rest.length} weitere anzeigen“. Am Rechner stehen alle da.`),
+  ];
+  if (h.weggelassen.length) {
+    teile.push(
+      el("p", { class: "muted", style: "margin:6px 0 0" },
+        `Nicht mitgezählt: ${h.weggelassen.map((r) => r.name).join(", ")} — dieser Auftritt steht auf derselben Seite schon als Termin und wird bei den Referenzen weggelassen.`)
+    );
+  }
+  return el("p", { class: "warn-box" }, teile);
+}
+
 export function renderReferences() {
   return view([
     head("Referenzen", "Wo Sam schon gespielt hat."),
     sectionBasics("references"),
     nachtragHinweis(),
+    handyVorschauHinweis(),
     group("Liste", [
       objectList("sections.references.items", null, {
         addLabel: "Referenz hinzufügen",
@@ -591,6 +621,25 @@ export function renderReferences() {
 
 /* ----------------------------------------------------- Abschnitt: Galerie */
 
+/**
+ * Einträge ohne Bilddatei.
+ *
+ * Rückmeldung von Sämi (15.09.2026): „Fotos erscheinen nicht zuverlässig."
+ * Nachgemessen am veröffentlichten Stand: 5 von 42 Galerie-Einträgen hatten
+ * keine Bilddatei. Die Website überspringt sie — hier stand der Eintrag
+ * trotzdem, und niemand erfuhr, warum das Foto fehlt. Gelöscht wird nichts:
+ * ein leerer Eintrag kann ein halb angelegter sein.
+ */
+function bilderLueckenHinweis() {
+  const luecken = bilderOhneDatei(S.content).filter((l) => l.wo === "gallery");
+  if (!luecken.length) return el("div", {});
+  return el("p", { class: "warn-box" }, [
+    el("strong", {}, `${luecken.length} Eintrag/Einträge ohne Bilddatei: `),
+    el("span", {}, luecken.map((l) => "#" + l.nummer + (l.alt ? ` („${l.alt.slice(0, 30)}…“)` : "")).join(", ")),
+    el("span", { class: "muted" }, " — diese erscheinen auf der Website NICHT. Bild zuweisen oder Eintrag löschen."),
+  ]);
+}
+
 export function renderGallery() {
   return view([
     head(
@@ -621,6 +670,7 @@ export function renderGallery() {
     ], {
       hint: "Eine kurze 2-Spalten-Auswahl hält den AIDA-Weg kompakt. Weitere Bilder öffnet der Besucher bewusst über einen Knopf.",
     }),
+    bilderLueckenHinweis(),
     group("Bilder", [
       objectList("sections.gallery.items", null, {
         // Der übliche Weg ist „Bilder aussuchen“ — der leere Platz ist die

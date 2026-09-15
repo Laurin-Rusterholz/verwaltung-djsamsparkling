@@ -718,6 +718,8 @@ select{
   border-radius:var(--r-sm);box-shadow:var(--sh-lg);animation:slide .2s ease;
 }
 .toast.err{border-left-color:var(--bad);}
+/* Kein Fehler, aber auch keine Bestaetigung: „angestossen, noch nicht oben". */
+.toast.warn{border-left-color:var(--warn,#d9a441);}
 .toast.out{opacity:0;transition:opacity .3s;}
 @keyframes slide{from{transform:translateX(20px);opacity:0}to{transform:none;opacity:1}}
 
