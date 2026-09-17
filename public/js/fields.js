@@ -421,7 +421,16 @@ export function objectList(path, label, opts = {}) {
                 !(await confirmDialog("Eintrag entfernen?", title, "Entfernen"))
               )
                 return;
+              const entfernt = items[i];
               items.splice(i, 1);
+              /* Was nach dem Entfernen noch aufzuräumen ist, weiss nur die
+                 Liste selbst. Die Referenzen brauchen das: dort bringt ein
+                 Entfernen sonst nichts, weil die Website denselben Auftritt
+                 als vergangenen Termin wieder anhängt (siehe content.js,
+                 `onRemove` bei den Referenzen). */
+              if (typeof opts.onRemove === "function") {
+                try { opts.onRemove(entfernt, items); } catch (e) { /* nie den Löschvorgang aufhalten */ }
+              }
               markDirty();
               render();
               changed();
