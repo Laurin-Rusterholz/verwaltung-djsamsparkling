@@ -39,8 +39,14 @@ const FIELDS = lies("public/js/fields.js");
 
 /* ══ 1. Das Häkchen am Termin ═════════════════════════════════════════════ */
 {
-  pruefe(/checkboxField\(`\$\{base\}\.nichtAlsReferenz`/.test(CONTENT),
+  /* `flagField`, NICHT `checkboxField` — beides hat am 17.09.2026 die
+     Shows-Maske gekostet (siehe scripts/shows-maske.test.mjs):
+     `checkboxField` nimmt den Hinweis als Zeichenkette und ist von Haus aus
+     AN. Hier muss es von Haus aus AUS sein. */
+  pruefe(/flagField\(\s*`\$\{base\}\.nichtAlsReferenz`/.test(CONTENT),
     "am Termin gibt es kein Häkchen „nicht automatisch als Referenz“");
+  pruefe(!/checkboxField\(\s*`\$\{base\}\.nichtAlsReferenz`/.test(CONTENT),
+    "das Häkchen hängt wieder an checkboxField — dann ist es voreingestellt AN");
   pruefe(/Nicht automatisch als Referenz zeigen/.test(CONTENT),
     "das Häkchen hat keine verständliche Aufschrift");
   /* Der Hinweis muss sagen, was passiert — und was NICHT passiert. Sonst
