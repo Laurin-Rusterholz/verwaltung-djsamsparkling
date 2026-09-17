@@ -457,7 +457,7 @@ export function renderShows() {
         upcoming === 1 ? "" : "e"
       }${vorbei ? `, ${vorbei} vorbei` : ""}${
         ohneName ? `, ${ohneName} ohne Namen` : ""
-      } — die Website zeigt kommende Termine oben, vergangene darunter im Rückblick. Beide bleiben sichtbar; der Abschnitt verschwindet erst, wenn gar kein Termin mehr eingetragen ist.`
+      } — die Website zeigt unter „Shows" nur die kommenden Termine. Vergangene bleiben hier gespeichert und stehen dort nicht mehr; wo Sam gespielt hat, gehört zu den Referenzen. Der Abschnitt selbst bleibt, auch wenn gerade nichts ansteht.`
     ),
     sectionBasics("shows"),
     group("Übersicht", [cal], {
@@ -479,14 +479,18 @@ export function renderShows() {
         },
         /* Die Kartenbeschriftung sagt auch, was die Website daraus macht:
            ohne "Event / Club" wird ein Termin dort gar nicht angezeigt, und
-           ein vergangener steht nur noch bei den Referenzen. Beides war
-           vorher unsichtbar — der Termin stand in der Verwaltung, auf der
-           Seite fehlte er. */
+           ein vergangener steht seit dem 15.09.2026 gar nicht mehr unter
+           "Shows" — dort steht nur, was bevorsteht. Beides war vorher
+           unsichtbar: der Termin stand in der Verwaltung, auf der Seite
+           fehlte er.
+
+           Stehen bleibt er hier in jedem Fall — nicht angezeigt heisst nicht
+           geloescht. */
         titleOf: (i) => {
           const name = String(i?.name || "").trim();
           const teile = [i.date, name].filter(Boolean).join("  ·  ") || "(neuer Termin)";
           if (!name) return `${teile}  ·  ohne „Event / Club“ — nicht auf der Website`;
-          if (i.date && i.date < today) return `${teile}  ·  vorbei — steht im Rückblick`;
+          if (i.date && i.date < today) return `${teile}  ·  vorbei — nicht mehr auf der Website`;
           return teile;
         },
         emptyText: "Noch keine Termine — erst dann bleiben der Shows-Abschnitt und sein Menüpunkt auf der Website verborgen.",
@@ -523,21 +527,20 @@ export function renderShows() {
     ], {
       hint:
         "„Event / Club“ ist Pflicht: ohne Namen zeigt die Website den Termin nicht an. " +
-        "Ist der Tag vorbei, rutscht der Termin auf der Website von der oberen Liste in " +
-        "den Rückblick darunter — sichtbar bleibt er.",
+        "Ist der Tag vorbei, verschwindet der Termin auf der Website aus dieser Liste — " +
+        "unter „Shows“ steht nur, was noch bevorsteht. Hier bleibt er stehen, gelöscht " +
+        "wird nichts. Wo Sam gespielt hat, gehört zu den Referenzen.",
     }),
-    group("Rückblick auf der Website", [
-      textField("sections.shows.pastLabel", "Überschrift über den vergangenen Terminen", {
-        placeholder: "Vergangene Shows",
-      }),
-    ], {
-      hint:
-        "Vergangene Termine stehen auf der Website unter den kommenden, mit dieser " +
-        "Überschrift und dem jüngsten zuerst — offen sichtbar, ohne Aufklappen, und ohne " +
-        "Ticket-Knopf. Leer lassen: dann steht dort „Vergangene Shows“ (bzw. „Past shows“, " +
-        "„Concerts passés“). Der Abschnitt bleibt auf der Website, solange überhaupt ein " +
-        "Termin eingetragen ist — auch wenn alle vorbei sind.",
-    }),
+    /* Das Feld „Überschrift über den vergangenen Terminen" (sections.shows.pastLabel)
+       stand bis zum 15.09.2026 hier. Die Website zeigt keinen Rückblick mehr —
+       das Feld hätte nichts mehr bewirkt und nur den Eindruck erweckt, es gäbe
+       ihn noch. Der gespeicherte Wert bleibt unangetastet im Inhalt stehen. */
+    el("p", { class: "group-hint", style: "margin:0" },
+      "Vergangene Termine erscheinen nicht mehr unter „Shows“. Gespeichert bleiben sie " +
+      "hier — auf der Website steht unter „Shows“ nur, was noch kommt, und wo Sam schon " +
+      "gespielt hat, steht bei den Referenzen. Ist gerade nichts angekündigt, bleiben " +
+      "Abschnitt und Menüpunkt stehen und zeigen den Hinweis aus „Text, wenn keine " +
+      "Termine anstehen“."),
   ]);
 }
 
@@ -550,8 +553,10 @@ export function renderShows() {
  * ersten vier stehen." Auf dem Handy zeigt die Website genau vier, der Rest
  * kommt über einen Knopf — nachgemessen an der gebauten Seite bei 390 px.
  * Wer hier ordnet, soll sehen, welche vier das sind; sonst ordnet man blind.
- * Dazu gehört auch der Auftritt, den die Website weglässt, weil er auf
- * derselben Seite schon als Termin steht — er verschiebt die Vorschau.
+ *
+ * Die Vorschau zeigt die Liste so, wie sie dasteht: gegen die Termine wird
+ * nicht gefiltert. Genannt wird nur, was die Website wirklich weglässt —
+ * derselbe Eintrag ein zweites Mal in dieser Liste.
  */
 function handyVorschauHinweis() {
   const h = handyVorschau(S.content);
@@ -562,10 +567,12 @@ function handyVorschauHinweis() {
     el("span", {}, namen),
     el("span", { class: "muted" }, ` — die übrigen ${h.rest.length} kommen dort über „${h.rest.length} weitere anzeigen“. Am Rechner stehen alle da.`),
   ];
-  if (h.weggelassen.length) {
+  if (h.dubletten.length) {
     teile.push(
       el("p", { class: "muted", style: "margin:6px 0 0" },
-        `Nicht mitgezählt: ${h.weggelassen.map((r) => r.name).join(", ")} — dieser Auftritt steht auf derselben Seite schon als Termin und wird bei den Referenzen weggelassen.`)
+        `Nicht mitgezählt: ${h.dubletten.map((r) => [r.name, r.city].filter(Boolean).join(" — ")).join(", ")} — ` +
+        `dieser Eintrag steht in dieser Liste schon weiter oben und erscheint auf der Website einmal. ` +
+        `Gelöscht wird hier nichts.`)
     );
   }
   return el("p", { class: "warn-box" }, teile);
@@ -592,9 +599,10 @@ export function renderReferences() {
       hint:
         "Alle Referenzen erscheinen auf der Website im selben Stil, fortlaufend in " +
         "genau dieser Reihenfolge — mit ↑ ↓ verschiebst du einen Eintrag. Was oben " +
-        "steht, steht auch auf der Website oben. Steht ein Auftritt auf derselben " +
-        "Seite schon als Termin im Rückblick, lässt die Website ihn hier weg — " +
-        "damit er nicht zweimal dasteht. Der Eintrag bleibt hier erhalten.",
+        "steht, steht auch auf der Website oben. Die Termine ändern daran nichts: " +
+        "auch ein erneuter kommender Auftritt im selben Club nimmt die Referenz " +
+        "nicht weg. Nur derselbe Eintrag ein zweites Mal in dieser Liste erscheint " +
+        "auf der Website einmal — gelöscht wird hier nie etwas.",
     }),
     /* Das Häkchen „Gross zeigen" ist am 11.08.2026 weggefallen. Es hat eine
        zweite Rangfolge neben dieser Liste aufgemacht: wer hier etwas nach oben
