@@ -532,11 +532,26 @@ export function renderShows() {
              löscht, bekommt das Häkchen automatisch gesetzt (siehe
              `onRemove` bei den Referenzen) — sonst käme sie beim nächsten
              Bau als automatische zurück. */
-          checkboxField(`${base}.nichtAlsReferenz`, "Nicht automatisch als Referenz zeigen", {
-            hint: "Normal aus: Ist der Abend vorbei, erscheint der Auftritt hinten bei den Referenzen — "
+          /* `flagField`, NICHT `checkboxField` — aus zwei Gruenden, und beide
+             haben am 17.09.2026 die ganze Shows-Maske gekostet:
+
+             1. `checkboxField(pfad, aufschrift, hinweis)` nimmt den Hinweis als
+                ZEICHENKETTE. Hier stand ein Objekt `{ hint: … }`. Das ging
+                ungeprueft durch `el()` bis in `appendChild` — und der Browser
+                bricht ab: "Failed to execute 'appendChild' on 'Node':
+                parameter 1 is not of type 'Node'." Die Ansicht blieb leer.
+             2. `checkboxField` ist absichtlich umgekehrt herum: nichts
+                gespeichert heisst AN. Fuer dieses Haekchen waere das falsch —
+                ein Termin ohne die Angabe soll ganz normal bei den Referenzen
+                erscheinen. `flagField` ist von Haus aus AUS und liest
+                `=== true`. */
+          flagField(
+            `${base}.nichtAlsReferenz`,
+            "Nicht automatisch als Referenz zeigen",
+            "Normal aus: Ist der Abend vorbei, erscheint der Auftritt hinten bei den Referenzen — "
               + "sofern er dort nicht schon steht. Angehakt bleibt er draussen. Der Termin selbst bleibt "
-              + "in jedem Fall hier stehen.",
-          }),
+              + "in jedem Fall hier stehen."
+          ),
         ],
       }),
     ], {
