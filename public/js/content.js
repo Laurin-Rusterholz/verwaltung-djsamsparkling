@@ -517,7 +517,15 @@ export function renderShows() {
             ["soldout", "ausverkauft"],
             ["cancelled", "abgesagt"],
           ], {
-            hint: "„gebucht“ färbt den Tag im Website-Kalender und blendet den Ticket-Knopf aus.",
+            /* Der Hinweis stimmte nicht mehr. „gebucht“ blendete den
+               Ticket-Knopf einmal aus — das war eine Fehldeutung des Status
+               und ist seit dem 12.08.2026 behoben: der Knopf haengt an der
+               Adresse, nicht am Status. Hier stand es trotzdem weiter so,
+               und wer es las, liess den Ticket-Link lieber weg. */
+            hint:
+              "„gebucht“ heisst: Sam hat den Termin — ein gültiger Ticket-Link wird trotzdem gezeigt " +
+              "und färbt den Tag im Website-Kalender. Nur „ausverkauft“ und „abgesagt“ zeigen keinen " +
+              "Kauf; „abgesagt“ erscheint ausserdem nie automatisch bei den Referenzen.",
             onChange: () => cal._redraw(),
           }),
           textField(`${base}.ticketUrl`, "Ticket-Link", { mono: true }),

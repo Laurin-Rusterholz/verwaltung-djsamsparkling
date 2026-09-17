@@ -166,6 +166,32 @@ pruefe("das Haekchen schreibt an die richtige Stelle — und nur dorthin", () =>
   assert.equal(stand.sections.shows.items.length, 2, "ein Termin ist verschwunden");
 });
 
+/* ══ 2b. Was am Status steht, muss stimmen ════════════════════════════════
+   Der Hinweis ist kein Beiwerk: wer liest, "gebucht" blende den Ticket-Knopf
+   aus, laesst den Ticket-Link lieber weg. Genau das stand bis zum 17.09.2026
+   dort — obwohl der Knopf seit dem 12.08. an der ADRESSE haengt und nicht am
+   Status. Geprueft wird am gezeichneten Text, nicht am Quelltext. */
+pruefe("der Hinweis am Status sagt die Wahrheit ueber den Ticket-Knopf", () => {
+  standSetzen([{ date: "2026-10-01", name: "Ein Abend", city: "Chur", status: "booked",
+    ticketUrl: "https://tickets.example/abend" }]);
+  const text = content.renderShows().textContent;
+
+  assert.ok(!/blendet den Ticket-Knopf aus/.test(text),
+    "am Status steht immer noch, „gebucht“ blende den Ticket-Knopf aus — das stimmt seit dem 12.08.2026 nicht");
+  assert.match(text, /„gebucht“ heisst: Sam hat den Termin/,
+    "es steht nicht da, was „gebucht“ bedeutet");
+  assert.match(text, /ausverkauft“ und „abgesagt“ zeigen keinen\s+Kauf/,
+    "es steht nicht da, welche Status keinen Kauf zeigen");
+  assert.match(text, /abgesagt“ erscheint ausserdem nie automatisch bei den Referenzen/,
+    "es steht nicht da, dass ein abgesagter Abend keine Referenz wird");
+
+  /* Und die vier Status stehen weiterhin zur Auswahl — geaendert wurde nur
+     der Hinweis. */
+  for (const wort of ["bestätigt", "gebucht", "ausverkauft", "abgesagt"]) {
+    assert.ok(text.includes(wort), `der Status „${wort}“ fehlt in der Auswahl`);
+  }
+});
+
 /* ══ 3. Und alle uebrigen Masken gleich mit ═══════════════════════════════
    Derselbe Fehler kann jede Ansicht treffen. Einmal alles zeichnen kostet
    nichts und faengt die naechste Verwechslung, bevor sie jemand sieht. */
